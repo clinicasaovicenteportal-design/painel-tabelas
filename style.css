@@ -1,62 +1,291 @@
+:root {
+    --primary-color: #8B252C; /* Cor principal inspirada na logo */
+    --primary-hover: #6b1b21;
+    --bg-color: #f4f7fa;
+    --surface-color: #ffffff;
+    --text-main: #2d3748;
+    --text-muted: #718096;
+    --border-color: #e2e8f0;
+    --shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 body {
-    background-color: #f4f7f6;
-    color: #333;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    overflow-x: hidden;
 }
 
-.screen {
+/* --- TELA DE LOGIN --- */
+#login-screen {
     min-height: 100vh;
     display: flex;
-    flex-direction: column;
-}
-
-/* Estilos do Login */
-#login-screen {
     justify-content: center;
     align-items: center;
+    background: linear-gradient(135deg, var(--bg-color) 0%, #e2e8f0 100%);
 }
 
 .login-box {
-    background: white;
+    background: var(--surface-color);
     padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    text-align: center;
+    border-radius: 20px;
     width: 100%;
-    max-width: 350px;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: var(--shadow-soft);
 }
 
 .login-logo {
-    width: 100px;
+    width: 120px;
     margin-bottom: 20px;
 }
 
-.login-box input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+.login-box h2 {
+    font-size: 24px;
+    font-weight: 600;
 }
 
-.login-box button {
+.subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 30px;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.input-group i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.input-group input {
     width: 100%;
-    padding: 12px;
-    background-color: #0056b3;
+    padding: 14px 14px 14px 45px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(139, 37, 44, 0.1);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 6px;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 15px;
     cursor: pointer;
-    font-size: 16px;
-    margin-top: 10px;
+    transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
 }
 
-.login-box button:hover {
-    background-color: #004494;
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+/* --- DASHBOARD E SIDEBAR --- */
+#dashboard-screen {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    background: var(--surface-color);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.sidebar-header {
+    padding-bottom: 30px;
+    text-align: center;
+}
+
+.sidebar-logo {
+    width: 100px;
+}
+
+.sidebar-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 10px;
+    text-align: left;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover {
+    background: var(--bg-color);
+    color: var(--primary-color);
+}
+
+.nav-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.logout-btn {
+    color: #e53e3e;
+    width: 100%;
+}
+
+.logout-btn:hover {
+    background: #fff5f5;
+}
+
+/* --- CONTEÚDO PRINCIPAL --- */
+.main-content {
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto;
+}
+
+.top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.top-header h1 {
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #e2e8f0;
+    color: var(--text-main);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 5px;
+}
+
+.badge.admin {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+/* --- CARDS DOS MÉDICOS --- */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: var(--surface-color);
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(0,0,0,0.02);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.card-subtitle {
+    font-size: 14px;
+    color: var(--primary-color);
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.card-info {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* --- MODAL (JANELA FLUTUANTE) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-box {
+    background: var(--surface-color);
+    padding: 30px;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    margin-bottom: 15px;
+    font-size: 14px;
 }
