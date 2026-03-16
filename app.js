@@ -5,12 +5,12 @@ import { initializeFirestore, persistentLocalCache } from "https://www.gstatic.c
 
 // COLE OS SEUS DADOS DO FIREBASE AQUI DENTRO:
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_PROJETO.firebaseapp.com",
-  projectId: "SEU_PROJETO",
-  storageBucket: "SEU_PROJETO.appspot.com",
-  messagingSenderId: "SEU_SENDER_ID",
-  appId: "SEU_APP_ID"
+  apiKey: "AIzaSyCVphiwmF-SBFyYYkjV-QvTvSFIigzIsoc",
+  authDomain: "painel-tabelas.firebaseapp.com",
+  projectId: "painel-tabelas",
+  storageBucket: "painel-tabelas.firebasestorage.app",
+  messagingSenderId: "189251122569",
+  appId: "1:189251122569:web:2902e8c47235d826af9d58"
 };
 
 // 1. Inicializar o Firebase
