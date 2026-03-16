@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+// IMPORTAMOS AGORA AS FUNÇÕES DE EDITAR E EXCLUIR (doc, updateDoc, deleteDoc)
+import { initializeFirestore, persistentLocalCache, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCVphiwmF-SBFyYYkjV-QvTvSFIigzIsoc",
@@ -19,7 +20,6 @@ let isAdmin = false;
 let abaAtual = 'corpo-clinico'; 
 const EMAIL_GESTAO = "gestao@clinica.com";
 
-// Dicionário de Formulários (Quais campos aparecem em qual aba)
 const configuracaoAbas = {
     'corpo-clinico': { titulo: 'Médico', campos: ['Nome/Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA'] },
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Observações'] },
@@ -29,7 +29,6 @@ const configuracaoAbas = {
     'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Código', 'Descrição', 'Valor', 'Prazo de Laudo', 'Onde encontrar resultado', 'Observações', 'Convênios'] },
     'institutos': { titulo: 'Instituto', campos: ['Número da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'] },
     'remocoes': { titulo: 'Remoção', campos: ['Nome do Lugar', 'Números (Separe por vírgula)', 'Local/Link Maps', 'Observações Importantes'] },
-    // Sub-abas de contatos
     'ramais': { titulo: 'Ramal', campos: ['Local/Prédio', 'Setor', 'Número do Ramal', 'Observações'] },
     'emails': { titulo: 'E-mail', campos: ['Descrição do E-mail', 'Setor'] },
     'contatos-gerais': { titulo: 'Contato Geral', campos: ['Descrição (Lugar/Pessoa)', 'Número'] },
@@ -39,8 +38,7 @@ const configuracaoAbas = {
 
 // Autenticação
 document.getElementById('btn-login').addEventListener('click', () => {
-    signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('senha').value)
-    .catch(err => alert("Erro: " + err.message));
+    signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('senha').value).catch(err => alert("Erro: " + err.message));
 });
 document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 
@@ -53,7 +51,6 @@ onAuthStateChanged(auth, (user) => {
         if(isAdmin) document.getElementById('user-role-badge').classList.add('admin');
         document.getElementById('btn-novo').style.display = isAdmin ? 'flex' : 'none';
         
-        // Carrega todas as abas automaticamente ao logar
         Object.keys(configuracaoAbas).forEach(idColecao => renderizarCards(idColecao));
     } else {
         document.getElementById('login-screen').style.display = 'flex';
@@ -70,63 +67,68 @@ document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
         abaAtual = btn.getAttribute('data-tab');
         document.getElementById(`tab-${abaAtual}`).style.display = 'block';
         document.getElementById('page-title').textContent = btn.textContent.trim();
-        
-        // Se saiu de contatos, reseta as sub-abas
         if(abaAtual !== 'contatos') window.voltarSubAba();
     });
 });
 
-// --- LÓGICA DO MODAL DINÂMICO ---
+// --- FUNÇÃO PARA ABRIR O MODAL (CRIAR OU EDITAR) ---
 const modal = document.getElementById('modal-cadastro');
 
+function abrirModal(colecao, docId = null, dadosAntigos = null) {
+    const config = configuracaoAbas[colecao];
+    document.getElementById('modal-title').textContent = docId ? `Editar ${config.titulo}` : `Novo(a) ${config.titulo}`;
+    
+    // Limpa ou preenche ID escondido e Cor
+    document.getElementById('modal-doc-id').value = docId || "";
+    document.getElementById('card-color').value = (dadosAntigos && dadosAntigos.corCard) ? dadosAntigos.corCard : "#8B252C";
+
+    // Cria os inputs dinamicamente
+    let htmlCampos = '';
+    config.campos.forEach(campo => {
+        const valorAntigo = (dadosAntigos && dadosAntigos[campo]) ? dadosAntigos[campo] : '';
+        
+        if(colecao === 'consultas' && campo.includes('Tipo')) {
+            htmlCampos += `
+            <select id="input-${campo}" class="form-input" style="margin-bottom:15px; width:100%; padding:12px; border-radius:10px;">
+                <option value="">Selecione o Tipo...</option>
+                <option value="Consulta" ${valorAntigo === 'Consulta' ? 'selected' : ''}>Consulta</option>
+                <option value="Exame" ${valorAntigo === 'Exame' ? 'selected' : ''}>Exame</option>
+                <option value="Pacotes" ${valorAntigo === 'Pacotes' ? 'selected' : ''}>Pacotes</option>
+                <option value="Outros" ${valorAntigo === 'Outros' ? 'selected' : ''}>Outros</option>
+            </select>`;
+        } else {
+            htmlCampos += `<input type="text" id="input-${campo}" placeholder="${campo}" value="${valorAntigo}" class="form-input">`;
+        }
+    });
+    
+    document.getElementById('modal-form-area').innerHTML = htmlCampos;
+    document.getElementById('btn-salvar-dados').setAttribute('data-colecao', colecao);
+    modal.style.display = 'flex';
+}
+
+// Botão Adicionar Novo (Abre Modal Vazio)
 document.getElementById('btn-novo').addEventListener('click', () => {
     let abaParaCadastrar = abaAtual;
-    
-    // Se estiver na aba contatos, pega qual sub-aba está aberta
     if(abaAtual === 'contatos') {
         const subAba = document.getElementById('btn-novo').getAttribute('data-sub-aba');
         if(!subAba) return alert("Abra uma categoria de contato primeiro!");
         abaParaCadastrar = subAba;
     }
-
-    const config = configuracaoAbas[abaParaCadastrar];
-    document.getElementById('modal-title').textContent = `Novo(a) ${config.titulo}`;
-    
-    // Cria os inputs dinamicamente com base na lista de campos
-    let htmlCampos = '';
-    config.campos.forEach(campo => {
-        // Se a aba for Consultas e o campo for Tipo, cria um select
-        if(abaParaCadastrar === 'consultas' && campo.includes('Tipo')) {
-            htmlCampos += `
-            <select id="input-${campo}" class="form-input" style="margin-bottom:15px; width:100%; padding:12px; border-radius:10px;">
-                <option value="">Selecione o Tipo...</option>
-                <option value="Consulta">Consulta</option>
-                <option value="Exame">Exame</option>
-                <option value="Pacotes">Pacotes</option>
-                <option value="Outros">Outros</option>
-            </select>`;
-        } else {
-            htmlCampos += `<input type="text" id="input-${campo}" placeholder="${campo}" class="form-input">`;
-        }
-    });
-    
-    document.getElementById('modal-form-area').innerHTML = htmlCampos;
-    document.getElementById('btn-salvar-dados').setAttribute('data-colecao', abaParaCadastrar);
-    modal.style.display = 'flex';
+    abrirModal(abaParaCadastrar);
 });
 
 document.getElementById('btn-fechar-modal').addEventListener('click', () => modal.style.display = 'none');
 
-// Salvar Dados
+// --- SALVAR DADOS (CRIAR OU ATUALIZAR) ---
 document.getElementById('btn-salvar-dados').addEventListener('click', async () => {
     if(!isAdmin) return;
     const colecaoNome = document.getElementById('btn-salvar-dados').getAttribute('data-colecao');
+    const docId = document.getElementById('modal-doc-id').value; // Pega o ID se estiver editando
     const config = configuracaoAbas[colecaoNome];
     
     let dadosParaSalvar = {};
     let temDado = false;
 
-    // Coleta os valores digitados
     config.campos.forEach(campo => {
         const valor = document.getElementById(`input-${campo}`).value.trim();
         if(valor) {
@@ -137,20 +139,48 @@ document.getElementById('btn-salvar-dados').addEventListener('click', async () =
 
     if(!temDado) return alert("Preencha pelo menos um campo!");
 
+    // Adiciona a cor escolhida aos dados
+    dadosParaSalvar.corCard = document.getElementById('card-color').value;
+
     document.getElementById('btn-salvar-dados').textContent = "Salvando...";
     try {
-        await addDoc(collection(db, colecaoNome), dadosParaSalvar);
+        if (docId) {
+            // Se tem ID, Atualiza!
+            await updateDoc(doc(db, colecaoNome, docId), dadosParaSalvar);
+        } else {
+            // Se não tem ID, Cria novo!
+            await addDoc(collection(db, colecaoNome), dadosParaSalvar);
+        }
         modal.style.display = 'none';
     } catch(e) {
         alert("Erro ao salvar: " + e);
     }
     document.getElementById('btn-salvar-dados').textContent = "Salvar Dados";
 });
+
+// --- DELETAR E ABRIR EDIÇÃO (Ouvinte de cliques no painel) ---
+// Escutamos os cliques na tela toda. Se clicar no ícone de lixo ou lápis, aciona a função.
+document.querySelector('.main-content').addEventListener('click', async (e) => {
+    const btnExcluir = e.target.closest('.btn-delete');
+    const btnEditar = e.target.closest('.btn-edit');
+
+    if (btnExcluir && isAdmin) {
+        if(confirm("Tem certeza que deseja EXCLUIR permanentemente este cadastro?")) {
+            await deleteDoc(doc(db, btnExcluir.dataset.colecao, btnExcluir.dataset.id));
+        }
+    }
+
+    if (btnEditar && isAdmin) {
+        const dados = JSON.parse(btnEditar.dataset.info);
+        abrirModal(btnEditar.dataset.colecao, btnEditar.dataset.id, dados);
+    }
+});
+
 // --- RENDERIZADOR UNIVERSAL DE CARDS ---
 function renderizarCards(colecaoNome) {
     const gridId = `grid-${colecaoNome}`;
     const grid = document.getElementById(gridId);
-    if(!grid) return; // Segurança
+    if(!grid) return;
 
     onSnapshot(collection(db, colecaoNome), (snapshot) => {
         grid.innerHTML = '';
@@ -158,27 +188,36 @@ function renderizarCards(colecaoNome) {
 
         snapshot.forEach((doc) => {
             const data = doc.data();
-            const campoTitulo = configuracaoAbas[colecaoNome].campos[0]; // Pega qual deve ser o título
+            const docId = doc.id; // Pegamos o ID exclusivo do Firebase
+            const campoTitulo = configuracaoAbas[colecaoNome].campos[0];
             
-            // Abre o card
-            let cardHtml = `<div class="card" style="display:flex; flex-direction:column; gap:8px;">`;
+            // Aqui aplicamos a Borda Colorida Elegante baseada na cor escolhida!
+            const corEscolhida = data.corCard || "transparent";
+            let cardHtml = `<div class="card" style="display:flex; flex-direction:column; gap:8px; border-left: 6px solid ${corEscolhida};">`;
             
-            // Coloca o título primeiro (maior)
             if (data[campoTitulo]) {
                 cardHtml += `<div class="card-title" style="margin-bottom:10px; font-size:18px; color:var(--text-main); font-weight:600;">${data[campoTitulo]}</div>`;
             }
             
-            // Faz o loop para o restante das informações
             for (const [chave, valor] of Object.entries(data)) {
-                if (chave !== campoTitulo) {
-                    cardHtml += `<div class="card-info" style="font-size:14px; color:var(--text-muted);"><strong style="color:var(--primary-color)">${chave}:</strong> ${valor}</div>`;
+                if (chave !== campoTitulo && chave !== 'corCard') { // Não imprimimos o código da cor no texto
+                    cardHtml += `<div class="card-info" style="font-size:14px; color:var(--text-muted);"><strong style="color:var(--text-main)">${chave}:</strong> ${valor}</div>`;
                 }
             }
             
-            // Fecha o card
-            cardHtml += `</div>`;
+            // Adiciona os botões de Ação apenas se for a Gestão
+            if (isAdmin) {
+                // Prepara os dados para mandar para o Modal de Edição de forma segura
+                const dadosSeguros = JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                
+                cardHtml += `
+                <div class="card-actions">
+                    <button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${dadosSeguros}" title="Editar informações"><i class="ri-pencil-line"></i></button>
+                    <button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button>
+                </div>`;
+            }
             
-            // Joga na tela
+            cardHtml += `</div>`;
             grid.innerHTML += cardHtml;
         });
     });
