@@ -21,19 +21,19 @@ let abaAtual = 'corpo-clinico';
 const EMAIL_GESTAO = "gestao@clinica.com";
 
 const configuracaoAbas = {
-    'corpo-clinico': { titulo: 'Médico', campos: ['Nome/Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA'] },
+    'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA'] },
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Observações'] },
     'ultrassom': { titulo: 'Ultrassom', campos: ['Código', 'Exame', 'Profissional', 'Restrição de Idade', 'Observação'] },
-    'consultas': { titulo: 'Consulta/Procedimento', campos: ['Código', 'Tipo (Consulta, Exame, Pacote, Outros)', 'Descrição', 'Observações'] },
-    'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor/Informação', 'O que está incluso', 'Observações', 'Pacotes', 'Kit'] },
+    'consultas': { titulo: 'Consulta ou Procedimento', campos: ['Código', 'Tipo', 'Descrição', 'Observações'] },
+    'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor ou Informacao', 'O que está incluso', 'Observações', 'Pacotes', 'Kit'] },
     'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Código', 'Descrição', 'Valor', 'Prazo de Laudo', 'Onde encontrar resultado', 'Observações', 'Convênios'] },
     'institutos': { titulo: 'Instituto', campos: ['Número da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'] },
-    'remocoes': { titulo: 'Remoção', campos: ['Nome do Lugar', 'Números (Separe por vírgula)', 'Local/Link Maps', 'Observações Importantes'] },
-    'ramais': { titulo: 'Ramal', campos: ['Local/Prédio', 'Setor', 'Número do Ramal', 'Observações'] },
+    'remocoes': { titulo: 'Remoção', campos: ['Nome do Lugar', 'Números (Separe por vírgula)', 'Local e Link Maps', 'Observações Importantes'] },
+    'ramais': { titulo: 'Ramal', campos: ['Local ou Prédio', 'Setor', 'Número do Ramal', 'Observações'] },
     'emails': { titulo: 'E-mail', campos: ['Descrição do E-mail', 'Setor'] },
-    'contatos-gerais': { titulo: 'Contato Geral', campos: ['Descrição (Lugar/Pessoa)', 'Número'] },
+    'contatos-gerais': { titulo: 'Contato Geral', campos: ['Descrição (Lugar ou Pessoa)', 'Número'] },
     'contatos-convenios': { titulo: 'Contato Convênio', campos: ['Nome do Convênio', 'Número'] },
-    'senhas': { titulo: 'Senha de Acesso', campos: ['Convênio/Sistema', 'Link de Acesso', 'Senha', 'Local de Acesso Permitido'] }
+    'senhas': { titulo: 'Senha de Acesso', campos: ['Convênio ou Sistema', 'Link de Acesso', 'Senha', 'Local de Acesso Permitido'] }
 };
 
 // Autenticação
