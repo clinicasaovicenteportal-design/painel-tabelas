@@ -1,40 +1,11 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Consultas</title>
-    
-    <link rel="manifest" href="manifest.json">
-    
-    <meta name="theme-color" content="#0056b3">
-    
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+<script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log('Service Worker registado com sucesso!'))
+            .catch(err => console.log('Erro no Service Worker:', err));
+        });
+      }
+    </script>
 
-    <div id="login-screen" class="screen">
-        <div class="login-box">
-            <img src="logo.png" alt="Logo" class="login-logo">
-            <h2>Acesso ao Sistema</h2>
-            <input type="email" id="email" placeholder="E-mail" required>
-            <input type="password" id="senha" placeholder="Senha" required>
-            <button id="btn-login">Entrar</button>
-        </div>
-    </div>
-
-    <div id="dashboard-screen" class="screen" style="display: none;">
-        <header>
-            <img src="logo.png" alt="Logo" class="header-logo">
-            <h1>Painel Principal</h1>
-            <button id="btn-logout">Sair</button>
-        </header>
-        
-        <main>
-            <p>Bem-vindo ao sistema de consultas.</p>
-        </main>
-    </div>
-
-    <script src="app.js"></script>
-</body>
-</html>
+    <script type="module" src="app.js"></script>
