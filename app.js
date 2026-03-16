@@ -146,9 +146,7 @@ document.getElementById('btn-salvar-dados').addEventListener('click', async () =
     }
     document.getElementById('btn-salvar-dados').textContent = "Salvar Dados";
 });
-
 // --- RENDERIZADOR UNIVERSAL DE CARDS ---
-// Esta função lê do Firebase e só mostra os campos que foram preenchidos
 function renderizarCards(colecaoNome) {
     const gridId = `grid-${colecaoNome}`;
     const grid = document.getElementById(gridId);
@@ -160,18 +158,27 @@ function renderizarCards(colecaoNome) {
 
         snapshot.forEach((doc) => {
             const data = doc.data();
+            const campoTitulo = configuracaoAbas[colecaoNome].campos[0]; // Pega qual deve ser o título
+            
+            // Abre o card
             let cardHtml = `<div class="card" style="display:flex; flex-direction:column; gap:8px;">`;
             
-            // Loop automático por todos os campos preenchidos no Firebase
+            // Coloca o título primeiro (maior)
+            if (data[campoTitulo]) {
+                cardHtml += `<div class="card-title" style="margin-bottom:10px; font-size:18px; color:var(--text-main); font-weight:600;">${data[campoTitulo]}</div>`;
+            }
+            
+            // Faz o loop para o restante das informações
             for (const [chave, valor] of Object.entries(data)) {
-                // A primeira chave que encontrar fica como título (maior)
-                if(chave === configuracaoAbas[colecaoNome].campos[0]) {
-                    cardHtml = `<div class="card"><div class="card-title" style="margin-bottom:10px;">${valor}</div>` + cardHtml.replace('<div class="card"', '');
-                } else {
-                    cardHtml += `<div class="card-info"><strong style="color:var(--primary-color)">${chave}:</strong> ${valor}</div>`;
+                if (chave !== campoTitulo) {
+                    cardHtml += `<div class="card-info" style="font-size:14px; color:var(--text-muted);"><strong style="color:var(--primary-color)">${chave}:</strong> ${valor}</div>`;
                 }
             }
+            
+            // Fecha o card
             cardHtml += `</div>`;
+            
+            // Joga na tela
             grid.innerHTML += cardHtml;
         });
     });
