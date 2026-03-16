@@ -81,9 +81,19 @@
                 <h3 id="modal-title">Cadastrar</h3>
                 <button id="btn-fechar-modal" class="btn-icon"><i class="ri-close-line"></i></button>
             </header>
-            <div class="modal-body" id="modal-form-area">
+            
+            <div class="modal-body">
+                <input type="hidden" id="modal-doc-id">
+                
+                <div id="modal-form-area"></div>
+                
+                <div style="margin-top: 15px; text-align: left;">
+                    <label for="card-color" style="font-size: 13px; font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 5px;">Cor de Identificação (Opcional):</label>
+                    <input type="color" id="card-color" value="#8B252C" style="width: 100%; height: 45px; border: none; border-radius: 8px; cursor: pointer; padding: 0; background: none;">
                 </div>
-            <button id="btn-salvar-dados" class="btn-primary" style="width: 100%; margin-top: 15px;">Salvar Dados</button>
+            </div>
+
+            <button id="btn-salvar-dados" class="btn-primary" style="width: 100%; margin-top: 20px;">Salvar Dados</button>
         </div>
     </div>
 
