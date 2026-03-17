@@ -442,29 +442,105 @@ body {
     border-color: var(--primary-color);
 }
 
-/* --- POPUP DE MATERIAL (MÍDIA/DOCS) CORRIGIDO --- */
+/* --- POPUP DE MATERIAL (MÍDIA/DOCS) GIGANTE --- */
 #modal-media .modal-box {
-    max-width: 900px;
-    width: 95%;
-    height: 85vh; /* Força a janela a ocupar 85% da altura da tela */
+    width: 95vw; /* 95% da largura da tela */
+    height: 90vh; /* 90% da altura da tela */
+    max-width: 1200px; /* Limite máximo para não ficar deformado em telas de TV */
     display: flex;
     flex-direction: column;
+    padding: 20px;
 }
 
 #modal-media .modal-body {
-    flex: 1; /* Faz o corpo da janela expandir o máximo possível */
+    flex-grow: 1; /* Faz o corpo expandir */
     display: flex;
     flex-direction: column;
     height: 100%;
+    margin-top: 15px;
 }
 
 #iframe-media {
-    flex: 1;
     width: 100%;
     height: 100%;
-    min-height: 60vh; /* Garante que nunca fique esmagado */
+    flex-grow: 1;
     border: none;
     border-radius: 10px;
-    background-color: #f4f4f4;
-    box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+    background-color: #e2e8f0;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* =========================================================
+   RESPONSIVIDADE (DEIXANDO AJUSTÁVEL PARA CELULAR/TABLET)
+   ========================================================= */
+@media (max-width: 768px) {
+    /* Transforma a tela dividida em uma coluna só */
+    #dashboard-screen {
+        flex-direction: column;
+    }
+
+    /* O Menu Lateral vira um Menu Superior Rolável */
+    .sidebar {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        padding: 15px 10px;
+    }
+
+    .sidebar-header {
+        padding-bottom: 15px;
+    }
+
+    .sidebar-nav {
+        flex-direction: row;
+        overflow-x: auto; /* Permite rolar os botões para o lado */
+        white-space: nowrap; /* Impede os botões de quebrarem linha */
+        padding-bottom: 10px;
+        gap: 5px;
+    }
+
+    .sidebar-nav::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .sidebar-nav::-webkit-scrollbar-thumb {
+        background-color: #cbd5e0;
+        border-radius: 10px;
+    }
+
+    .nav-btn {
+        flex: 0 0 auto; /* Mantém o tamanho do botão fixo */
+        font-size: 14px;
+        padding: 10px 14px;
+    }
+
+    /* Ajusta o conteúdo principal para não ficar esmagado */
+    .main-content {
+        padding: 20px 15px;
+    }
+
+    /* Arruma o cabeçalho e a barra de pesquisa */
+    .top-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .search-container {
+        margin: 0;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    #btn-novo {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Ajusta os modais de cadastro para celular */
+    .modal-box {
+        padding: 20px;
+        width: 95%;
+    }
 }
