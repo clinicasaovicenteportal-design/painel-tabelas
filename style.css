@@ -579,27 +579,30 @@ body {
     flex-direction: column;
     align-items: center;
     position: relative;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
 }
 
 #banner-content {
     display: flex;
-    flex-wrap: wrap; /* Permite que várias imagens fiquem lado a lado */
+    flex-direction: column;
     gap: 15px;
-    justify-content: center;
     width: 100%;
 }
 
 #banner-content img {
-    max-width: 100%;
-    height: auto; /* Mantém a proporção real da imagem sem amassar */
-    object-fit: contain;
+    width: 100%;
+    height: auto;
     border-radius: 15px;
     box-shadow: var(--shadow-soft);
+    display: block;
 }
 
 #banner-content iframe {
     width: 100%;
-    min-height: 400px; /* Garante que o vídeo fique com um tamanho excelente */
+    aspect-ratio: 16 / 9;
     border-radius: 15px;
     border: none;
     box-shadow: var(--shadow-soft);
@@ -617,10 +620,4 @@ body {
     cursor: pointer;
     font-size: 13px;
     z-index: 10;
-    backdrop-filter: blur(4px);
-    transition: 0.2s;
-}
-
-#btn-editar-banner:hover {
-    background: var(--primary-color);
 }
