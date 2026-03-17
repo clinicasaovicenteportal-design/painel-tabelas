@@ -24,7 +24,7 @@ const frases = ["O sucesso é a soma de pequenos esforços repetidos dia após d
 
 const configuracaoAbas = {
     'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor ou Cargo'] },
-    'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA'] },
+    'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Link da Logo (Ex: Unimed)'] },
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Observações'] },
     'ultrassom': { titulo: 'Ultrassom', campos: ['Código', 'Exame', 'Profissional', 'Restrição de Idade', 'Observação'] },
     'consultas': { titulo: 'Consulta ou Procedimento', campos: ['Código', 'Tipo', 'Descrição', 'Observações'] },
@@ -223,6 +223,7 @@ document.getElementById('btn-novo').addEventListener('click', () => {
 });
 document.getElementById('btn-fechar-modal').addEventListener('click', () => document.getElementById('modal-cadastro').style.display = 'none');
 
+// --- RENDERIZADOR 100% CORRIGIDO (Com Etiqueta da Logo e Segurança) ---
 function renderizarCards(colecaoNome) {
     const grid = document.getElementById(`grid-${colecaoNome}`);
     if(!grid) return;
@@ -252,7 +253,7 @@ function renderizarCards(colecaoNome) {
             const docId = item.id;
             
             if(colecaoNome === 'boletins' && data['Data de Publicação'] === dataHoje) {
-                areaNotificacoes.innerHTML += `<div class="notificacao-dia" onclick="document.querySelector('[data-tab=\\'boletins\\']').click()" style="cursor:pointer;"><i class="ri-notification-3-line"></i><div><strong style="display:block; color:#2c5282;">Novo Boletim Hoje!</strong><span style="font-size:13px; color:#4a5568;">${data[campoTitulo]} foi publicado. Clique para ler.</span></div></div>`;
+                areaNotificacoes.innerHTML += `<div class="notificacao-dia" onclick="irParaAba('boletins')" style="cursor:pointer;"><i class="ri-notification-3-line"></i><div><strong style="display:block; color:#2c5282;">Novo Boletim Hoje!</strong><span style="font-size:13px; color:#4a5568;">${data[campoTitulo]} foi publicado. Clique para ler.</span></div></div>`;
             }
             
             const isUrgente = data['Tipo (Urgente, Norma, Regra, etc)'] && data['Tipo (Urgente, Norma, Regra, etc)'].toLowerCase().includes('urgente');
@@ -260,16 +261,32 @@ function renderizarCards(colecaoNome) {
             const corEscolhida = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
             const fundoColorido = corEscolhida !== "#ffffff" ? corEscolhida + "1A" : "var(--surface-color)";
             
-            let cardHtml = `<div class="card ${classeUrgente}" style="display:flex; flex-direction:column; gap:8px; border-left: 6px solid ${corEscolhida}; background-color: ${fundoColorido};">`;
-            if (data[campoTitulo]) cardHtml += `<div class="card-title" style="margin-bottom:10px; font-size:18px; font-weight:600;">${data[campoTitulo]}</div>`;
+            // É OBRIGATÓRIO o "position: relative" para a logo flutuar certinho no canto
+            let cardHtml = `<div class="card ${classeUrgente}" style="position: relative; display:flex; flex-direction:column; gap:8px; border-left: 6px solid ${corEscolhida}; background-color: ${fundoColorido};">`;
             
+            // 1. INJETA A LOGO FLUTUANTE SE EXISTIR
+            if (data['Link da Logo (Ex: Unimed)']) {
+                cardHtml += `<img src="${data['Link da Logo (Ex: Unimed)']}" style="position:absolute; top:-15px; right:-15px; height:45px; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index:5; background:white; padding:2px;" alt="Convênio">`;
+            }
+
+            // 2. INJETA O TÍTULO
+            if (data[campoTitulo]) {
+                cardHtml += `<div class="card-title" style="margin-bottom:10px; font-size:18px; font-weight:600; padding-right: 30px;">${data[campoTitulo]}</div>`;
+            }
+            
+            // 3. INJETA AS OUTRAS INFORMAÇÕES
             for (const [chave, valor] of Object.entries(data)) {
-                if (chave !== campoTitulo && chave !== 'corCard' && chave !== 'leituras') {
-                    if(chave.includes('Link')) cardHtml += `<div class="boletim-media"><button onclick="abrirMidaFlutuante('${valor}')" style="background: var(--primary-color); color: white; border:none; cursor:pointer; padding: 8px 16px; border-radius: 8px; font-size: 13px; margin-top: 10px;"><i class="ri-eye-line"></i> Acessar Material</button></div>`;
-                    else { const corTexto = (isUrgente && chave.includes('Tipo')) ? '#e53e3e; font-weight:bold;' : 'var(--text-main)'; cardHtml += `<div class="card-info" style="font-size:14px; color:${corTexto};"><strong style="color:var(--primary-color)">${chave}:</strong> ${valor}</div>`; }
+                if (chave !== campoTitulo && chave !== 'corCard' && chave !== 'leituras' && chave !== 'Link da Logo (Ex: Unimed)') {
+                    if(chave.includes('Link')) {
+                        cardHtml += `<div class="boletim-media"><button onclick="abrirMidaFlutuante('${valor}')" style="background: var(--primary-color); color: white; border:none; cursor:pointer; padding: 8px 16px; border-radius: 8px; font-size: 13px; margin-top: 10px;"><i class="ri-eye-line"></i> Acessar Material</button></div>`;
+                    } else { 
+                        const corTexto = (isUrgente && chave.includes('Tipo')) ? '#e53e3e; font-weight:bold;' : 'var(--text-main)'; 
+                        cardHtml += `<div class="card-info" style="font-size:14px; color:${corTexto};"><strong style="color:var(--primary-color)">${chave}:</strong> ${valor}</div>`; 
+                    }
                 }
             }
             
+            // 4. INJETA ÁREA DE LEITURAS (Boletins)
             if(colecaoNome.includes('boletins')) {
                 cardHtml += `<div class="leituras-lista" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color); font-size: 13px;"><strong>Status de Leitura/Ciente:</strong>`;
                 if(data.leituras && data.leituras.length > 0) { data.leituras.forEach(leitura => { cardHtml += `<div class="leitura-item" style="display: flex; justify-content: space-between; background: rgba(255,255,255,0.6); padding: 6px 10px; border-radius: 6px; margin-top: 6px;"><i class="ri-check-double-line" style="color:#38a169;"></i> <span style="color: #38a169; font-weight: 600; font-size:11px;">${leitura}</span></div>`; }); } 
@@ -283,12 +300,13 @@ function renderizarCards(colecaoNome) {
                 cardHtml += `</div>`;
             }
             
+            // 5. INJETA BOTÕES DE EDITAR/EXCLUIR
             if (isAdmin) {
                 const dadosSeguros = JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
                 cardHtml += `<div class="card-actions" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 15px; padding-top: 12px; border-top: 1px solid var(--border-color);"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${dadosSeguros}" title="Editar" style="background: none; border: none; cursor: pointer; font-size: 18px; color: #3182ce;"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir" style="background: none; border: none; cursor: pointer; font-size: 18px; color: #e53e3e;"><i class="ri-delete-bin-line"></i></button></div>`;
             }
-            cardHtml += `</div>`;
-            grid.innerHTML += cardHtml;
+            cardHtml += `</div>`; // Fecha o Card
+            grid.innerHTML += cardHtml; // Joga pra tela!
         });
     });
 }
