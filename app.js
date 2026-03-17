@@ -47,7 +47,6 @@ document.getElementById('frase-dia').innerText = frases[Math.floor(Math.random()
 document.getElementById('btn-login').addEventListener('click', () => { signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('senha').value).catch(err => alert("Erro: " + err.message)); });
 document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 
-// --- CORREÇÃO DE SEGURANÇA E BOTÕES ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
         document.getElementById('login-screen').style.display = 'none';
@@ -55,8 +54,6 @@ onAuthStateChanged(auth, (user) => {
         isAdmin = (user.email === EMAIL_GESTAO);
         
         document.getElementById('user-role-badge').textContent = isAdmin ? "Gestão Administrador" : "Acesso Geral";
-        
-        // Esconde ou mostra os botões ativamente baseados em quem logou!
         if(isAdmin) {
             document.getElementById('user-role-badge').classList.add('admin');
             document.getElementById('btn-nav-privados').style.display = 'flex';
@@ -109,22 +106,20 @@ document.getElementById('btn-salvar-dados').addEventListener('click', async () =
     try {
         if (docId) await updateDoc(doc(db, colecaoNome, docId), dados);
         else await addDoc(collection(db, colecaoNome), dados);
-        
         const nomeAcao = dados[config.campos[0]] || "Item Atualizado";
         await addDoc(collection(db, "historico_sistema"), { mensagem: `${docId ? 'Editou' : 'Cadastrou'} em ${config.titulo}: <b>${nomeAcao}</b>`, data: Date.now() });
         document.getElementById('modal-cadastro').style.display = 'none';
     } catch(e) { alert("Erro: " + e); }
 });
 
-// --- LÓGICA DO BANNER MÚLTIPLAS IMAGENS ---
+// --- NOVO BANNER DE TEXTO ANIMADO ---
 document.getElementById('btn-editar-banner').addEventListener('click', () => document.getElementById('modal-banner').style.display = 'flex');
 document.getElementById('btn-fechar-banner').addEventListener('click', () => document.getElementById('modal-banner').style.display = 'none');
 
 document.getElementById('btn-salvar-banner').addEventListener('click', async () => {
     if(!isAdmin) return;
-    const link = document.getElementById('input-banner-link').value;
     const texto = document.getElementById('input-banner-texto').value;
-    await setDoc(doc(db, "configuracoes", "banner_home"), { link: link, texto: texto });
+    await setDoc(doc(db, "configuracoes", "banner_home"), { texto: texto });
     document.getElementById('modal-banner').style.display = 'none';
 });
 
@@ -133,32 +128,13 @@ function carregarBanner() {
         const area = document.getElementById('banner-content');
         if (docSnap.exists()) {
             const data = docSnap.data();
-            let html = '';
-            
-            if(data.link && data.link.trim() !== '') {
-                // Divide por linhas (Enter) para pegar múltiplos links
-                const links = data.link.split('\n').filter(l => l.trim() !== '');
-                
-                links.forEach(l => {
-                    let link = l.trim();
-                    if(link.includes("youtube.com") || link.includes("youtu.be") || link.includes("drive.google.com")) {
-                        if(link.includes("/view")) link = link.replace("/view", "/preview");
-                        if(link.includes("watch?v=")) link = `https://www.youtube.com/embed/${link.split("v=")[1].split("&")[0]}`;
-                        else if(link.includes("youtu.be/")) link = `https://www.youtube.com/embed/${link.split("youtu.be/")[1].split("?")[0]}`;
-                        html += `<iframe src="${link}" allowfullscreen></iframe>`;
-                    } else {
-                        html += `<img src="${link}" alt="Banner">`;
-                    }
-                });
-            } else if (data.texto && data.texto.trim() !== '') {
-                html = `<div style="background:var(--surface-color); padding:30px; border-radius:15px; width:100%; border:1px dashed var(--border-color);"><h2>${data.texto}</h2></div>`;
+            if(data.texto && data.texto.trim() !== '') {
+                // Transforma as "quebras de linha" em tags <br> para respeitar os parágrafos
+                area.innerHTML = `<h2>${data.texto.replace(/\n/g, '<br>')}</h2>`;
             } else {
-                html = `<div style="background:var(--surface-color); padding:20px; border-radius:15px; width:100%; border:1px dashed var(--border-color); color:var(--text-muted);">Espaço reservado para Banner de Comunicação</div>`;
+                area.innerHTML = `<h2>Bem-vindo ao Painel CSV</h2>`;
             }
-            
-            if(document.getElementById('input-banner-link')) document.getElementById('input-banner-link').value = data.link || '';
             if(document.getElementById('input-banner-texto')) document.getElementById('input-banner-texto').value = data.texto || '';
-            area.innerHTML = html;
         }
     });
 }
@@ -223,7 +199,7 @@ document.getElementById('btn-novo').addEventListener('click', () => {
 });
 document.getElementById('btn-fechar-modal').addEventListener('click', () => document.getElementById('modal-cadastro').style.display = 'none');
 
-// --- RENDERIZADOR 100% CORRIGIDO (Com Etiqueta da Logo e Segurança) ---
+// --- RENDERIZADOR COM CORREÇÃO DE TÍTULO E LOGO OCULTA EM ERRO ---
 function renderizarCards(colecaoNome) {
     const grid = document.getElementById(`grid-${colecaoNome}`);
     if(!grid) return;
@@ -238,10 +214,11 @@ function renderizarCards(colecaoNome) {
         if(colecaoNome === 'colaboradores') listaColaboradoresGlobal = itens.map(item => item.data['Nome Completo do Colaborador']).filter(Boolean).sort();
 
         const campoTitulo = configuracaoAbas[colecaoNome].campos[0];
+        
         itens.sort((a, b) => {
-            const tA = a.data[campoTitulo] ? a.data[campoTitulo].toUpperCase() : "";
-            const tB = b.data[campoTitulo] ? b.data[campoTitulo].toUpperCase() : "";
-            return tA.localeCompare(tB);
+            const tituloA = a.data[campoTitulo] || a.data['Nome/Médico'] || a.data['Nome'] || "";
+            const tituloB = b.data[campoTitulo] || b.data['Nome/Médico'] || b.data['Nome'] || "";
+            return tituloA.toUpperCase().localeCompare(tituloB.toUpperCase());
         });
 
         const dataHoje = new Date().toISOString().split('T')[0];
@@ -252,8 +229,11 @@ function renderizarCards(colecaoNome) {
             const data = item.data;
             const docId = item.id;
             
+            // Aqui garantimos que ele ache o nome, mesmo se tiver sido salvo no formato antigo
+            const tituloDesteCard = data[campoTitulo] || data['Nome/Médico'] || data['Nome'];
+            
             if(colecaoNome === 'boletins' && data['Data de Publicação'] === dataHoje) {
-                areaNotificacoes.innerHTML += `<div class="notificacao-dia" onclick="irParaAba('boletins')" style="cursor:pointer;"><i class="ri-notification-3-line"></i><div><strong style="display:block; color:#2c5282;">Novo Boletim Hoje!</strong><span style="font-size:13px; color:#4a5568;">${data[campoTitulo]} foi publicado. Clique para ler.</span></div></div>`;
+                areaNotificacoes.innerHTML += `<div class="notificacao-dia" onclick="window.irParaAba('boletins')" style="cursor:pointer;"><i class="ri-notification-3-line"></i><div><strong style="display:block; color:#2c5282;">Novo Boletim Hoje!</strong><span style="font-size:13px; color:#4a5568;">${tituloDesteCard} foi publicado. Clique para ler.</span></div></div>`;
             }
             
             const isUrgente = data['Tipo (Urgente, Norma, Regra, etc)'] && data['Tipo (Urgente, Norma, Regra, etc)'].toLowerCase().includes('urgente');
@@ -261,22 +241,21 @@ function renderizarCards(colecaoNome) {
             const corEscolhida = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
             const fundoColorido = corEscolhida !== "#ffffff" ? corEscolhida + "1A" : "var(--surface-color)";
             
-            // É OBRIGATÓRIO o "position: relative" para a logo flutuar certinho no canto
             let cardHtml = `<div class="card ${classeUrgente}" style="position: relative; display:flex; flex-direction:column; gap:8px; border-left: 6px solid ${corEscolhida}; background-color: ${fundoColorido};">`;
             
-            // 1. INJETA A LOGO FLUTUANTE SE EXISTIR
+            // A LOGO: Note o onerror="", se a imagem der erro, ele apaga ela discretamente
             if (data['Link da Logo (Ex: Unimed)']) {
-                cardHtml += `<img src="${data['Link da Logo (Ex: Unimed)']}" style="position:absolute; top:-15px; right:-15px; height:45px; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index:5; background:white; padding:2px;" alt="Convênio">`;
+                cardHtml += `<img src="${data['Link da Logo (Ex: Unimed)']}" onerror="this.style.display='none'" style="position:absolute; top:-15px; right:-15px; height:45px; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index:5; background:white; padding:2px;" alt="Logo">`;
             }
 
-            // 2. INJETA O TÍTULO
-            if (data[campoTitulo]) {
-                cardHtml += `<div class="card-title" style="margin-bottom:10px; font-size:18px; font-weight:600; padding-right: 30px;">${data[campoTitulo]}</div>`;
+            // O TÍTULO CORRIGIDO NO TOPO
+            if (tituloDesteCard) {
+                cardHtml += `<div class="card-title" style="margin-bottom:10px; font-size:18px; font-weight:600; padding-right: 30px;">${tituloDesteCard}</div>`;
             }
             
-            // 3. INJETA AS OUTRAS INFORMAÇÕES
             for (const [chave, valor] of Object.entries(data)) {
-                if (chave !== campoTitulo && chave !== 'corCard' && chave !== 'leituras' && chave !== 'Link da Logo (Ex: Unimed)') {
+                // Impede que os campos antigos "Nome/Médico" ou a Logo apareçam na lista de texto lá embaixo
+                if (chave !== campoTitulo && chave !== 'Nome/Médico' && chave !== 'Nome' && chave !== 'corCard' && chave !== 'leituras' && chave !== 'Link da Logo (Ex: Unimed)') {
                     if(chave.includes('Link')) {
                         cardHtml += `<div class="boletim-media"><button onclick="abrirMidaFlutuante('${valor}')" style="background: var(--primary-color); color: white; border:none; cursor:pointer; padding: 8px 16px; border-radius: 8px; font-size: 13px; margin-top: 10px;"><i class="ri-eye-line"></i> Acessar Material</button></div>`;
                     } else { 
@@ -286,7 +265,6 @@ function renderizarCards(colecaoNome) {
                 }
             }
             
-            // 4. INJETA ÁREA DE LEITURAS (Boletins)
             if(colecaoNome.includes('boletins')) {
                 cardHtml += `<div class="leituras-lista" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color); font-size: 13px;"><strong>Status de Leitura/Ciente:</strong>`;
                 if(data.leituras && data.leituras.length > 0) { data.leituras.forEach(leitura => { cardHtml += `<div class="leitura-item" style="display: flex; justify-content: space-between; background: rgba(255,255,255,0.6); padding: 6px 10px; border-radius: 6px; margin-top: 6px;"><i class="ri-check-double-line" style="color:#38a169;"></i> <span style="color: #38a169; font-weight: 600; font-size:11px;">${leitura}</span></div>`; }); } 
@@ -300,13 +278,12 @@ function renderizarCards(colecaoNome) {
                 cardHtml += `</div>`;
             }
             
-            // 5. INJETA BOTÕES DE EDITAR/EXCLUIR
             if (isAdmin) {
                 const dadosSeguros = JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
                 cardHtml += `<div class="card-actions" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 15px; padding-top: 12px; border-top: 1px solid var(--border-color);"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${dadosSeguros}" title="Editar" style="background: none; border: none; cursor: pointer; font-size: 18px; color: #3182ce;"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir" style="background: none; border: none; cursor: pointer; font-size: 18px; color: #e53e3e;"><i class="ri-delete-bin-line"></i></button></div>`;
             }
-            cardHtml += `</div>`; // Fecha o Card
-            grid.innerHTML += cardHtml; // Joga pra tela!
+            cardHtml += `</div>`;
+            grid.innerHTML += cardHtml;
         });
     });
 }
