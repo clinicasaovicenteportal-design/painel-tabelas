@@ -30,7 +30,9 @@ window.dadosBoletins = {};
 window.pastaBoletimAtual = null;
 window.pastaPrivadoAtual = null;
 
-// Instâncias dos Gráficos para não bugar ao recarregar
+window.corStatusPendente = "#e53e3e";
+window.corStatusConcluido = "#38a169";
+
 let chartBoletinsInst = null;
 let chartPrivadosInst = null;
 
@@ -66,7 +68,7 @@ const configuracaoAbas = {
     'contatos-convenios': { titulo: 'Contato Convênio', campos: ['Nome do Convênio', 'Número'] },
     'senhas': { titulo: 'Senha de Acesso', campos: ['Convênio ou Sistema', 'Link de Acesso', 'Senha', 'Local de Acesso Permitido'] },
     'boletins': { titulo: 'Boletim Informativo', campos: ['Título do Informativo', 'Para quais Setores?', 'Tipo (Urgente, Norma, Regra, etc)', 'Data de Publicação', 'Motivo', 'Links dos Materiais (1 por linha)'] },
-    'boletins-privados': { titulo: 'Informativo Direto (Privado)', campos: ['Para qual Colaborador?', 'Título do Documento', 'Data de Publicação', 'Motivo', 'Links dos Materiais (1 por linha)'] }
+    'boletins-privados': { titulo: 'Informativo Direto (Privado)', campos: ['Para qual Colaborador?', 'Título do Documento', 'Data de Publicação', 'Tipo (Urgente, Norma, Regra, etc)', 'Motivo', 'Links dos Materiais (1 por linha)'] }
 };
 
 setInterval(() => { document.getElementById('relogio').innerText = new Date().toLocaleTimeString('pt-BR'); }, 1000);
@@ -114,7 +116,7 @@ document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
         document.getElementById('page-title').textContent = btn.textContent.trim();
         document.getElementById('btn-novo').style.display = (isAdmin && abaAtual !== 'home' && abaAtual !== 'ajustes') ? 'flex' : 'none';
         document.getElementById('search-box').style.display = (abaAtual !== 'home' && abaAtual !== 'ajustes') ? 'flex' : 'none';
-        document.getElementById('input-pesquisa').value = ''; // Limpa pesquisa local ao trocar de aba
+        document.getElementById('input-pesquisa').value = ''; 
         
         if(abaAtual === 'boletins') window.fecharPastaBoletim(); 
         if(abaAtual === 'boletins-privados') window.fecharPastaPrivado();
@@ -152,10 +154,12 @@ document.getElementById('btn-salvar-ajustes').addEventListener('click', async ()
     const locaisTexto = document.getElementById('tab-input-locais').value; 
     const setoresTexto = document.getElementById('tab-input-setores').value; 
     const motivosTexto = document.getElementById('tab-input-motivos').value; 
+    const corPend = document.getElementById('tab-color-pendente').value; 
+    const corConc = document.getElementById('tab-color-concluido').value; 
     
     document.getElementById('btn-salvar-ajustes').textContent = "Salvando...";
     try {
-        await setDoc(doc(db, "configuracoes", "gerais"), { banner_texto: texto, locais: locaisTexto, setores: setoresTexto, motivos: motivosTexto });
+        await setDoc(doc(db, "configuracoes", "gerais"), { banner_texto: texto, locais: locaisTexto, setores: setoresTexto, motivos: motivosTexto, cor_pendente: corPend, cor_concluido: corConc });
         alert("Configurações salvas com sucesso!");
     } catch(e) { alert("Erro ao salvar configurações."); }
     document.getElementById('btn-salvar-ajustes').innerHTML = '<i class="ri-save-line"></i> Salvar Alterações';
@@ -173,6 +177,11 @@ function carregarConfiguracoes() {
             if(document.getElementById('tab-input-locais')) document.getElementById('tab-input-locais').value = data.locais || '';
             if(document.getElementById('tab-input-setores')) document.getElementById('tab-input-setores').value = data.setores || '';
             if(document.getElementById('tab-input-motivos')) document.getElementById('tab-input-motivos').value = data.motivos || '';
+            
+            window.corStatusPendente = data.cor_pendente || '#e53e3e';
+            window.corStatusConcluido = data.cor_concluido || '#38a169';
+            if(document.getElementById('tab-color-pendente')) document.getElementById('tab-color-pendente').value = window.corStatusPendente;
+            if(document.getElementById('tab-color-concluido')) document.getElementById('tab-color-concluido').value = window.corStatusConcluido;
             
             locaisGlobais = data.locais ? data.locais.split('\n').filter(l => l.trim() !== '') : [];
             setoresGlobais = data.setores ? data.setores.split('\n').filter(s => s.trim() !== '') : [];
@@ -201,7 +210,7 @@ async function buscarClimaAraucaria() {
     } catch(e) { document.getElementById('weather-desc').textContent = "Clima indisponível no momento"; }
 }
 
-// PESQUISA GLOBAL (Corrigida: não puxa abas de admin se for usuário comum e não puxa ajustes)
+// PESQUISA GLOBAL 
 document.getElementById('input-pesquisa-global').addEventListener('keyup', (e) => {
     const texto = e.target.value.toLowerCase();
     const areaRes = document.getElementById('resultados-globais');
@@ -211,15 +220,13 @@ document.getElementById('input-pesquisa-global').addEventListener('keyup', (e) =
     areaRes.innerHTML = '<h3 style="grid-column: 1/-1; margin-bottom: 10px;">Resultados da Busca:</h3>';
     let encontrou = false;
     
-    // Varre todos os cards de abas permitidas
     document.querySelectorAll('.tab-content:not(#tab-home):not(#tab-ajustes) .card, .mini-card').forEach(card => {
-        // Checa se a aba pai está visível para o nível do usuário
         const abaPai = card.closest('.tab-content');
         if(!isAdmin && abaPai && (abaPai.id === 'tab-boletins-privados' || abaPai.id === 'tab-colaboradores')) return;
         
         if(card.innerText.toLowerCase().includes(texto)) { 
             let clone = card.cloneNode(true);
-            clone.style.display = 'flex'; // Garante que cards do grid fiquem visíveis
+            clone.style.display = 'flex'; 
             areaRes.appendChild(clone); 
             encontrou = true; 
         }
@@ -234,15 +241,12 @@ document.getElementById('input-pesquisa').addEventListener('keyup', (e) => {
     if(!abaContainer) return;
     
     abaContainer.querySelectorAll('.card, .mini-card').forEach(card => {
-        // Ignora os cards de pastas para não bugar a visualização
         if(card.classList.contains('shortcut-card')) return;
-        
         if(card.innerText.toLowerCase().includes(texto)) card.style.display = 'flex';
         else card.style.display = 'none';
     });
 });
 
-// DESFAZER ASSINATURA (Para Boletins e Privados)
 window.desfazerLeitura = async function(docId, nomeColab, colecao) {
     if(!isAdmin) return;
     if(!confirm(`Tem certeza que deseja remover a assinatura de ${nomeColab}?`)) return;
@@ -250,7 +254,6 @@ window.desfazerLeitura = async function(docId, nomeColab, colecao) {
     const docData = window.dadosBoletins[docId];
     if(!docData || !docData.leituras) return;
     
-    // Procura a string exata no banco de dados (ex: "Nome (Lido em: ...)")
     const stringExata = docData.leituras.find(txt => txt.startsWith(nomeColab));
     if(stringExata) {
         await updateDoc(doc(db, colecao, docId), { leituras: arrayRemove(stringExata) });
@@ -264,6 +267,36 @@ function obterPublicoAlvo(setoresAlvoString) {
     return listaColaboradoresGlobal.filter(c => setoresMarcados.includes(c.setor)).map(c => c.nome);
 }
 
+// ALERTA NA HOME (URGENTES)
+function verificarUrgentesHome() {
+    const area = document.getElementById('area-alertas-home');
+    area.innerHTML = '';
+    
+    let totalUrgentesPendentes = 0;
+
+    const verificarItens = (lista, ehPrivado) => {
+        lista.forEach(item => {
+            const data = item.data;
+            const isUrgente = data['Tipo (Urgente, Norma, Regra, etc)'] && data['Tipo (Urgente, Norma, Regra, etc)'].toLowerCase().includes('urgente');
+            if(!isUrgente) return;
+
+            const publico = ehPrivado ? [data['Para qual Colaborador?']] : obterPublicoAlvo(data['Para quais Setores?']);
+            const lidosNomes = (data.leituras || []).map(txt => txt.split(' (')[0]);
+            const faltam = publico.filter(n => !lidosNomes.includes(n)).length;
+
+            if (faltam > 0) totalUrgentesPendentes++;
+        });
+    };
+
+    verificarItens(window.todosBoletinsData, false);
+    if(isAdmin) verificarItens(window.todosPrivadosData, true);
+
+    if(totalUrgentesPendentes > 0) {
+        area.innerHTML = `<div class="alerta-urgente-home" onclick="window.irParaAba('boletins')"><i class="ri-alarm-warning-fill"></i><div><strong>Atenção! Informativos Urgentes</strong><span>Existem <b>${totalUrgentesPendentes}</b> informativos com prioridade urgente aguardando leitura. Clique aqui para acessar.</span></div></div>`;
+    }
+}
+
+
 window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
     const data = window.dadosBoletins[docId];
     if(!data) return;
@@ -272,7 +305,7 @@ window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
     
     let publicoAlvoNomes = [];
     if(colecaoOrigem === 'boletins') publicoAlvoNomes = obterPublicoAlvo(data['Para quais Setores?']);
-    else publicoAlvoNomes = [data['Para qual Colaborador?']]; // Se for privado, o alvo é só 1 pessoa.
+    else publicoAlvoNomes = [data['Para qual Colaborador?']]; 
 
     const lidosTextos = data.leituras || [];
     const lidosNomes = lidosTextos.map(txt => txt.split(' (')[0]); 
@@ -366,7 +399,6 @@ function atualizarGrafico(canvasId, refInstancia, dados, labelGrafico) {
     const ctx = document.getElementById(canvasId);
     if(!ctx) return refInstancia;
     
-    // Conta os motivos
     const contagemMotivos = {};
     dados.forEach(b => {
         const m = b.data['Motivo'] || 'Sem Motivo';
@@ -376,7 +408,7 @@ function atualizarGrafico(canvasId, refInstancia, dados, labelGrafico) {
     const labels = Object.keys(contagemMotivos);
     const valores = Object.values(contagemMotivos);
 
-    if(refInstancia) refInstancia.destroy(); // Destroi o antigo para não bugar
+    if(refInstancia) refInstancia.destroy(); 
 
     return new Chart(ctx, {
         type: 'bar',
@@ -425,7 +457,9 @@ function renderizarPastasBoletins() {
             totalLidos += leram; totalFaltam += Math.max(0, publicoDaqui.length - leram);
         });
         const icone = pasta === 'Geral' ? 'ri-global-line' : 'ri-folder-user-line';
-        gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaBoletim('${pasta}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px;"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: var(--bg-color); padding: 15px; border-radius: 12px; color: var(--primary-color); font-size: 24px;"><i class="${icone}"></i></div><div style="font-size: 16px; font-weight: 600;">${pasta}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Boletins Ativos: <b style="color: var(--text-main);">${boletinsDaPasta.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos Acumulados: <b>${totalLidos}</b></div><div style="color: #e53e3e;">Pendências: <b>${totalFaltam}</b></div></div></div>`;
+        const corStatusPasta = totalFaltam > 0 ? window.corStatusPendente : window.corStatusConcluido;
+
+        gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaBoletim('${pasta}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; border-left: 6px solid ${corStatusPasta};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: var(--bg-color); padding: 15px; border-radius: 12px; color: var(--primary-color); font-size: 24px;"><i class="${icone}"></i></div><div style="font-size: 16px; font-weight: 600;">${pasta}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Boletins Ativos: <b style="color: var(--text-main);">${boletinsDaPasta.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos Acumulados: <b>${totalLidos}</b></div><div style="color: #e53e3e;">Pendências: <b>${totalFaltam}</b></div></div></div>`;
     });
 }
 function renderizarListaBoletins() {
@@ -433,7 +467,6 @@ function renderizarListaBoletins() {
     const pasta = window.pastaBoletimAtual;
     const boletinsExibir = window.todosBoletinsData.filter(item => (item.data['Para quais Setores?'] || 'Geral').includes(pasta));
     
-    // Atualiza o Gráfico
     chartBoletinsInst = atualizarGrafico('chart-boletins', chartBoletinsInst, boletinsExibir, `Motivos em ${pasta}`);
 
     const camposOrdem = configuracaoAbas['boletins'].campos;
@@ -446,7 +479,17 @@ function renderizarListaBoletins() {
         const corSalva = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
         const configCor = paletaGradientes.find(p => p.valor === corSalva);
         const gradientClass = (configCor ? configCor.dark : false) ? 'has-gradient' : ''; 
-        let cardHtml = `<div class="card ${isUrgente ? 'card-urgente' : ''} ${gradientClass}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; ${isUrgente ? 'border: 2px solid #e53e3e;' : ''} ${(!isUrgente && !(configCor ? configCor.dark : false)) ? 'border-left: 6px solid var(--primary-color);' : ''}"><div class="card-title" style="margin-bottom:15px; font-size:18px; font-weight:600; line-height:1.2;">${titulo}</div>`;
+        
+        const publicoAlvoNomes = obterPublicoAlvo(data['Para quais Setores?']);
+        const lidosNomes = (data.leituras || []).map(txt => txt.split(' (')[0]);
+        const faltamAssinar = publicoAlvoNomes.filter(n => !lidosNomes.includes(n));
+        const qtdLidos = publicoAlvoNomes.filter(n => lidosNomes.includes(n)).length;
+        const qtdFaltam = faltamAssinar.length;
+
+        const corStatus = qtdFaltam > 0 ? window.corStatusPendente : window.corStatusConcluido;
+        const classeUrgente = (isUrgente && qtdFaltam > 0) ? 'card-urgente' : ''; // Para de pulsar se leu tudo!
+
+        let cardHtml = `<div class="card ${classeUrgente} ${gradientClass}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border: 3px solid ${corStatus};"><div class="card-title" style="margin-bottom:15px; font-size:18px; font-weight:600; line-height:1.2;">${titulo}</div>`;
         
         let botaoLinkHtml = '';
         camposOrdem.forEach(chave => {
@@ -466,11 +509,7 @@ function renderizarListaBoletins() {
         });
         cardHtml += botaoLinkHtml;
         
-        const publicoAlvoNomes = obterPublicoAlvo(data['Para quais Setores?']);
-        const lidosNomes = (data.leituras || []).map(txt => txt.split(' (')[0]);
-        const faltamAssinar = publicoAlvoNomes.filter(n => !lidosNomes.includes(n));
-        
-        cardHtml += `<div class="leituras-lista" style="margin-top: auto; padding-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); font-size: 13px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(255,255,255,0.7); padding: 8px 10px; border-radius: 8px;"><div style="font-size: 11px;">Lidos: <b style="color:#38a169; font-size:13px;">${publicoAlvoNomes.length - faltamAssinar.length}</b> | Faltam: <b style="color:#e53e3e; font-size:13px;">${faltamAssinar.length}</b></div><button onclick="window.abrirListaLeituras('${docId}', 'boletins')" style="background: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; cursor:pointer; font-size: 12px; font-weight: 500; color: var(--primary-color);"><i class="ri-team-line"></i> Detalhes</button></div>`;
+        cardHtml += `<div class="leituras-lista" style="margin-top: auto; padding-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); font-size: 13px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(255,255,255,0.7); padding: 8px 10px; border-radius: 8px;"><div style="font-size: 11px;">Lidos: <b style="color:#38a169; font-size:13px;">${qtdLidos}</b> | Faltam: <b style="color:#e53e3e; font-size:13px;">${qtdFaltam}</b></div><button onclick="window.abrirListaLeituras('${docId}', 'boletins')" style="background: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; cursor:pointer; font-size: 12px; font-weight: 500; color: var(--primary-color);"><i class="ri-team-line"></i> Detalhes</button></div>`;
         
         if(isAdmin) {
             cardHtml += `<div class="add-leitura-box" style="display: flex; gap: 8px; margin-top: 5px;"><select id="leitor-${docId}" style="flex:1; padding:8px; border-radius:8px; border:none; font-size:12px; background:rgba(255,255,255,0.9); outline:none;">`;
@@ -503,7 +542,6 @@ function renderizarPastasPrivados() {
     if(!gridFolders) return;
     gridFolders.innerHTML = '';
     
-    // Agrupa por colaborador
     const colabsComPrivados = [...new Set(window.todosPrivadosData.map(i => i.data['Para qual Colaborador?']).filter(Boolean))].sort();
     
     colabsComPrivados.forEach(nome => {
@@ -514,7 +552,9 @@ function renderizarPastasPrivados() {
             if(leitor) lidos++; else faltam++;
         });
 
-        gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaPrivado('${nome}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px;"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: #e2e8f0; padding: 15px; border-radius: 12px; color: var(--text-main); font-size: 24px;"><i class="ri-user-star-fill"></i></div><div style="font-size: 15px; font-weight: 600;">${nome}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Documentos: <b style="color: var(--text-main);">${boletinsDele.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos: <b>${lidos}</b></div><div style="color: #e53e3e;">Pendentes: <b>${faltam}</b></div></div></div>`;
+        const corStatusPasta = faltam > 0 ? window.corStatusPendente : window.corStatusConcluido;
+
+        gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaPrivado('${nome}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; border-left: 6px solid ${corStatusPasta};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: #e2e8f0; padding: 15px; border-radius: 12px; color: var(--text-main); font-size: 24px;"><i class="ri-user-star-fill"></i></div><div style="font-size: 15px; font-weight: 600;">${nome}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Documentos: <b style="color: var(--text-main);">${boletinsDele.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos: <b>${lidos}</b></div><div style="color: #e53e3e;">Pendentes: <b>${faltam}</b></div></div></div>`;
     });
 }
 
@@ -530,11 +570,16 @@ function renderizarListaPrivados() {
         const data = item.data; const docId = item.id; window.dadosBoletins[docId] = data;
         const titulo = data['Título do Documento'] || 'Documento Privado';
         
+        const isUrgente = data['Tipo (Urgente, Norma, Regra, etc)'] && data['Tipo (Urgente, Norma, Regra, etc)'].toLowerCase().includes('urgente');
         const corSalva = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
         const configCor = paletaGradientes.find(p => p.valor === corSalva);
         const gradientClass = (configCor ? configCor.dark : false) ? 'has-gradient' : ''; 
 
-        let cardHtml = `<div class="card ${gradientClass}" style="display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border-left: 6px solid var(--primary-color);"><div class="card-title" style="margin-bottom:15px; font-size:18px; font-weight:600;">${titulo}</div>`;
+        const jaLeu = (data.leituras || []).find(txt => txt.startsWith(colabAtual));
+        const corStatus = jaLeu ? window.corStatusConcluido : window.corStatusPendente;
+        const classeUrgente = (isUrgente && !jaLeu) ? 'card-urgente' : ''; 
+
+        let cardHtml = `<div class="card ${classeUrgente} ${gradientClass}" style="display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border: 3px solid ${corStatus};"><div class="card-title" style="margin-bottom:15px; font-size:18px; font-weight:600;">${titulo}</div>`;
         
         let botaoLinkHtml = '';
         camposOrdem.forEach(chave => {
@@ -547,17 +592,15 @@ function renderizarListaPrivados() {
                         links.forEach((lk, i) => { botaoLinkHtml += `<button onclick="abrirMidaFlutuante('${lk.trim()}')" style="width: 100%; background: var(--primary-color); color: white; border:none; cursor:pointer; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; transition: 0.2s;"><i class="ri-eye-line"></i> Acessar Material ${links.length > 1 ? i+1 : ''}</button>`; });
                         botaoLinkHtml += `</div>`;
                     }
-                } else { cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4;"><strong>${chave}:</strong> <span>${valor}</span></div>`; }
+                } else { cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4; color: ${(isUrgente && chave.includes('Tipo')) ? '#e53e3e' : ''};"><strong>${chave}:</strong> <span>${valor}</span></div>`; }
             }
         });
         cardHtml += botaoLinkHtml;
         
-        const jaLeu = (data.leituras || []).find(txt => txt.startsWith(colabAtual));
-        
         cardHtml += `<div class="leituras-lista" style="margin-top: auto; padding-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); font-size: 13px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(255,255,255,0.7); padding: 8px 10px; border-radius: 8px;"><div style="font-size: 13px; font-weight:600; color: ${jaLeu ? '#38a169' : '#e53e3e'};">${jaLeu ? '<i class="ri-check-double-line"></i> Lido' : '<i class="ri-time-line"></i> Pendente'}</div><button onclick="window.abrirListaLeituras('${docId}', 'boletins-privados')" style="background: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; cursor:pointer; font-size: 12px; font-weight: 500; color: var(--primary-color);"><i class="ri-list-check"></i> Detalhes</button></div>`;
         
         if(isAdmin && !jaLeu) {
-            cardHtml += `<div class="add-leitura-box" style="display: flex; gap: 8px; margin-top: 5px;"><input type="hidden" id="leitor-${docId}" value="${colabAtual}"><button class="btn-action btn-assinar" data-id="${docId}" data-colecao="boletins-privados" style="width:100%; background:#38a169; color:white; padding:8px 12px; border-radius:8px; cursor:pointer; font-size: 13px; font-weight: 500;"><i class="ri-check-line"></i> Confirmar Assinatura do Colaborador</button></div>`;
+            cardHtml += `<div class="add-leitura-box" style="display: flex; gap: 8px; margin-top: 5px;"><input type="hidden" id="leitor-${docId}" value="${colabAtual}"><button class="btn-action btn-assinar" data-id="${docId}" data-colecao="boletins-privados" style="width:100%; background:#38a169; color:white; padding:8px 12px; border-radius:8px; cursor:pointer; font-size: 13px; font-weight: 500;"><i class="ri-check-line"></i> Confirmar Assinatura</button></div>`;
         }
         cardHtml += `</div>`;
         
@@ -573,7 +616,11 @@ function renderizarCards(colecaoNome) {
 
     onSnapshot(collection(db, colecaoNome), (snapshot) => {
         grid.innerHTML = '';
-        if(snapshot.empty) return;
+        if(snapshot.empty) {
+            if(colecaoNome === 'boletins') { window.todosBoletinsData = []; verificarUrgentesHome(); }
+            if(colecaoNome === 'boletins-privados') { window.todosPrivadosData = []; verificarUrgentesHome(); }
+            return;
+        }
 
         let itens = [];
         snapshot.forEach(doc => itens.push({ id: doc.id, data: doc.data() }));
@@ -582,21 +629,20 @@ function renderizarCards(colecaoNome) {
             listaColaboradoresGlobal = itens.map(item => { return { nome: item.data['Nome Completo do Colaborador'], setor: item.data['Setor da Clínica'] || 'Geral' }; }).filter(c => c.nome).sort((a,b) => a.nome.localeCompare(b.nome));
         }
 
-        // PASTAS BOLETINS GERAIS
         if(colecaoNome === 'boletins') {
             window.todosBoletinsData = itens;
             if(abaAtual === 'boletins') { if(window.pastaBoletimAtual) renderizarListaBoletins(); else renderizarPastasBoletins(); }
+            verificarUrgentesHome();
             return;
         }
 
-        // PASTAS BOLETINS PRIVADOS
         if(colecaoNome === 'boletins-privados') {
             window.todosPrivadosData = itens;
             if(abaAtual === 'boletins-privados') { if(window.pastaPrivadoAtual) renderizarListaPrivados(); else renderizarPastasPrivados(); }
+            verificarUrgentesHome();
             return;
         }
 
-        // RAMAIS (Blocos Sanfona)
         if (colecaoNome === 'ramais') {
             grid.style.display = 'block'; 
             const locaisMap = {};
@@ -617,7 +663,6 @@ function renderizarCards(colecaoNome) {
             return; 
         }
         
-        // RENDER GERAL DE OUTROS CARDS
         grid.style.display = 'grid'; 
         const camposOrdem = configuracaoAbas[colecaoNome].campos;
         const campoTitulo = camposOrdem[0];
