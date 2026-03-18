@@ -264,7 +264,7 @@ function renderizarCards(colecaoNome) {
                 areaNotificacoes.innerHTML += `<div class="notificacao-dia" onclick="window.irParaAba('boletins')" style="cursor:pointer;"><i class="ri-notification-3-line"></i><div><strong style="display:block; color:#2c5282;">Novo Boletim Hoje!</strong><span style="font-size:13px; color:#4a5568;">${tituloDesteCard} foi publicado. Clique para ler.</span></div></div>`;
             }
             
-            // --- A CORREÇÃO DO ERRO ESTÁ AQUI (classeUrgente definida novamente!) ---
+            // --- A CORREÇÃO DO ERRO ESTÁ AQUI (classeUrgente definida perfeitamente) ---
             const isUrgente = data['Tipo (Urgente, Norma, Regra, etc)'] && data['Tipo (Urgente, Norma, Regra, etc)'].toLowerCase().includes('urgente');
             const classeUrgente = isUrgente ? 'card-urgente' : '';
             
