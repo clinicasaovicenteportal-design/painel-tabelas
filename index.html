@@ -37,6 +37,7 @@
                 <button class="nav-btn" data-tab="institutos"><i class="ri-building-line"></i> Institutos</button>
                 <button class="nav-btn" data-tab="contatos"><i class="ri-contacts-book-line"></i> Contatos Úteis</button>
                 <button class="nav-btn" data-tab="remocoes"><i class="ri-ambulance-line"></i> Remoções</button>
+                
                 <button class="nav-btn" data-tab="boletins" style="margin-top: 15px; border-top: 1px solid #eee; border-radius: 0; padding-top: 15px;"><i class="ri-newspaper-line"></i> Boletins Gerais</button>
                 <button class="nav-btn admin-only" id="btn-nav-privados" data-tab="boletins-privados" style="display: none;"><i class="ri-user-star-line"></i> Informativos Diretos</button>
                 <button class="nav-btn admin-only" id="btn-nav-colaboradores" data-tab="colaboradores" style="display: none;"><i class="ri-group-line"></i> Gerenciar Equipe</button>
@@ -71,16 +72,16 @@
 
                 <div class="home-banner" id="banner-area">
                     <div id="banner-content"><h2>Bem-vindo ao Painel CSV</h2></div>
-                    <button id="btn-editar-banner" style="display: none;"><i class="ri-pencil-line"></i> Editar Aviso</button>
+                    <button id="btn-abrir-config" style="display: none; position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; z-index: 10; backdrop-filter: blur(5px);"><i class="ri-settings-3-line"></i> Configurações Globais</button>
                 </div>
 
                 <div id="area-notificacoes"></div>
 
                 <h2 style="margin-bottom: 20px; font-weight: 500; color: var(--text-muted); margin-top: 10px;">Acesso Rápido</h2>
                 <div class="home-grid">
-                    <div class="shortcut-card" onclick="irParaAba('boletins')"><div class="shortcut-icon"><i class="ri-alarm-warning-line"></i></div><div class="shortcut-title">Boletins Gerais</div></div>
-                    <div class="shortcut-card" onclick="irParaAba('corpo-clinico')"><div class="shortcut-icon"><i class="ri-team-fill"></i></div><div class="shortcut-title">Corpo Clínico</div></div>
-                    <div class="shortcut-card" onclick="abrirSubAba('ramais'); irParaAba('contatos');"><div class="shortcut-icon"><i class="ri-phone-fill"></i></div><div class="shortcut-title">Ramais Internos</div></div>
+                    <div class="shortcut-card" onclick="window.irParaAba('boletins')"><div class="shortcut-icon"><i class="ri-alarm-warning-line"></i></div><div class="shortcut-title">Boletins Gerais</div></div>
+                    <div class="shortcut-card" onclick="window.irParaAba('corpo-clinico')"><div class="shortcut-icon"><i class="ri-team-fill"></i></div><div class="shortcut-title">Corpo Clínico</div></div>
+                    <div class="shortcut-card" onclick="window.abrirSubAba('ramais'); window.irParaAba('contatos');"><div class="shortcut-icon"><i class="ri-phone-fill"></i></div><div class="shortcut-title">Ramais Internos</div></div>
                 </div>
 
                 <h2 style="margin-bottom: 10px; font-weight: 500; color: var(--text-muted); margin-top: 30px;">Últimas Atualizações no Sistema</h2>
@@ -100,17 +101,17 @@
             <section id="tab-remocoes" class="tab-content" style="display: none;"><div class="cards-grid" id="grid-remocoes"></div></section>
             <section id="tab-contatos" class="tab-content" style="display: none;">
                 <div class="cards-grid" id="menu-contatos">
-                    <div class="card" onclick="abrirSubAba('ramais')" style="cursor:pointer; text-align:center;"><h3>Ramais Internos</h3></div>
-                    <div class="card" onclick="abrirSubAba('emails')" style="cursor:pointer; text-align:center;"><h3>E-mails</h3></div>
-                    <div class="card" onclick="abrirSubAba('contatos-gerais')" style="cursor:pointer; text-align:center;"><h3>Contatos Gerais</h3></div>
-                    <div class="card" onclick="abrirSubAba('contatos-convenios')" style="cursor:pointer; text-align:center;"><h3>Contatos Convênios</h3></div>
-                    <div class="card" onclick="abrirSubAba('senhas')" style="cursor:pointer; text-align:center;"><h3>Senhas e Logins</h3></div>
+                    <div class="card" onclick="window.abrirSubAba('ramais')" style="cursor:pointer; text-align:center;"><h3>Ramais Internos</h3></div>
+                    <div class="card" onclick="window.abrirSubAba('emails')" style="cursor:pointer; text-align:center;"><h3>E-mails</h3></div>
+                    <div class="card" onclick="window.abrirSubAba('contatos-gerais')" style="cursor:pointer; text-align:center;"><h3>Contatos Gerais</h3></div>
+                    <div class="card" onclick="window.abrirSubAba('contatos-convenios')" style="cursor:pointer; text-align:center;"><h3>Contatos Convênios</h3></div>
+                    <div class="card" onclick="window.abrirSubAba('senhas')" style="cursor:pointer; text-align:center;"><h3>Senhas e Logins</h3></div>
                 </div>
-                <div id="sub-ramais" style="display:none;"><button class="btn-primary" onclick="voltarSubAba()" style="margin-bottom:20px; width:auto;">Voltar</button><div class="cards-grid" id="grid-ramais"></div></div>
-                <div id="sub-emails" style="display:none;"><button class="btn-primary" onclick="voltarSubAba()" style="margin-bottom:20px; width:auto;">Voltar</button><div class="cards-grid" id="grid-emails"></div></div>
-                <div id="sub-contatos-gerais" style="display:none;"><button class="btn-primary" onclick="voltarSubAba()" style="margin-bottom:20px; width:auto;">Voltar</button><div class="cards-grid" id="grid-contatos-gerais"></div></div>
-                <div id="sub-contatos-convenios" style="display:none;"><button class="btn-primary" onclick="voltarSubAba()" style="margin-bottom:20px; width:auto;">Voltar</button><div class="cards-grid" id="grid-contatos-convenios"></div></div>
-                <div id="sub-senhas" style="display:none;"><button class="btn-primary" onclick="voltarSubAba()" style="margin-bottom:20px; width:auto;">Voltar</button><div class="cards-grid" id="grid-senhas"></div></div>
+                <div id="sub-ramais" style="display:none;"><button class="btn-primary" onclick="window.voltarSubAba()" style="margin-bottom:20px; width:auto;">Voltar</button><div class="cards-grid" id="grid-ramais"></div></div>
+                <div id="sub-emails" style="display:none;"><button class="btn-primary" onclick="window.voltarSubAba()" style="margin-bottom:20px; width:auto;">Voltar</button><div class="cards-grid" id="grid-emails"></div></div>
+                <div id="sub-contatos-gerais" style="display:none;"><button class="btn-primary" onclick="window.voltarSubAba()" style="margin-bottom:20px; width:auto;">Voltar</button><div class="cards-grid" id="grid-contatos-gerais"></div></div>
+                <div id="sub-contatos-convenios" style="display:none;"><button class="btn-primary" onclick="window.voltarSubAba()" style="margin-bottom:20px; width:auto;">Voltar</button><div class="cards-grid" id="grid-contatos-convenios"></div></div>
+                <div id="sub-senhas" style="display:none;"><button class="btn-primary" onclick="window.voltarSubAba()" style="margin-bottom:20px; width:auto;">Voltar</button><div class="cards-grid" id="grid-senhas"></div></div>
             </section>
         </main>
     </div>
@@ -123,25 +124,26 @@
                 <div id="modal-form-area"></div>
                 
                 <div style="margin-top: 15px;">
-                    <label style="font-size: 13px; font-weight: 500; color: var(--text-muted);">Estilo do Card (Opcional):</label>
+                    <label style="font-size: 13px; font-weight: 500; color: var(--text-muted);">Cor ou Gradiente do Card (Opcional):</label>
                     <input type="hidden" id="card-color" value="#ffffff">
-                    <div id="gradient-picker" class="gradient-picker-container">
-                        </div>
+                    <div id="gradient-picker" class="gradient-picker-container"></div>
                 </div>
-                
             </div>
             <button id="btn-salvar-dados" class="btn-primary" style="width: 100%; margin-top: 20px;">Salvar Dados</button>
         </div>
     </div>
 
-    <div id="modal-banner" class="modal-overlay" style="display: none;">
+    <div id="modal-config" class="modal-overlay" style="display: none; z-index: 9999;">
         <div class="modal-box glass-effect">
-            <header class="modal-header"><h3>Configurar Banner de Avisos</h3><button id="btn-fechar-banner" class="btn-icon"><i class="ri-close-line"></i></button></header>
+            <header class="modal-header"><h3>Configurações Globais</h3><button id="btn-fechar-config" class="btn-icon"><i class="ri-close-line"></i></button></header>
             <div class="modal-body">
-                <p style="font-size: 12px; margin-bottom: 10px; color: var(--text-muted);">Digite o aviso em destaque. Ele ficará animado e brilhando na tela inicial.</p>
-                <textarea id="input-banner-texto" placeholder="Ex: Campanha de Vacinação iniciada! Verifique seus informativos." class="form-input" style="height: 120px; resize: vertical;"></textarea>
+                <p style="font-size: 12px; margin-bottom: 5px; color: var(--text-muted);">Aviso Animado na Tela Inicial (Banner):</p>
+                <textarea id="input-banner-texto" placeholder="Ex: Campanha de Vacinação iniciada!" class="form-input" style="height: 100px; resize: vertical;"></textarea>
+
+                <p style="font-size: 12px; margin-bottom: 5px; color: var(--text-muted); margin-top: 15px;">Link da Logo Padrão (Ex: Logo da Unimed):</p>
+                <input type="url" id="input-logo-global" placeholder="Cole aqui o link da imagem da logo" class="form-input">
             </div>
-            <button id="btn-salvar-banner" class="btn-primary" style="width: 100%; margin-top: 20px;">Atualizar Banner</button>
+            <button id="btn-salvar-config" class="btn-primary" style="width: 100%; margin-top: 20px;">Salvar Configurações</button>
         </div>
     </div>
 
