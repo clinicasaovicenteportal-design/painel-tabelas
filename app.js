@@ -40,7 +40,6 @@ const frases = ["O sucesso é a soma de pequenos esforços repetidos dia após d
 
 const configuracaoAbas = {
     'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor ou Cargo'] },
-    // CORREÇÃO AQUI: NOME DO CAMPO SEM BARRAS
     'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio'] }, 
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Observações'] },
     'ultrassom': { titulo: 'Ultrassom', campos: ['Código', 'Exame', 'Profissional', 'Restrição de Idade', 'Observação'] },
@@ -75,15 +74,15 @@ onAuthStateChanged(auth, (user) => {
             document.getElementById('user-role-badge').classList.add('admin');
             document.getElementById('btn-nav-privados').style.display = 'flex';
             document.getElementById('btn-nav-colaboradores').style.display = 'flex';
-            document.getElementById('btn-abrir-config').style.display = 'block';
+            document.getElementById('btn-nav-ajustes').style.display = 'flex'; // MOSTRA A ABA DE AJUSTES
         } else {
             document.getElementById('user-role-badge').classList.remove('admin');
             document.getElementById('btn-nav-privados').style.display = 'none';
             document.getElementById('btn-nav-colaboradores').style.display = 'none';
-            document.getElementById('btn-abrir-config').style.display = 'none';
+            document.getElementById('btn-nav-ajustes').style.display = 'none';
         }
         
-        document.getElementById('btn-novo').style.display = (isAdmin && abaAtual !== 'home') ? 'flex' : 'none';
+        document.getElementById('btn-novo').style.display = (isAdmin && abaAtual !== 'home' && abaAtual !== 'ajustes') ? 'flex' : 'none';
         
         Object.keys(configuracaoAbas).forEach(idColecao => renderizarCards(idColecao));
         carregarHistorico();
@@ -102,8 +101,10 @@ document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
         abaAtual = btn.getAttribute('data-tab');
         document.getElementById(`tab-${abaAtual}`).style.display = 'block';
         document.getElementById('page-title').textContent = btn.textContent.trim();
-        document.getElementById('btn-novo').style.display = (isAdmin && abaAtual !== 'home') ? 'flex' : 'none';
-        document.getElementById('search-box').style.display = (abaAtual !== 'home') ? 'flex' : 'none';
+        
+        // Esconde o botão de "Adicionar Novo" se estiver na Home ou na Aba de Ajustes
+        document.getElementById('btn-novo').style.display = (isAdmin && abaAtual !== 'home' && abaAtual !== 'ajustes') ? 'flex' : 'none';
+        document.getElementById('search-box').style.display = (abaAtual !== 'home' && abaAtual !== 'ajustes') ? 'flex' : 'none';
     });
 });
 
@@ -129,14 +130,20 @@ document.getElementById('btn-salvar-dados').addEventListener('click', async () =
     } catch(e) { alert("Erro: " + e); }
 });
 
-document.getElementById('btn-abrir-config').addEventListener('click', () => document.getElementById('modal-config').style.display = 'flex');
-document.getElementById('btn-fechar-config').addEventListener('click', () => document.getElementById('modal-config').style.display = 'none');
-document.getElementById('btn-salvar-config').addEventListener('click', async () => {
+// --- LÓGICA DA NOVA ABA DE AJUSTES GLOBAIS ---
+document.getElementById('btn-salvar-ajustes').addEventListener('click', async () => {
     if(!isAdmin) return;
-    const texto = document.getElementById('input-banner-texto').value;
-    const logoUrl = document.getElementById('input-logo-global').value;
-    await setDoc(doc(db, "configuracoes", "gerais"), { banner_texto: texto, logo_url: logoUrl });
-    document.getElementById('modal-config').style.display = 'none';
+    const texto = document.getElementById('tab-input-banner').value;
+    const logoUrl = document.getElementById('tab-input-logo').value;
+    
+    document.getElementById('btn-salvar-ajustes').textContent = "Salvando...";
+    try {
+        await setDoc(doc(db, "configuracoes", "gerais"), { banner_texto: texto, logo_url: logoUrl });
+        alert("Configurações salvas com sucesso!");
+    } catch(e) {
+        alert("Erro ao salvar configurações.");
+    }
+    document.getElementById('btn-salvar-ajustes').innerHTML = '<i class="ri-save-line"></i> Salvar Alterações';
 });
 
 function carregarConfiguracoes() {
@@ -151,8 +158,8 @@ function carregarConfiguracoes() {
             } else {
                 area.innerHTML = `<h2>Bem-vindo ao Painel CSV</h2>`;
             }
-            if(document.getElementById('input-banner-texto')) document.getElementById('input-banner-texto').value = data.banner_texto || '';
-            if(document.getElementById('input-logo-global')) document.getElementById('input-logo-global').value = data.logo_url || '';
+            if(document.getElementById('tab-input-banner')) document.getElementById('tab-input-banner').value = data.banner_texto || '';
+            if(document.getElementById('tab-input-logo')) document.getElementById('tab-input-logo').value = data.logo_url || '';
         }
     });
 }
@@ -217,7 +224,6 @@ function abrirModal(colecao, docId = null, dadosAntigos = null) {
             listaColaboradoresGlobal.forEach(nome => { htmlCampos += `<option value="${nome}" ${valorAntigo === nome ? 'selected' : ''}>${nome}</option>`; });
             htmlCampos += `</select>`;
         } 
-        // CORREÇÃO DO CAMPO AQUI TAMBÉM
         else if(colecao === 'corpo-clinico' && campo === 'Exibir Logo do Convenio') {
             htmlCampos += `
             <select id="input-${campo}" class="form-input" style="margin-bottom:15px; width:100%; padding:12px; border-radius:10px;">
@@ -293,7 +299,6 @@ function renderizarCards(colecaoNome) {
 
             let cardHtml = `<div class="card ${classeUrgente} ${gradientClass}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; ${bordaUrgente} ${bordaEsqNormal}">`;
             
-            // VERIFICAÇÃO DA LOGO E USO DO NOME NOVO
             if (data['Exibir Logo do Convenio'] === 'Sim' && logoGlobalDaClinica) {
                 if(!logoGlobalDaClinica.includes('file:///')) {
                     cardHtml += `<img src="${logoGlobalDaClinica}" onerror="this.style.display='none'" style="position:absolute; top:-15px; right:-15px; height:50px; width:50px; object-fit:contain; border-radius:12px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); z-index:5; background:white; padding:4px;" alt="Logo">`;
@@ -308,8 +313,7 @@ function renderizarCards(colecaoNome) {
             
             camposOrdem.forEach(chave => {
                 const valor = data[chave];
-                // IGNORA OS CAMPOS DA LOGO PARA NÃO VIRAREM TEXTO
-                if (valor && chave !== campoTitulo && chave !== 'Exibir Logo do Convenio' && chave !== 'Exibir Logo do Convênio (Sim/Não)?' && chave !== 'Link da Logo (Ex: Unimed)') {
+                if (valor && chave !== campoTitulo && chave !== 'Exibir Logo do Convenio' && chave !== 'Link da Logo (Ex: Unimed)') {
                     
                     if(typeof valor === 'string' && valor.includes('file:///')) return; 
 
