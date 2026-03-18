@@ -19,7 +19,7 @@ let isAdmin = false;
 let abaAtual = 'home'; 
 const EMAIL_GESTAO = "gestao@clinica.com";
 let listaColaboradoresGlobal = []; 
-let logoGlobalDaClinica = ""; // Armazena a logo cadastrada nas configurações
+let logoGlobalDaClinica = ""; 
 
 // LISTA DE CORES SÓLIDAS E GRADIENTES
 const paletaGradientes = [
@@ -40,7 +40,8 @@ const frases = ["O sucesso é a soma de pequenos esforços repetidos dia após d
 
 const configuracaoAbas = {
     'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor ou Cargo'] },
-    'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convênio (Sim/Não)?'] }, // MUDOU AQUI
+    // CORREÇÃO AQUI: NOME DO CAMPO SEM BARRAS
+    'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio'] }, 
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Observações'] },
     'ultrassom': { titulo: 'Ultrassom', campos: ['Código', 'Exame', 'Profissional', 'Restrição de Idade', 'Observação'] },
     'consultas': { titulo: 'Consulta ou Procedimento', campos: ['Código', 'Tipo', 'Descrição', 'Observações'] },
@@ -128,7 +129,6 @@ document.getElementById('btn-salvar-dados').addEventListener('click', async () =
     } catch(e) { alert("Erro: " + e); }
 });
 
-// LÓGICA DE CONFIGURAÇÕES GLOBAIS
 document.getElementById('btn-abrir-config').addEventListener('click', () => document.getElementById('modal-config').style.display = 'flex');
 document.getElementById('btn-fechar-config').addEventListener('click', () => document.getElementById('modal-config').style.display = 'none');
 document.getElementById('btn-salvar-config').addEventListener('click', async () => {
@@ -217,8 +217,8 @@ function abrirModal(colecao, docId = null, dadosAntigos = null) {
             listaColaboradoresGlobal.forEach(nome => { htmlCampos += `<option value="${nome}" ${valorAntigo === nome ? 'selected' : ''}>${nome}</option>`; });
             htmlCampos += `</select>`;
         } 
-        // LISTA SUSPENSA PARA A LOGO
-        else if(colecao === 'corpo-clinico' && campo === 'Exibir Logo do Convênio (Sim/Não)?') {
+        // CORREÇÃO DO CAMPO AQUI TAMBÉM
+        else if(colecao === 'corpo-clinico' && campo === 'Exibir Logo do Convenio') {
             htmlCampos += `
             <select id="input-${campo}" class="form-input" style="margin-bottom:15px; width:100%; padding:12px; border-radius:10px;">
                 <option value="">Exibir Logo Padrão?</option>
@@ -245,7 +245,6 @@ document.getElementById('btn-novo').addEventListener('click', () => {
 });
 document.getElementById('btn-fechar-modal').addEventListener('click', () => document.getElementById('modal-cadastro').style.display = 'none');
 
-// --- RENDERIZADOR COM ESCUDO ANTI-ERRO E CORES CORRIGIDAS ---
 function renderizarCards(colecaoNome) {
     const grid = document.getElementById(`grid-${colecaoNome}`);
     if(!grid) return;
@@ -285,20 +284,17 @@ function renderizarCards(colecaoNome) {
             const classeUrgente = isUrgente ? 'card-urgente' : '';
             
             const corSalva = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
-            
-            // Procura na paleta se a cor escolhida é escura para deixar a letra branca!
             const configCor = paletaGradientes.find(p => p.valor === corSalva);
             const isDark = configCor ? configCor.dark : false;
             
-            const gradientClass = isDark ? 'has-gradient' : ''; // Tem classe no CSS que deixa texto branco
+            const gradientClass = isDark ? 'has-gradient' : ''; 
             const bordaUrgente = isUrgente ? 'border: 2px solid #e53e3e;' : '';
             const bordaEsqNormal = (!isUrgente && !isDark) ? 'border-left: 6px solid var(--primary-color);' : '';
 
             let cardHtml = `<div class="card ${classeUrgente} ${gradientClass}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; ${bordaUrgente} ${bordaEsqNormal}">`;
             
-            // VERIFICAÇÃO DA LOGO (Com o Escudo Anti "file:///")
-            if (data['Exibir Logo do Convênio (Sim/Não)?'] === 'Sim' && logoGlobalDaClinica) {
-                // Se alguém tentar colocar um arquivo do HD na logo global, a gente bloqueia!
+            // VERIFICAÇÃO DA LOGO E USO DO NOME NOVO
+            if (data['Exibir Logo do Convenio'] === 'Sim' && logoGlobalDaClinica) {
                 if(!logoGlobalDaClinica.includes('file:///')) {
                     cardHtml += `<img src="${logoGlobalDaClinica}" onerror="this.style.display='none'" style="position:absolute; top:-15px; right:-15px; height:50px; width:50px; object-fit:contain; border-radius:12px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); z-index:5; background:white; padding:4px;" alt="Logo">`;
                 }
@@ -312,13 +308,10 @@ function renderizarCards(colecaoNome) {
             
             camposOrdem.forEach(chave => {
                 const valor = data[chave];
-                // Ignora campos antigos de erro, títulos, e coisas da logo
-                if (valor && chave !== campoTitulo && chave !== 'Exibir Logo do Convênio (Sim/Não)?' && chave !== 'Link da Logo (Ex: Unimed)') {
+                // IGNORA OS CAMPOS DA LOGO PARA NÃO VIRAREM TEXTO
+                if (valor && chave !== campoTitulo && chave !== 'Exibir Logo do Convenio' && chave !== 'Exibir Logo do Convênio (Sim/Não)?' && chave !== 'Link da Logo (Ex: Unimed)') {
                     
-                    // ESCUDO CONTRA O ERRO F12: Se o texto tiver "file:///", simplesmente não exibe!
-                    if(typeof valor === 'string' && valor.includes('file:///')) {
-                        return; // Pula esse campo quebrado
-                    }
+                    if(typeof valor === 'string' && valor.includes('file:///')) return; 
 
                     if(chave.includes('Link')) {
                         botaoLinkHtml = `<div class="boletim-media" style="margin-top: 15px;"><button onclick="abrirMidaFlutuante('${valor}')" style="width: 100%; background: var(--primary-color); color: white; border:none; cursor:pointer; padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"><i class="ri-eye-line"></i> Acessar Material</button></div>`;
