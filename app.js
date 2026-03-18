@@ -20,7 +20,7 @@ let abaAtual = 'home';
 const EMAIL_GESTAO = "gestao@clinica.com";
 let listaColaboradoresGlobal = []; 
 
-// LISTA DE GRADIENTES PREMIUM (Baseados na sua imagem)
+// LISTA DE GRADIENTES
 const paletaGradientes = [
     { valor: "#ffffff", nome: "Branco Padrão" },
     { valor: "linear-gradient(135deg, #f40076, #df98fa)", nome: "Rosa/Roxo" },
@@ -28,7 +28,7 @@ const paletaGradientes = [
     { valor: "linear-gradient(135deg, #ff0076, #590fb7)", nome: "Roxo Escuro" },
     { valor: "linear-gradient(135deg, #9055ff, #13e2da)", nome: "Azul/Ciano" },
     { valor: "linear-gradient(135deg, #0b63f6, #003cc5)", nome: "Azul Escuro" },
-    { valor: "linear-gradient(135deg, #d6ff7f, #00b3cc)", float: false, nome: "Verde/Azul" },
+    { valor: "linear-gradient(135deg, #d6ff7f, #00b3cc)", nome: "Verde/Azul" },
     { valor: "linear-gradient(135deg, #f6d365, #fda085)", nome: "Laranja Suave" },
     { valor: "linear-gradient(135deg, #84fab0, #8fd3f4)", nome: "Menta/Céu" }
 ];
@@ -113,7 +113,6 @@ document.getElementById('btn-salvar-dados').addEventListener('click', async () =
         const valor = document.getElementById(`input-${campo}`).value.trim();
         if(valor) dados[campo] = valor;
     });
-    // Salva o gradiente selecionado
     dados.corCard = document.getElementById('card-color').value;
     
     try {
@@ -192,7 +191,6 @@ function abrirModal(colecao, docId = null, dadosAntigos = null) {
     });
     document.getElementById('gradient-picker').innerHTML = htmlGradientes;
     
-    // Adiciona evento de clique nas bolinhas de cor
     document.querySelectorAll('.color-swatch').forEach(swatch => {
         swatch.addEventListener('click', (e) => {
             document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
@@ -230,7 +228,7 @@ document.getElementById('btn-novo').addEventListener('click', () => {
 });
 document.getElementById('btn-fechar-modal').addEventListener('click', () => document.getElementById('modal-cadastro').style.display = 'none');
 
-// --- RENDERIZADOR COM GRADIENTES ---
+// --- RENDERIZADOR COM A CORREÇÃO DO ERRO ---
 function renderizarCards(colecaoNome) {
     const grid = document.getElementById(`grid-${colecaoNome}`);
     if(!grid) return;
@@ -266,13 +264,13 @@ function renderizarCards(colecaoNome) {
                 areaNotificacoes.innerHTML += `<div class="notificacao-dia" onclick="window.irParaAba('boletins')" style="cursor:pointer;"><i class="ri-notification-3-line"></i><div><strong style="display:block; color:#2c5282;">Novo Boletim Hoje!</strong><span style="font-size:13px; color:#4a5568;">${tituloDesteCard} foi publicado. Clique para ler.</span></div></div>`;
             }
             
+            // --- A CORREÇÃO DO ERRO ESTÁ AQUI (classeUrgente definida novamente!) ---
             const isUrgente = data['Tipo (Urgente, Norma, Regra, etc)'] && data['Tipo (Urgente, Norma, Regra, etc)'].toLowerCase().includes('urgente');
+            const classeUrgente = isUrgente ? 'card-urgente' : '';
             
-            // LÓGICA DE COR E GRADIENTE
             const corSalva = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
             const isGradient = corSalva.includes('gradient');
             
-            // Se for gradiente forte, aplica a classe especial para mudar a cor do texto para branco
             const gradientClass = isGradient ? 'has-gradient' : '';
             const bordaUrgente = isUrgente ? 'border: 2px solid #e53e3e;' : '';
             const bordaEsqNormal = (!isUrgente && !isGradient) ? 'border-left: 6px solid var(--primary-color);' : '';
