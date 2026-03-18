@@ -8,6 +8,7 @@
     <meta name="theme-color" content="#8B252C">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -102,16 +103,17 @@
                     <h2 style="margin-bottom: 20px; color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Configurações do Sistema</h2>
                     
                     <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px;">Aviso Animado na Tela Inicial (Banner)</label>
-                    <p style="font-size: 12px; margin-bottom: 10px; color: var(--text-muted);">Digite o aviso em destaque. Ele ficará animado e brilhando na tela inicial.</p>
                     <textarea id="tab-input-banner" class="form-input" style="height: 100px; resize: vertical;" placeholder="Ex: Campanha de Vacinação iniciada!"></textarea>
 
                     <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Locais/Prédios (Para os Contatos)</label>
-                    <p style="font-size: 12px; margin-bottom: 10px; color: var(--text-muted);">Digite um local por linha. (Ex: MATRIZ, CASA DE VIDRO).</p>
                     <textarea id="tab-input-locais" class="form-input" style="height: 100px; resize: vertical;" placeholder="MATRIZ&#10;CASA DE VIDRO"></textarea>
 
                     <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Setores da Clínica (Para os Boletins)</label>
-                    <p style="font-size: 12px; margin-bottom: 10px; color: var(--text-muted);">Digite um setor por linha. (Ex: Recepção, Enfermagem). Isso servirá para você vincular colaboradores a setores e enviar informativos direcionados.</p>
-                    <textarea id="tab-input-setores" class="form-input" style="height: 120px; resize: vertical;" placeholder="Recepção&#10;Enfermagem&#10;Comercial"></textarea>
+                    <textarea id="tab-input-setores" class="form-input" style="height: 100px; resize: vertical;" placeholder="Recepção&#10;Enfermagem"></textarea>
+
+                    <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Motivos dos Informativos (Para os Gráficos)</label>
+                    <p style="font-size: 12px; margin-bottom: 10px; color: var(--text-muted);">Digite os motivos (um por linha) para categorizar os boletins e gerar os gráficos. (Ex: Elogio, Regra Nova, Advertência).</p>
+                    <textarea id="tab-input-motivos" class="form-input" style="height: 100px; resize: vertical;" placeholder="Aviso Geral&#10;Nova Regra&#10;Elogio"></textarea>
 
                     <button id="btn-salvar-ajustes" class="btn-primary" style="margin-top: 20px; width: 100%;"><i class="ri-save-line"></i> Salvar Alterações</button>
                 </div>
@@ -119,20 +121,43 @@
 
             <section id="tab-boletins" class="tab-content" style="display: none;">
                 <div id="boletins-view-folders">
-                    <p style="margin-bottom: 20px; color: var(--text-muted);">Selecione o setor para ver os informativos direcionados.</p>
+                    <p style="margin-bottom: 20px; color: var(--text-muted);">Selecione o setor para ver os informativos direcionados e o gráfico de desempenho.</p>
                     <div class="home-grid" id="grid-boletins-folders"></div>
                 </div>
                 <div id="boletins-view-list" style="display:none;">
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
-                        <button class="btn-primary" onclick="window.fecharPastaBoletim()" style="width: auto; background: var(--text-muted);"><i class="ri-arrow-left-line"></i> Voltar</button>
-                        <h2 id="titulo-pasta-boletins" style="color: var(--primary-color);">Setor</h2>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button class="btn-primary" onclick="window.fecharPastaBoletim()" style="width: auto; background: var(--text-muted);"><i class="ri-arrow-left-line"></i> Voltar</button>
+                            <h2 id="titulo-pasta-boletins" style="color: var(--primary-color);">Setor</h2>
+                        </div>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: var(--shadow-soft); margin-bottom: 25px; height: 300px;">
+                        <canvas id="chart-boletins"></canvas>
                     </div>
                     <div class="cards-grid" id="grid-boletins"></div>
                 </div>
             </section>
 
+            <section id="tab-boletins-privados" class="tab-content" style="display: none;">
+                <div id="privados-view-folders">
+                    <p style="margin-bottom: 20px; color: var(--text-muted);">Pastas Individuais dos Colaboradores.</p>
+                    <div class="home-grid" id="grid-privados-folders"></div>
+                </div>
+                <div id="privados-view-list" style="display:none;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button class="btn-primary" onclick="window.fecharPastaPrivado()" style="width: auto; background: var(--text-muted);"><i class="ri-arrow-left-line"></i> Voltar</button>
+                            <h2 id="titulo-pasta-privados" style="color: var(--primary-color);">Colaborador</h2>
+                        </div>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: var(--shadow-soft); margin-bottom: 25px; height: 300px;">
+                        <canvas id="chart-privados"></canvas>
+                    </div>
+                    <div class="cards-grid" id="grid-boletins-privados-list"></div>
+                </div>
+            </section>
+
             <section id="tab-colaboradores" class="tab-content" style="display: none;"><div class="cards-grid" id="grid-colaboradores"></div></section>
-            <section id="tab-boletins-privados" class="tab-content" style="display: none;"><div class="cards-grid" id="grid-boletins-privados"></div></section>
             <section id="tab-corpo-clinico" class="tab-content" style="display: none;"><div class="cards-grid" id="grid-corpo-clinico"></div></section>
             <section id="tab-convenios" class="tab-content" style="display: none;"><div class="cards-grid" id="grid-convenios"></div></section>
             <section id="tab-ultrassom" class="tab-content" style="display: none;"><div class="cards-grid" id="grid-ultrassom"></div></section>
@@ -159,9 +184,9 @@
     </div>
 
     <div id="modal-cadastro" class="modal-overlay" style="display: none;">
-        <div class="modal-box glass-effect">
+        <div class="modal-box glass-effect" style="max-height: 95vh; overflow-y: auto;">
             <header class="modal-header"><h3 id="modal-title">Cadastrar</h3><button id="btn-fechar-modal" class="btn-icon"><i class="ri-close-line"></i></button></header>
-            <div class="modal-body">
+            <div class="modal-body" style="overflow-y: visible;">
                 <input type="hidden" id="modal-doc-id">
                 <div id="modal-form-area"></div>
                 <div style="margin-top: 15px;">
@@ -175,7 +200,7 @@
     </div>
 
     <div id="modal-leituras" class="modal-overlay" style="display: none; z-index: 10000;">
-        <div class="modal-box modal-leituras-box glass-effect" style="max-width: 600px;">
+        <div class="modal-box modal-leituras-box glass-effect" style="max-width: 650px;">
             <header class="modal-header"><h3 id="modal-leitura-titulo">Status de Visualizações</h3><button onclick="document.getElementById('modal-leituras').style.display='none'" class="btn-icon"><i class="ri-close-line"></i></button></header>
             <div class="modal-body" style="display: flex; gap: 20px;">
                 <div style="flex: 1;">
