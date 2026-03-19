@@ -234,3 +234,23 @@ body { background-color: var(--bg-color); color: var(--text-main); overflow-x: h
     margin-top: 5px;
     margin-bottom: 5px;
 }
+/* CORREÇÃO DE CONTRASTE NOS MINI CARDS (RAMAIS) ESCUROS */
+.mini-card.has-gradient .mini-card-title,
+.mini-card.has-gradient .mini-card-details p,
+.mini-card.has-gradient .mini-card-details strong {
+    color: #ffffff !important;
+}
+.mini-card.has-gradient .mini-card-number {
+    color: #ffffff !important;
+    background: rgba(255,255,255,0.2) !important;
+}
+.mini-card.has-gradient .mini-card-number i {
+    color: #ffffff !important;
+}
+.mini-card.has-gradient .btn-action {
+    color: #ffffff !important;
+    background: rgba(255,255,255,0.2) !important;
+}
+.mini-card.has-gradient .btn-action:hover {
+    background: rgba(255,255,255,0.4) !important;
+}
