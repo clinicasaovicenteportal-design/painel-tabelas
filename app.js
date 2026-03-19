@@ -59,7 +59,7 @@ const configuracaoAbas = {
     'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'] }, 
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Link da Logo do Convênio', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'] },
     'ultrassom': { titulo: 'Ultrassom', campos: ['Código', 'Exame', 'Profissional', 'Restrição de Idade', 'Observação', 'Link da Imagem Ilustrativa'] },
-    'consultas': { titulo: 'Consulta ou Procedimento', campos: ['Código', 'Tipo', 'Descrição', 'Observações'] },
+    'consultas': { titulo: 'Consulta ou Procedimento', campos: ['Código', 'Tipo', 'Descrição', 'Valor', 'Observações'] }, // CAMPO VALOR ADICIONADO AQUI
     'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor ou Informacao', 'O que está incluso', 'Observações', 'Pacotes', 'Kit'] },
     'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Código', 'Descrição', 'Valor', 'Prazo de Laudo', 'Onde encontrar resultado', 'Observações', 'Convênios'] },
     'institutos': { titulo: 'Instituto', campos: ['Número da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'] },
@@ -606,7 +606,7 @@ function renderizarListaPrivados() {
         cardHtml += `<div class="leituras-lista" style="margin-top: auto; padding-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); font-size: 13px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(255,255,255,0.7); padding: 8px 10px; border-radius: 8px;"><div style="font-size: 13px; font-weight:600; color: ${jaLeu ? '#38a169' : '#e53e3e'};">${jaLeu ? '<i class="ri-check-double-line"></i> Lido' : '<i class="ri-time-line"></i> Pendente'}</div><button onclick="window.abrirListaLeituras('${docId}', 'boletins-privados')" style="background: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; cursor:pointer; font-size: 12px; font-weight: 500; color: var(--primary-color);"><i class="ri-list-check"></i> Detalhes</button></div>`;
         
         if(isAdmin && !jaLeu) {
-            cardHtml += `<div class="add-leitura-box" style="display: flex; gap: 8px; margin-top: 5px;"><input type="hidden" id="leitor-${docId}" value="${colabAtual}"><button class="btn-action btn-assinar" data-id="${docId}" data-colecao="boletins-privados" style="width:100%; background:#38a169; color:white; padding:8px 12px; border-radius:8px; cursor:pointer; font-size: 13px; font-weight: 500;"><i class="ri-check-line"></i> Confirmar Assinatura</button></div>`;
+            cardHtml += `<div class="add-leitura-box" style="display: flex; gap: 8px; margin-top: 5px;"><input type="hidden" id="leitor-${docId}" value="${colabAtual}"><button class="btn-action btn-assinar" data-id="${docId}" data-colecao="boletins-privados" style="width:100%; background:#38a169; color:white; padding:8px 12px; border-radius:8px; cursor:pointer; font-size: 13px; font-weight: 500;"><i class="ri-check-line"></i> Confirmar Assinatura do Colaborador</button></div>`;
         }
         cardHtml += `</div>`;
         
@@ -760,7 +760,23 @@ function renderizarCards(colecaoNome) {
             
             let hasFlexLayout = (colecaoNome === 'corpo-clinico' && data['Link da Foto do Profissional']) || (colecaoNome === 'ultrassom' && data['Link da Imagem Ilustrativa']);
             
-            if (tituloDesteCard) cardHtml += `<div class="card-title" style="margin-bottom:15px; font-size:18px; font-weight:600; padding-right: 35px; line-height:1.2;">${tituloDesteCard}</div>`;
+            // --- NOVA LÓGICA DO BADGE DE VALOR ---
+            let badgeValorHtml = '';
+            camposOrdem.forEach(chave => {
+                const valor = data[chave];
+                if (valor && chave !== campoTitulo) {
+                    if (chave === 'Valor' || chave === 'Valor ou Informacao' || (chave === 'Descrição' && typeof valor === 'string' && (valor.toUpperCase().includes('REAIS') || valor.toUpperCase().includes('R$')))) {
+                        badgeValorHtml = `<div class="badge-valor"><i class="ri-money-dollar-circle-line"></i> ${valor}</div>`;
+                    }
+                }
+            });
+
+            let titleSection = `<div class="card-title" style="font-size:18px; font-weight:600; line-height:1.2; flex:1; padding-right:10px; margin-bottom:0;">${tituloDesteCard || ''}</div>`;
+            
+            cardHtml += `<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; gap:10px;">
+                            ${titleSection}
+                            ${badgeValorHtml}
+                         </div>`;
             
             if(hasFlexLayout) {
                 cardHtml += `<div class="medico-wrapper">`;
@@ -778,6 +794,11 @@ function renderizarCards(colecaoNome) {
                 const valor = data[chave];
                 if (valor && chave !== campoTitulo && chave !== 'Exibir Logo do Convenio' && chave !== 'Link da Logo (Ex: Unimed)' && chave !== 'Link da Foto do Profissional' && chave !== 'Link da Imagem Ilustrativa') {
                     
+                    // PULA O VALOR JÁ RENDERIZADO NO BADGE
+                    if (chave === 'Valor' || chave === 'Valor ou Informacao' || (chave === 'Descrição' && typeof valor === 'string' && (valor.toUpperCase().includes('REAIS') || valor.toUpperCase().includes('R$')))) {
+                        return;
+                    }
+
                     if(chave === 'Local e Link Maps' && valor.includes('http')) {
                         const urlMatch = valor.match(/https?:\/\/[^\s]+/);
                         const url = urlMatch ? urlMatch[0] : valor;
