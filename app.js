@@ -26,9 +26,11 @@ let motivosGlobais = [];
 
 window.todosBoletinsData = [];
 window.todosPrivadosData = [];
+window.todosConveniosData = [];
 window.dadosBoletins = {}; 
 window.pastaBoletimAtual = null;
 window.pastaPrivadoAtual = null;
+window.pastaConvenioAtual = null;
 
 window.corStatusPendente = "#e53e3e";
 window.corStatusConcluido = "#38a169";
@@ -120,6 +122,7 @@ document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
         
         if(abaAtual === 'boletins') window.fecharPastaBoletim(); 
         if(abaAtual === 'boletins-privados') window.fecharPastaPrivado();
+        if(abaAtual === 'convenios') window.fecharPastaConvenio();
     });
 });
 
@@ -210,7 +213,6 @@ async function buscarClimaAraucaria() {
     } catch(e) { document.getElementById('weather-desc').textContent = "Clima indisponível no momento"; }
 }
 
-// PESQUISA GLOBAL 
 document.getElementById('input-pesquisa-global').addEventListener('keyup', (e) => {
     const texto = e.target.value.toLowerCase();
     const areaRes = document.getElementById('resultados-globais');
@@ -234,7 +236,6 @@ document.getElementById('input-pesquisa-global').addEventListener('keyup', (e) =
     if(!encontrou) areaRes.innerHTML += '<p>Nenhum resultado encontrado.</p>';
 });
 
-// PESQUISA LOCAL NA ABA
 document.getElementById('input-pesquisa').addEventListener('keyup', (e) => {
     const texto = e.target.value.toLowerCase();
     const abaContainer = document.getElementById(`tab-${abaAtual}`);
@@ -267,11 +268,9 @@ function obterPublicoAlvo(setoresAlvoString) {
     return listaColaboradoresGlobal.filter(c => setoresMarcados.includes(c.setor)).map(c => c.nome);
 }
 
-// ALERTA NA HOME (URGENTES)
 function verificarUrgentesHome() {
     const area = document.getElementById('area-alertas-home');
     area.innerHTML = '';
-    
     let totalUrgentesPendentes = 0;
 
     const verificarItens = (lista, ehPrivado) => {
@@ -283,7 +282,6 @@ function verificarUrgentesHome() {
             const publico = ehPrivado ? [data['Para qual Colaborador?']] : obterPublicoAlvo(data['Para quais Setores?']);
             const lidosNomes = (data.leituras || []).map(txt => txt.split(' (')[0]);
             const faltam = publico.filter(n => !lidosNomes.includes(n)).length;
-
             if (faltam > 0) totalUrgentesPendentes++;
         });
     };
@@ -292,15 +290,13 @@ function verificarUrgentesHome() {
     if(isAdmin) verificarItens(window.todosPrivadosData, true);
 
     if(totalUrgentesPendentes > 0) {
-        area.innerHTML = `<div class="alerta-urgente-home" onclick="window.irParaAba('boletins')"><i class="ri-alarm-warning-fill"></i><div><strong>Atenção! Informativos Urgentes</strong><span>Existem <b>${totalUrgentesPendentes}</b> informativos com prioridade urgente aguardando leitura. Clique aqui para acessar.</span></div></div>`;
+        area.innerHTML = `<div class="alerta-urgente-home" onclick="window.irParaAba('boletins')"><i class="ri-alarm-warning-fill"></i><div><strong>Atenção! Informativos Urgentes</strong><span>Existem <b>${totalUrgentesPendentes}</b> informativos com prioridade urgente aguardando assinatura.</span></div></div>`;
     }
 }
-
 
 window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
     const data = window.dadosBoletins[docId];
     if(!data) return;
-    
     document.getElementById('modal-leitura-titulo').textContent = data['Título do Informativo'] || data['Título do Documento'] || 'Status';
     
     let publicoAlvoNomes = [];
@@ -310,17 +306,13 @@ window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
     const lidosTextos = data.leituras || [];
     const lidosNomes = lidosTextos.map(txt => txt.split(' (')[0]); 
 
-    let htmlLidos = '';
-    let htmlNaoLidos = '';
-
+    let htmlLidos = ''; let htmlNaoLidos = '';
     publicoAlvoNomes.forEach(nome => {
         const registroCompleto = lidosTextos.find(txt => txt.startsWith(nome));
         if (registroCompleto) {
             let btnDesfazer = isAdmin ? `<button onclick="window.desfazerLeitura('${docId}', '${nome}', '${colecaoOrigem}')" class="btn-desfazer"><i class="ri-arrow-go-back-line"></i> Desfazer</button>` : '';
             htmlLidos += `<div class="item-lido" style="display:flex; justify-content:space-between; align-items:center;"><span><i class="ri-check-line"></i> ${registroCompleto}</span> ${btnDesfazer}</div>`;
-        } else {
-            htmlNaoLidos += `<div class="item-falta"><i class="ri-time-line"></i> ${nome}</div>`;
-        }
+        } else { htmlNaoLidos += `<div class="item-falta"><i class="ri-time-line"></i> ${nome}</div>`; }
     });
 
     document.getElementById('lista-lidos-content').innerHTML = htmlLidos || '<p style="color:var(--text-muted);">Ninguém assinou ainda.</p>';
@@ -487,7 +479,7 @@ function renderizarListaBoletins() {
         const qtdFaltam = faltamAssinar.length;
 
         const corStatus = qtdFaltam > 0 ? window.corStatusPendente : window.corStatusConcluido;
-        const classeUrgente = (isUrgente && qtdFaltam > 0) ? 'card-urgente' : ''; // Para de pulsar se leu tudo!
+        const classeUrgente = (isUrgente && qtdFaltam > 0) ? 'card-urgente' : ''; 
 
         let cardHtml = `<div class="card ${classeUrgente} ${gradientClass}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border: 3px solid ${corStatus};"><div class="card-title" style="margin-bottom:15px; font-size:18px; font-weight:600; line-height:1.2;">${titulo}</div>`;
         
@@ -542,9 +534,10 @@ function renderizarPastasPrivados() {
     if(!gridFolders) return;
     gridFolders.innerHTML = '';
     
-    const colabsComPrivados = [...new Set(window.todosPrivadosData.map(i => i.data['Para qual Colaborador?']).filter(Boolean))].sort();
+    // Mostra todos os colaboradores cadastrados para sempre ter a pasta!
+    const todosOsNomes = listaColaboradoresGlobal.map(c => c.nome).sort();
     
-    colabsComPrivados.forEach(nome => {
+    todosOsNomes.forEach(nome => {
         const boletinsDele = window.todosPrivadosData.filter(item => item.data['Para qual Colaborador?'] === nome);
         let lidos = 0; let faltam = 0;
         boletinsDele.forEach(b => {
@@ -552,7 +545,8 @@ function renderizarPastasPrivados() {
             if(leitor) lidos++; else faltam++;
         });
 
-        const corStatusPasta = faltam > 0 ? window.corStatusPendente : window.corStatusConcluido;
+        let corStatusPasta = "var(--border-color)";
+        if(boletinsDele.length > 0) corStatusPasta = faltam > 0 ? window.corStatusPendente : window.corStatusConcluido;
 
         gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaPrivado('${nome}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; border-left: 6px solid ${corStatusPasta};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: #e2e8f0; padding: 15px; border-radius: 12px; color: var(--text-main); font-size: 24px;"><i class="ri-user-star-fill"></i></div><div style="font-size: 15px; font-weight: 600;">${nome}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Documentos: <b style="color: var(--text-main);">${boletinsDele.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos: <b>${lidos}</b></div><div style="color: #e53e3e;">Pendentes: <b>${faltam}</b></div></div></div>`;
     });
@@ -592,7 +586,7 @@ function renderizarListaPrivados() {
                         links.forEach((lk, i) => { botaoLinkHtml += `<button onclick="abrirMidaFlutuante('${lk.trim()}')" style="width: 100%; background: var(--primary-color); color: white; border:none; cursor:pointer; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; transition: 0.2s;"><i class="ri-eye-line"></i> Acessar Material ${links.length > 1 ? i+1 : ''}</button>`; });
                         botaoLinkHtml += `</div>`;
                     }
-                } else { cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4; color: ${(isUrgente && chave.includes('Tipo')) ? '#e53e3e' : ''};"><strong>${chave}:</strong> <span>${valor}</span></div>`; }
+                } else { cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4; color: ${(isUrgente && chave.includes('Tipo')) ? '#e53e3e' : ''};"><strong>${chave}:</strong> <span style="font-weight: ${(isUrgente && chave.includes('Tipo')) ? '700' : '500'};">${valor}</span></div>`; }
             }
         });
         cardHtml += botaoLinkHtml;
@@ -609,16 +603,59 @@ function renderizarListaPrivados() {
     });
 }
 
+// --- CONVÊNIOS (COM PASTAS) ---
+window.abrirPastaConvenio = function(convenio) {
+    window.pastaConvenioAtual = convenio;
+    document.getElementById('convenios-view-folders').style.display = 'none';
+    document.getElementById('convenios-view-list').style.display = 'block';
+    document.getElementById('titulo-pasta-convenios').innerHTML = `<i class="ri-shield-cross-line"></i> ${convenio}`;
+    renderizarListaConvenios();
+}
+window.fecharPastaConvenio = function() {
+    window.pastaConvenioAtual = null;
+    document.getElementById('convenios-view-list').style.display = 'none';
+    document.getElementById('convenios-view-folders').style.display = 'block';
+    renderizarPastasConvenios();
+}
+function renderizarPastasConvenios() {
+    const grid = document.getElementById('grid-convenios-folders');
+    if(!grid) return;
+    grid.innerHTML = '';
+    const conveniosUnicos = [...new Set(window.todosConveniosData.map(i => i.data['Convênio']).filter(Boolean))].sort();
+    conveniosUnicos.forEach(conv => {
+        const qtd = window.todosConveniosData.filter(i => i.data['Convênio'] === conv).length;
+        grid.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaConvenio('${conv}')" style="text-align: left; padding: 20px; border-left: 6px solid var(--primary-color);"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;"><div style="background: var(--bg-color); padding: 15px; border-radius: 12px; color: var(--primary-color); font-size: 24px;"><i class="ri-shield-cross-fill"></i></div><div style="font-size: 16px; font-weight: 600;">${conv}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;">Serviços cadastrados: <b style="color:var(--text-main);">${qtd}</b></div></div>`;
+    });
+}
+function renderizarListaConvenios() {
+    const grid = document.getElementById('grid-convenios-list'); grid.innerHTML = '';
+    const itensExibir = window.todosConveniosData.filter(i => i.data['Convênio'] === window.pastaConvenioAtual);
+    const camposOrdem = configuracaoAbas['convenios'].campos;
+    
+    itensExibir.forEach(item => {
+        const data = item.data; const docId = item.id;
+        let cardHtml = `<div class="card" style="display:flex; flex-direction:column; background: #ffffff; border-left: 6px solid var(--primary-color);"><div class="card-title" style="margin-bottom:15px; font-size:18px; font-weight:600;">${data[camposOrdem[0]] || 'Serviço'}</div>`;
+        camposOrdem.forEach(chave => {
+            if (data[chave] && chave !== camposOrdem[0]) {
+                cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span>${data[chave]}</span></div>`; 
+            }
+        });
+        if (isAdmin) cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="convenios" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="convenios" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
+        grid.innerHTML += cardHtml + `</div>`;
+    });
+}
+
 // RENDERIZADOR GERAL
 function renderizarCards(colecaoNome) {
     const grid = document.getElementById(`grid-${colecaoNome}`);
-    if(!grid) return;
+    if(!grid && colecaoNome !== 'boletins' && colecaoNome !== 'boletins-privados' && colecaoNome !== 'convenios') return;
 
     onSnapshot(collection(db, colecaoNome), (snapshot) => {
-        grid.innerHTML = '';
         if(snapshot.empty) {
             if(colecaoNome === 'boletins') { window.todosBoletinsData = []; verificarUrgentesHome(); }
             if(colecaoNome === 'boletins-privados') { window.todosPrivadosData = []; verificarUrgentesHome(); }
+            if(colecaoNome === 'convenios') { window.todosConveniosData = []; }
+            if(grid) grid.innerHTML = '';
             return;
         }
 
@@ -627,6 +664,7 @@ function renderizarCards(colecaoNome) {
 
         if(colecaoNome === 'colaboradores') {
             listaColaboradoresGlobal = itens.map(item => { return { nome: item.data['Nome Completo do Colaborador'], setor: item.data['Setor da Clínica'] || 'Geral' }; }).filter(c => c.nome).sort((a,b) => a.nome.localeCompare(b.nome));
+            if(abaAtual === 'boletins-privados' && !window.pastaPrivadoAtual) renderizarPastasPrivados(); // Atualiza pastas privadas se cadastrar novo collab
         }
 
         if(colecaoNome === 'boletins') {
@@ -642,9 +680,15 @@ function renderizarCards(colecaoNome) {
             verificarUrgentesHome();
             return;
         }
+        
+        if(colecaoNome === 'convenios') {
+            window.todosConveniosData = itens;
+            if(abaAtual === 'convenios') { if(window.pastaConvenioAtual) renderizarListaConvenios(); else renderizarPastasConvenios(); }
+            return;
+        }
 
         if (colecaoNome === 'ramais') {
-            grid.style.display = 'block'; 
+            grid.style.display = 'block'; grid.innerHTML = '';
             const locaisMap = {};
             itens.forEach(item => { const local = item.data['Local ou Prédio'] || 'Sem Local Definido'; if (!locaisMap[local]) locaisMap[local] = []; locaisMap[local].push(item); });
             Object.keys(locaisMap).sort().forEach(local => {
@@ -663,7 +707,7 @@ function renderizarCards(colecaoNome) {
             return; 
         }
         
-        grid.style.display = 'grid'; 
+        grid.style.display = 'grid'; grid.innerHTML = '';
         const camposOrdem = configuracaoAbas[colecaoNome].campos;
         const campoTitulo = camposOrdem[0];
         
@@ -685,7 +729,17 @@ function renderizarCards(colecaoNome) {
             
             camposOrdem.forEach(chave => {
                 const valor = data[chave];
-                if (valor && chave !== campoTitulo) cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4;"><strong>${chave}:</strong> <span style="font-weight: 500;">${valor}</span></div>`; 
+                if (valor && chave !== campoTitulo) {
+                    // INTELIGÊNCIA DO GOOGLE MAPS PARA REMOÇÕES E CONTATOS
+                    if(chave === 'Local e Link Maps' && valor.includes('http')) {
+                        const urlMatch = valor.match(/https?:\/\/[^\s]+/);
+                        const url = urlMatch ? urlMatch[0] : valor;
+                        const textoSemUrl = valor.replace(url, '').trim();
+                        cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4;"><strong>${chave}:</strong> <span>${textoSemUrl}</span><br><button onclick="window.open('${url}', '_blank')" style="background: var(--bg-color); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-top: 8px; font-size: 12px; font-weight: 600; color: var(--primary-color); transition:0.2s;"><i class="ri-map-pin-user-fill"></i> Ver no Mapa</button></div>`;
+                    } else {
+                        cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4;"><strong>${chave}:</strong> <span style="font-weight: 500;">${valor}</span></div>`; 
+                    }
+                }
             });
             
             if (isAdmin) cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
