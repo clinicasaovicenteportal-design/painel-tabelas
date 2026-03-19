@@ -169,9 +169,24 @@
                 </div>
             </section>
 
+            <section id="tab-convenios" class="tab-content" style="display: none;">
+                <div id="convenios-view-folders">
+                    <p style="margin-bottom: 20px; color: var(--text-muted);">Selecione o Convênio para ver os serviços, códigos e observações.</p>
+                    <div class="home-grid" id="grid-convenios-folders"></div>
+                </div>
+                <div id="convenios-view-list" style="display:none;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button class="btn-primary" onclick="window.fecharPastaConvenio()" style="width: auto; background: var(--text-muted);"><i class="ri-arrow-left-line"></i> Voltar</button>
+                            <h2 id="titulo-pasta-convenios" style="color: var(--primary-color);">Convênio</h2>
+                        </div>
+                    </div>
+                    <div class="cards-grid" id="grid-convenios-list"></div>
+                </div>
+            </section>
+
             <section id="tab-colaboradores" class="tab-content" style="display: none;"><div class="cards-grid" id="grid-colaboradores"></div></section>
             <section id="tab-corpo-clinico" class="tab-content" style="display: none;"><div class="cards-grid" id="grid-corpo-clinico"></div></section>
-            <section id="tab-convenios" class="tab-content" style="display: none;"><div class="cards-grid" id="grid-convenios"></div></section>
             <section id="tab-ultrassom" class="tab-content" style="display: none;"><div class="cards-grid" id="grid-ultrassom"></div></section>
             <section id="tab-consultas" class="tab-content" style="display: none;"><div class="cards-grid" id="grid-consultas"></div></section>
             <section id="tab-pacotes" class="tab-content" style="display: none;"><div class="cards-grid" id="grid-pacotes"></div></section>
