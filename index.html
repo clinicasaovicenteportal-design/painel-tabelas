@@ -9,6 +9,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.3/TweenMax.min.js"></script>
+    <script src="https://unpkg.com/imagesloaded@4.1.4/imagesloaded.pkgd.min.js"></script>
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -76,8 +81,15 @@
                 </div>
                 <div id="resultados-globais" class="cards-grid" style="display: none; margin-bottom: 30px; padding: 15px; background: #fff; border-radius: 15px; box-shadow: var(--shadow-soft);"></div>
 
-                <div class="home-banner" id="banner-area">
-                    <div id="banner-content"><h2>Bem-vindo ao Painel CSV</h2></div>
+                <div id="home-3d-slider" class="home-slider-container">
+                    <div class="slider-inner">
+                        <div id="slider-content">
+                            <h2 id="slide-title">Carregando...</h2>
+                            <div id="slide-subtitle-container"></div>
+                        </div>
+                    </div>
+                    <div id="pagination"></div>
+                    <div id="slider-images-data" style="display: none;"></div>
                 </div>
 
                 <div class="weather-widget">
@@ -105,8 +117,15 @@
                 <div class="card" style="max-width: 600px; margin: 0 auto;">
                     <h2 style="margin-bottom: 20px; color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Configurações do Sistema</h2>
                     
-                    <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px;">Aviso Animado na Tela Inicial (Banner)</label>
-                    <textarea id="tab-input-banner" class="form-input" style="height: 100px; resize: vertical;" placeholder="Ex: Campanha de Vacinação iniciada!"></textarea>
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+                        <h4 style="color: var(--primary-color); margin-bottom: 10px;"><i class="ri-image-edit-line"></i> Banner Animado 3D (Tela Inicial)</h4>
+                        <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 5px;">Imagens do Slider (1 Link URL por linha)</label>
+                        <textarea id="tab-input-slider-img" class="form-input" style="height: 80px; resize: vertical;" placeholder="https://imgur.com/sua-imagem1.jpg&#10;https://imgur.com/sua-imagem2.jpg"></textarea>
+                        
+                        <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 5px;">Títulos Respectivos (1 por linha)</label>
+                        <textarea id="tab-input-slider-txt" class="form-input" style="height: 80px; resize: vertical;" placeholder="Inauguração da Nova Ala&#10;Campanha de Vacinação"></textarea>
+                        <p style="font-size: 11px; color: var(--text-muted);">* As linhas de imagem e título devem coincidir. Se usar Google Drive e ficar preto, use o Imgur.com para hospedar.</p>
+                    </div>
 
                     <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Locais/Prédios (Para os Contatos)</label>
                     <textarea id="tab-input-locais" class="form-input" style="height: 100px; resize: vertical;" placeholder="MATRIZ&#10;CASA DE VIDRO"></textarea>
@@ -118,6 +137,7 @@
                     <textarea id="tab-input-especialidades" class="form-input" style="height: 100px; resize: vertical;" placeholder="Cardiologia&#10;Pediatria&#10;Ginecologia"></textarea>
 
                     <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Motivos dos Informativos (Para os Gráficos)</label>
+                    <p style="font-size: 12px; margin-bottom: 10px; color: var(--text-muted);">Digite os motivos (um por linha) para categorizar os boletins. (Ex: Elogio, Regra Nova).</p>
                     <textarea id="tab-input-motivos" class="form-input" style="height: 100px; resize: vertical;" placeholder="Aviso Geral&#10;Nova Regra&#10;Elogio"></textarea>
 
                     <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Cores de Status (Informativos)</label>
