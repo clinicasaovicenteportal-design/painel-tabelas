@@ -2,12 +2,12 @@
 const configuracaoAbas = {
     'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da Clínica'] },
     'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' }, 
-    'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'], campoAgrupador: 'Convênio', icone: 'ri-shield-cross-fill' },
-    'ultrassom': { titulo: 'Exame de Ultrassom', campos: ['Exame', 'Código', 'Profissional', 'Restrição de Idade', 'Observação'], campoAgrupador: 'Exame', icone: 'ri-pulse-line' },
-    'consultas': { titulo: 'Consulta / Procedimento', campos: ['Tipo', 'Código', 'Descrição', 'Valor', 'Observações'], campoAgrupador: 'Tipo', icone: 'ri-stethoscope-line' },
+    'convenios': { titulo: 'Convênio', campos: ['Convênio (Nome da Pasta)', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'], campoAgrupador: 'Convênio (Nome da Pasta)', icone: 'ri-shield-cross-fill' },
+    'ultrassom': { titulo: 'Exame de Ultrassom', campos: ['Nome do Exame (Pasta)', 'Código', 'Profissional Executante', 'Restrição de Idade', 'Observações'], campoAgrupador: 'Nome do Exame (Pasta)', icone: 'ri-pulse-line' },
+    'consultas': { titulo: 'Consulta / Procedimento', campos: ['Categoria ou Setor (Pasta)', 'Tipo', 'Código', 'Descrição', 'Valor', 'Observações'], campoAgrupador: 'Categoria ou Setor (Pasta)', icone: 'ri-stethoscope-line' },
     'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor ou Informacao', 'O que está incluso', 'Observações', 'Pacotes', 'Kit'] },
-    'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Categoria do Exame', 'Código', 'Descrição', 'Valor', 'Prazo de Laudo', 'Onde encontrar resultado', 'Observações', 'Convênios'], campoAgrupador: 'Categoria do Exame', icone: 'ri-body-scan-line' },
-    'institutos': { titulo: 'Instituto Tabela', campos: ['Número da Tabela', 'Valor da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'], campoAgrupador: 'Número da Tabela', icone: 'ri-building-line' },
+    'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Categoria do Exame (Pasta)', 'Código', 'Descrição', 'Valor', 'Prazo de Laudo', 'Onde encontrar resultado', 'Observações', 'Convênios Aceitos'], campoAgrupador: 'Categoria do Exame (Pasta)', icone: 'ri-body-scan-line' },
+    'institutos': { titulo: 'Instituto Tabela', campos: ['Número da Tabela (Pasta)', 'Valor da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'], campoAgrupador: 'Número da Tabela (Pasta)', icone: 'ri-building-line' },
     'remocoes': { titulo: 'Remoção', campos: ['Nome do Lugar', 'Números (Separe por vírgula)', 'Local e Link Maps', 'Observações Importantes'] },
     'ramais': { titulo: 'Ramal', campos: ['Local ou Prédio', 'Setor', 'Número do Ramal', 'Observações'] },
     'emails': { titulo: 'E-mail', campos: ['Descrição do E-mail', 'Setor'] },
@@ -42,7 +42,7 @@ const EMAIL_GESTAO = "gestao@clinica.com";
 let listaColaboradoresGlobal = []; 
 let locaisGlobais = []; 
 let setoresGlobais = [];
-let especialidadesGlobais = []; // NOVO!
+let especialidadesGlobais = []; 
 let motivosGlobais = [];
 
 window.todosBoletinsData = [];
@@ -82,6 +82,157 @@ function formatarLinkImagem(link) {
     return link;
 }
 
+// --- EFEITO 3D DO SLIDER ---
+let slider3DIniciado = false;
+let renderer3D = null;
+function iniciarSlider3D(imgsUrls, titulosStr) {
+    const parent = document.getElementById('home-3d-slider');
+    const dataContainer = document.getElementById('slider-images-data');
+    if(!parent || !dataContainer) return;
+    
+    // Limpa instâncias antigas
+    if(renderer3D) {
+        parent.removeChild(renderer3D.domElement);
+        renderer3D.dispose();
+        renderer3D = null;
+        slider3DIniciado = false;
+    }
+    dataContainer.innerHTML = '';
+    
+    const tituloEl = document.getElementById('slide-title');
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+
+    // Links padrão (Leopard, Bear) se o usuário não configurou nada
+    let urls = imgsUrls ? imgsUrls.split('\n').filter(l=>l.trim()!=='') : [];
+    let titles = titulosStr ? titulosStr.split('\n').filter(t=>t.trim()!=='') : [];
+    
+    if(urls.length < 2) {
+        urls = [
+            "https://s3-us-west-2.amazonaws.com/s.cdpn.io/123024/leopard2.jpg",
+            "https://s3-us-west-2.amazonaws.com/s.cdpn.io/123024/lion2.jpg"
+        ];
+        titles = ["Bem-vindo ao Painel", "Gestão Inteligente"];
+        document.getElementById('banner-area').style.display = 'none';
+        parent.style.display = 'block';
+    } else {
+        document.getElementById('banner-area').style.display = 'none';
+        parent.style.display = 'block';
+    }
+
+    urls.forEach((url, i) => {
+        let fmtUrl = formatarLinkImagem(url);
+        dataContainer.innerHTML += `<img src="${fmtUrl}" class="raw-image" data-title="${titles[i] || 'Painel Clínico'}">`;
+        pagination.innerHTML += `<button data-slide="${i}" class="${i === 0 ? 'active' : ''}"></button>`;
+    });
+
+    tituloEl.innerText = titles[0] || 'Painel Clínico';
+
+    imagesLoaded(document.querySelectorAll('.raw-image'), () => {
+        if(slider3DIniciado) return;
+        slider3DIniciado = true;
+        
+        const images = Array.from(parent.querySelectorAll('.raw-image'));
+        if(images.length < 2) return;
+
+        let vertex = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }`;
+        let fragment = `varying vec2 vUv; uniform sampler2D currentImage; uniform sampler2D nextImage; uniform float dispFactor; void main() { vec2 uv = vUv; vec4 _currentImage; vec4 _nextImage; float intensity = 0.3; vec4 orig1 = texture2D(currentImage, uv); vec4 orig2 = texture2D(nextImage, uv); _currentImage = texture2D(currentImage, vec2(uv.x, uv.y + dispFactor * (orig2 * intensity))); _nextImage = texture2D(nextImage, vec2(uv.x, uv.y + (1.0 - dispFactor) * (orig1 * intensity))); gl_FragColor = mix(_currentImage, _nextImage, dispFactor); }`;
+
+        let renderW = parent.offsetWidth;
+        let renderH = parent.offsetHeight;
+
+        renderer3D = new THREE.WebGLRenderer({ antialias: false });
+        renderer3D.setPixelRatio(window.devicePixelRatio);
+        renderer3D.setClearColor(0x23272A, 1.0);
+        renderer3D.setSize(renderW, renderH);
+        parent.appendChild(renderer3D.domElement);
+
+        let loader = new THREE.TextureLoader();
+        loader.crossOrigin = "anonymous";
+        let sliderImages = [];
+
+        images.forEach((img) => {
+            let tex = loader.load(img.getAttribute('src'));
+            tex.magFilter = tex.minFilter = THREE.LinearFilter;
+            tex.anisotropy = renderer3D.capabilities.getMaxAnisotropy();
+            sliderImages.push(tex);
+        });
+
+        let scene = new THREE.Scene();
+        let camera = new THREE.OrthographicCamera( renderW / -2, renderW / 2, renderH / 2, renderH / -2, 1, 1000 );
+        camera.position.z = 1;
+
+        let mat = new THREE.ShaderMaterial({
+            uniforms: {
+                dispFactor: { type: "f", value: 0.0 },
+                currentImage: { type: "t", value: sliderImages[0] },
+                nextImage: { type: "t", value: sliderImages[1] },
+            },
+            vertexShader: vertex,
+            fragmentShader: fragment,
+            transparent: true,
+            opacity: 1.0
+        });
+
+        let geometry = new THREE.PlaneBufferGeometry(renderW, renderH, 1);
+        let object = new THREE.Mesh(geometry, mat);
+        object.position.set(0, 0, 0);
+        scene.add(object);
+
+        let isAnimating = false;
+        let pagButtons = Array.from(pagination.querySelectorAll('button'));
+
+        pagButtons.forEach((el) => {
+            el.addEventListener('click', function() {
+                if(!isAnimating) {
+                    isAnimating = true;
+                    pagination.querySelectorAll('.active')[0].className = '';
+                    this.className = 'active';
+
+                    let slideId = parseInt(this.dataset.slide, 10);
+                    let nextTitle = images[slideId].getAttribute('data-title');
+
+                    mat.uniforms.nextImage.value = sliderImages[slideId];
+                    mat.uniforms.nextImage.needsUpdate = true;
+
+                    TweenLite.to(mat.uniforms.dispFactor, 1, {
+                        value: 1, ease: 'Expo.easeInOut',
+                        onComplete: function() {
+                            mat.uniforms.currentImage.value = sliderImages[slideId];
+                            mat.uniforms.currentImage.needsUpdate = true;
+                            mat.uniforms.dispFactor.value = 0.0;
+                            isAnimating = false;
+                        }
+                    });
+
+                    TweenLite.fromTo(tituloEl, 0.5, { autoAlpha: 1, y: 0 }, { autoAlpha: 0, y: 20, ease: 'Expo.easeIn',
+                        onComplete: function() {
+                            tituloEl.innerHTML = nextTitle;
+                            TweenLite.to(tituloEl, 0.5, { autoAlpha: 1, y: 0 });
+                        }
+                    });
+                }
+            });
+        });
+
+        window.addEventListener('resize', function() {
+            if(!parent || !renderer3D) return;
+            renderW = parent.offsetWidth; renderH = parent.offsetHeight;
+            renderer3D.setSize(renderW, renderH);
+            camera.left = renderW / -2; camera.right = renderW / 2; camera.top = renderH / 2; camera.bottom = renderH / -2;
+            camera.updateProjectionMatrix();
+        });
+
+        let animate = function() {
+            if(!renderer3D) return;
+            requestAnimationFrame(animate);
+            renderer3D.render(scene, camera);
+        };
+        animate();
+    });
+}
+
+// RESTANTE DO CÓDIGO
 setInterval(() => { const rl = document.getElementById('relogio'); if(rl) rl.innerText = new Date().toLocaleTimeString('pt-BR'); }, 1000);
 const frases = ["O sucesso é a soma de pequenos esforços.", "A empatia é a medicina que o mundo precisa.", "Trabalho em equipe multiplica o sucesso."];
 const fm = document.getElementById('frase-dia'); if(fm) fm.innerText = frases[Math.floor(Math.random() * frases.length)];
@@ -320,6 +471,9 @@ document.getElementById('btn-salvar-dados').addEventListener('click', async () =
 document.getElementById('btn-salvar-ajustes').addEventListener('click', async () => {
     if(!isAdmin) return;
     const texto = document.getElementById('tab-input-banner').value;
+    const sliderImg = document.getElementById('tab-input-slider-img').value;
+    const sliderTxt = document.getElementById('tab-input-slider-txt').value;
+    
     const locaisTexto = document.getElementById('tab-input-locais').value; 
     const setoresTexto = document.getElementById('tab-input-setores').value; 
     const especialidadesTexto = document.getElementById('tab-input-especialidades').value; 
@@ -331,6 +485,8 @@ document.getElementById('btn-salvar-ajustes').addEventListener('click', async ()
     try {
         await setDoc(doc(db, "configuracoes", "gerais"), { 
             banner_texto: texto, 
+            slider_img: sliderImg,
+            slider_txt: sliderTxt,
             locais: locaisTexto, 
             setores: setoresTexto, 
             especialidades: especialidadesTexto,
@@ -352,6 +508,9 @@ function carregarConfiguracoes() {
             else area.innerHTML = `<h2>Bem-vindo ao Painel Clínico</h2>`;
             
             if(document.getElementById('tab-input-banner')) document.getElementById('tab-input-banner').value = data.banner_texto || '';
+            if(document.getElementById('tab-input-slider-img')) document.getElementById('tab-input-slider-img').value = data.slider_img || '';
+            if(document.getElementById('tab-input-slider-txt')) document.getElementById('tab-input-slider-txt').value = data.slider_txt || '';
+            
             if(document.getElementById('tab-input-locais')) document.getElementById('tab-input-locais').value = data.locais || '';
             if(document.getElementById('tab-input-setores')) document.getElementById('tab-input-setores').value = data.setores || '';
             if(document.getElementById('tab-input-especialidades')) document.getElementById('tab-input-especialidades').value = data.especialidades || '';
@@ -369,6 +528,11 @@ function carregarConfiguracoes() {
             
             if(abaAtual === 'boletins' && !window.pastaBoletimAtual) renderizarPastasBoletins();
             if(abaAtual === 'boletins-privados' && !window.pastaPrivadoAtual) renderizarPastasPrivados();
+            
+            // INICIA O SLIDER 3D AO CARREGAR AS CONFIGURAÇÕES
+            if(abaAtual === 'home') {
+                setTimeout(() => { iniciarSlider3D(data.slider_img, data.slider_txt); }, 500);
+            }
         }
     });
 }
