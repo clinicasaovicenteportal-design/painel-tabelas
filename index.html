@@ -115,10 +115,10 @@
                     <textarea id="tab-input-setores" class="form-input" style="height: 100px; resize: vertical;" placeholder="Recepção&#10;Enfermagem"></textarea>
                     
                     <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Especialidades (Corpo Clínico)</label>
+                    <p style="font-size: 12px; margin-bottom: 10px; color: var(--text-muted);">Digite as especialidades para criar as Pastas dos Médicos.</p>
                     <textarea id="tab-input-especialidades" class="form-input" style="height: 100px; resize: vertical;" placeholder="Cardiologia&#10;Pediatria&#10;Ginecologia"></textarea>
 
                     <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Motivos dos Informativos (Para os Gráficos)</label>
-                    <p style="font-size: 12px; margin-bottom: 10px; color: var(--text-muted);">Digite os motivos (um por linha) para categorizar os boletins. (Ex: Elogio, Regra Nova).</p>
                     <textarea id="tab-input-motivos" class="form-input" style="height: 100px; resize: vertical;" placeholder="Aviso Geral&#10;Nova Regra&#10;Elogio"></textarea>
 
                     <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Cores de Status (Informativos)</label>
@@ -150,22 +150,18 @@
                 <div id="convenios-view-folders"><p style="margin-bottom: 20px; color: var(--text-muted);">Selecione o Convênio para visualizar os serviços cobertos e regras.</p><div class="home-grid" id="grid-convenios-folders"></div></div>
                 <div id="convenios-view-list" style="display:none;"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;"><button class="btn-primary" onclick="window.fecharPastaGenerica('convenios')" style="width: auto; background: var(--text-muted);"><i class="ri-arrow-left-line"></i> Voltar</button><h2 id="titulo-pasta-convenios" style="color: var(--primary-color);">Pasta</h2></div><div class="cards-grid" id="grid-convenios-list"></div></div>
             </section>
-            
             <section id="tab-ultrassom" class="tab-content" style="display: none;">
                 <div id="ultrassom-view-folders"><p style="margin-bottom: 20px; color: var(--text-muted);">Selecione o Tipo de Exame.</p><div class="home-grid" id="grid-ultrassom-folders"></div></div>
                 <div id="ultrassom-view-list" style="display:none;"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;"><button class="btn-primary" onclick="window.fecharPastaGenerica('ultrassom')" style="width: auto; background: var(--text-muted);"><i class="ri-arrow-left-line"></i> Voltar</button><h2 id="titulo-pasta-ultrassom" style="color: var(--primary-color);">Pasta</h2></div><div class="cards-grid" id="grid-ultrassom-list"></div></div>
             </section>
-            
             <section id="tab-consultas" class="tab-content" style="display: none;">
                 <div id="consultas-view-folders"><p style="margin-bottom: 20px; color: var(--text-muted);">Selecione a Categoria/Setor.</p><div class="home-grid" id="grid-consultas-folders"></div></div>
                 <div id="consultas-view-list" style="display:none;"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;"><button class="btn-primary" onclick="window.fecharPastaGenerica('consultas')" style="width: auto; background: var(--text-muted);"><i class="ri-arrow-left-line"></i> Voltar</button><h2 id="titulo-pasta-consultas" style="color: var(--primary-color);">Pasta</h2></div><div class="cards-grid" id="grid-consultas-list"></div></div>
             </section>
-            
             <section id="tab-exames-imagem" class="tab-content" style="display: none;">
                 <div id="exames-imagem-view-folders"><p style="margin-bottom: 20px; color: var(--text-muted);">Selecione a Categoria do Exame.</p><div class="home-grid" id="grid-exames-imagem-folders"></div></div>
                 <div id="exames-imagem-view-list" style="display:none;"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;"><button class="btn-primary" onclick="window.fecharPastaGenerica('exames-imagem')" style="width: auto; background: var(--text-muted);"><i class="ri-arrow-left-line"></i> Voltar</button><h2 id="titulo-pasta-exames-imagem" style="color: var(--primary-color);">Pasta</h2></div><div class="cards-grid" id="grid-exames-imagem-list"></div></div>
             </section>
-            
             <section id="tab-institutos" class="tab-content" style="display: none;">
                 <div id="institutos-view-folders"><p style="margin-bottom: 20px; color: var(--text-muted);">Selecione o Número da Tabela.</p><div class="home-grid" id="grid-institutos-folders"></div></div>
                 <div id="institutos-view-list" style="display:none;"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;"><button class="btn-primary" onclick="window.fecharPastaGenerica('institutos')" style="width: auto; background: var(--text-muted);"><i class="ri-arrow-left-line"></i> Voltar</button><h2 id="titulo-pasta-institutos" style="color: var(--primary-color);">Pasta</h2></div><div class="cards-grid" id="grid-institutos-list"></div></div>
