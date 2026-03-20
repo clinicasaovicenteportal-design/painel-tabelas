@@ -1,13 +1,14 @@
 // --- CONFIGURAÇÃO DE CAMPOS E PASTAS DO SISTEMA ---
+// Os nomes dos campos voltaram ao original exato para não perder seus dados antigos!
 const configuracaoAbas = {
     'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da Clínica'] },
     'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'] }, 
-    'convenios': { titulo: 'Convênio', campos: ['Convênio (Nome da Pasta)', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'], campoAgrupador: 'Convênio (Nome da Pasta)', icone: 'ri-shield-cross-fill' },
-    'ultrassom': { titulo: 'Exame de Ultrassom', campos: ['Nome do Exame (Pasta)', 'Código', 'Profissional Executante', 'Restrição de Idade', 'Observações'], campoAgrupador: 'Nome do Exame (Pasta)', icone: 'ri-pulse-line' },
-    'consultas': { titulo: 'Consulta / Procedimento', campos: ['Categoria ou Setor (Pasta)', 'Tipo', 'Código', 'Descrição', 'Valor', 'Observações'], campoAgrupador: 'Categoria ou Setor (Pasta)', icone: 'ri-stethoscope-line' },
+    'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'], campoAgrupador: 'Convênio', campoTitulo: 'Serviço', icone: 'ri-shield-cross-fill' },
+    'ultrassom': { titulo: 'Exame de Ultrassom', campos: ['Exame', 'Código', 'Profissional', 'Restrição de Idade', 'Observação'], campoAgrupador: 'Exame', campoTitulo: 'Profissional', icone: 'ri-pulse-line' },
+    'consultas': { titulo: 'Consulta / Procedimento', campos: ['Tipo', 'Código', 'Descrição', 'Valor', 'Observações'], campoAgrupador: 'Tipo', campoTitulo: 'Descrição', icone: 'ri-stethoscope-line' },
     'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor ou Informacao', 'O que está incluso', 'Observações', 'Pacotes', 'Kit'] },
-    'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Categoria do Exame (Pasta)', 'Código', 'Descrição', 'Valor', 'Prazo de Laudo', 'Onde encontrar resultado', 'Observações', 'Convênios Aceitos'], campoAgrupador: 'Categoria do Exame (Pasta)', icone: 'ri-body-scan-line' },
-    'institutos': { titulo: 'Instituto Tabela', campos: ['Número da Tabela (Pasta)', 'Valor da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'], campoAgrupador: 'Número da Tabela (Pasta)', icone: 'ri-building-line' },
+    'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Categoria do Exame', 'Código', 'Descrição', 'Valor', 'Prazo de Laudo', 'Onde encontrar resultado', 'Observações', 'Convênios'], campoAgrupador: 'Categoria do Exame', campoTitulo: 'Descrição', icone: 'ri-body-scan-line' },
+    'institutos': { titulo: 'Instituto Tabela', campos: ['Número da Tabela', 'Valor da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'], campoAgrupador: 'Número da Tabela', campoTitulo: 'Profissional', icone: 'ri-building-line' },
     'remocoes': { titulo: 'Remoção', campos: ['Nome do Lugar', 'Números (Separe por vírgula)', 'Local e Link Maps', 'Observações Importantes'] },
     'ramais': { titulo: 'Ramal', campos: ['Local ou Prédio', 'Setor', 'Número do Ramal', 'Observações'] },
     'emails': { titulo: 'E-mail', campos: ['Descrição do E-mail', 'Setor'] },
@@ -46,8 +47,8 @@ let motivosGlobais = [];
 
 window.todosBoletinsData = [];
 window.todosPrivadosData = [];
-window.dadosGlobaisAbas = {}; // Armazena dados de pastas genéricas
-window.todosOsDadosDoSistema = {}; // Armazena TODOS os dados para a busca global funcionar perfeito
+window.dadosGlobaisAbas = {}; 
+window.todosOsDadosDoSistema = {}; 
 window.dadosBoletins = {}; 
 window.pastaBoletimAtual = null;
 window.pastaPrivadoAtual = null;
@@ -157,10 +158,11 @@ function renderizarPastasGenericas(colecao) {
     const config = configuracaoAbas[colecao];
     const dadosAtuais = window.dadosGlobaisAbas[colecao] || [];
     
-    const pastasUnicas = [...new Set(dadosAtuais.map(i => i.data[config.campoAgrupador]).filter(Boolean))].sort();
+    // Fallback: se o item antigo não tinha a categoria/pasta preenchida, joga na pasta 'Geral'
+    const pastasUnicas = [...new Set(dadosAtuais.map(i => i.data[config.campoAgrupador] || 'Geral'))].sort();
     
     pastasUnicas.forEach(nomePasta => {
-        const itensPasta = dadosAtuais.filter(i => i.data[config.campoAgrupador] === nomePasta);
+        const itensPasta = dadosAtuais.filter(i => (i.data[config.campoAgrupador] || 'Geral') === nomePasta);
         const qtd = itensPasta.length;
         const corIcone = itensPasta[0].data.corCard && itensPasta[0].data.corCard !== "transparent" ? itensPasta[0].data.corCard : "var(--primary-color)";
         const iconeHtml = `<div style="background: var(--bg-color); padding: 15px; border-radius: 12px; color: ${corIcone}; font-size: 24px;"><i class="${config.icone}"></i></div>`;
@@ -172,10 +174,10 @@ function renderizarPastasGenericas(colecao) {
 function gerarHTMLCard(colecaoNome, docId, data) {
     const config = configuracaoAbas[colecaoNome];
     const camposOrdem = config.campos;
-    let campoTitulo = camposOrdem[0];
     
+    let campoTitulo = camposOrdem[0];
     if(config.campoAgrupador) {
-        campoTitulo = camposOrdem.find(c => c !== config.campoAgrupador) || camposOrdem[0];
+        campoTitulo = config.campoTitulo || camposOrdem[0];
     }
     
     const tituloDesteCard = data[campoTitulo] || data['Nome/Médico'] || data['Nome'] || 'Detalhes do Cadastro';
@@ -195,8 +197,8 @@ function gerarHTMLCard(colecaoNome, docId, data) {
 
     let cardHtml = `<div class="card ${isDark ? 'has-gradient' : ''}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border-left: 6px solid var(--primary-color);">`;
     
-    if(config.campoAgrupador && data[config.campoAgrupador]) {
-        cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px;"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA: ${data[config.campoAgrupador]}</div>`;
+    if(config.campoAgrupador && (data[config.campoAgrupador] || 'Geral')) {
+        cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px;"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA: ${data[config.campoAgrupador] || 'Geral'}</div>`;
     }
 
     cardHtml += `<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; gap:10px;">
@@ -244,11 +246,12 @@ function gerarHTMLCard(colecaoNome, docId, data) {
 function renderizarListaGenerica(colecao) {
     const grid = document.getElementById(`grid-${colecao}-list`); grid.innerHTML = '';
     const nomePasta = window[`pasta_${colecao}_Atual`];
-    const itensExibir = (window.dadosGlobaisAbas[colecao] || []).filter(i => i.data[configuracaoAbas[colecao].campoAgrupador] === nomePasta);
+    // Se o campo do banco não tiver categoria preenchida, agrupa no "Geral" para não perder os dados
+    const itensExibir = (window.dadosGlobaisAbas[colecao] || []).filter(i => (i.data[configuracaoAbas[colecao].campoAgrupador] || 'Geral') === nomePasta);
     itensExibir.forEach(item => { grid.innerHTML += gerarHTMLCard(colecao, item.id, item.data); });
 }
 
-// MOTOR DE BUSCA GLOBAL ATUALIZADO
+// MOTOR DE BUSCA GLOBAL
 document.getElementById('input-pesquisa-global').addEventListener('keyup', (e) => {
     const texto = e.target.value.toLowerCase().trim();
     const areaRes = document.getElementById('resultados-globais');
