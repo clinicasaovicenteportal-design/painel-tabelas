@@ -893,3 +893,112 @@ document.getElementById('btn-fechar-media').addEventListener('click', () => {
     if(modalMedia) modalMedia.style.display = 'none'; 
     if(iframe) iframe.src = ""; 
 });
+// ================== LÓGICA DO CHATBOT ASSISTENTE ==================
+
+window.toggleChatbot = function() {
+    const win = document.getElementById('chatbot-window');
+    const bubble = document.getElementById('chatbot-bubble');
+    if (win.style.display === 'none' || win.style.display === '') {
+        win.style.display = 'flex';
+        bubble.querySelector('.chatbot-tooltip').style.display = 'none'; // esconde o aviso
+        document.getElementById('chatbot-input-field').focus();
+    } else {
+        win.style.display = 'none';
+    }
+}
+
+window.handleChatKeyPress = function(e) {
+    if (e.key === 'Enter') enviarMensagemChat();
+}
+
+window.enviarMensagemRapida = function(texto) {
+    document.getElementById('chatbot-input-field').value = texto;
+    enviarMensagemChat();
+}
+
+window.enviarMensagemChat = function() {
+    const input = document.getElementById('chatbot-input-field');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    // 1. Adiciona msg do usuário
+    addChatBubble(msg, 'user');
+    input.value = '';
+
+    // 2. Simula "Digitando..."
+    setTimeout(() => {
+        const resposta = processarLogicaDoBot(msg);
+        addChatBubble(resposta, 'bot');
+    }, 600); // pequeno delay para parecer natural
+}
+
+function addChatBubble(text, sender) {
+    const chatArea = document.getElementById('chatbot-messages');
+    const div = document.createElement('div');
+    div.className = `msg ${sender === 'user' ? 'user-msg' : 'bot-msg'}`;
+    div.innerHTML = text; // innerHTML permite colocar <b> e <br>
+    chatArea.appendChild(div);
+    chatArea.scrollTop = chatArea.scrollHeight; // rola para baixo
+}
+
+function processarLogicaDoBot(mensagemUser) {
+    const texto = mensagemUser.toLowerCase();
+    
+    // Respostas Sociais Básicas
+    if (texto === 'oi' || texto === 'olá' || texto === 'ola' || texto.includes('bom dia') || texto.includes('boa tarde')) {
+        return "Olá! Tudo bem? Sou a inteligência de busca do painel. Me pergunte sobre algum <b>Exame, Especialidade, Médico ou Convênio</b>!";
+    }
+
+    if (texto.includes('obrigado') || texto.includes('valeu')) {
+        return "Por nada! Estou sempre aqui no cantinho se precisar de mais alguma informação rápida. 😉";
+    }
+
+    // LÓGICA DE BUSCA NOS DADOS DO SISTEMA
+    let resultadosEncontrados = [];
+    
+    // Onde o bot vai procurar?
+    const colecoesBusca = ['corpo-clinico', 'ultrassom', 'exames-imagem', 'consultas', 'convenios', 'ramais'];
+    
+    colecoesBusca.forEach(colecao => {
+        const itens = window.todosOsDadosDoSistema[colecao] || window.dadosGlobaisAbas[colecao] || [];
+        
+        itens.forEach(item => {
+            // Junta todos os valores do card numa string gigante para procurar
+            const valoresStr = Object.values(item.data).join(' ').toLowerCase();
+            
+            if (valoresStr.includes(texto)) {
+                const config = configuracaoAbas[colecao];
+                let tituloItem = item.data[config.campos[0]] || 'Item';
+                
+                // Se for corpo clínico, mostra a especialidade do lado
+                if(colecao === 'corpo-clinico') {
+                    tituloItem = `Dr(a) ${item.data['Nome do Médico']} (${item.data['Especialidade']})`;
+                } else if(colecao === 'ramais') {
+                    tituloItem = `Ramal: ${item.data['Número do Ramal']} (${item.data['Setor']})`;
+                }
+                
+                resultadosEncontrados.push(`• <b>${tituloItem}</b> <i>(em ${config.titulo})</i>`);
+            }
+        });
+    });
+
+    // Filtra e remove duplicados para não spammar
+    resultadosEncontrados = [...new Set(resultadosEncontrados)];
+
+    // Montando a resposta
+    if (resultadosEncontrados.length > 0) {
+        // Mostrar no máximo 6 resultados para não travar o chat
+        let respostaFormatada = `Aqui está o que encontrei no nosso sistema sobre <b>"${mensagemUser}"</b>:<br><br>`;
+        const limite = resultadosEncontrados.slice(0, 6);
+        respostaFormatada += limite.join('<br>');
+        
+        if (resultadosEncontrados.length > 6) {
+            respostaFormatada += `<br><br><span style="color:var(--text-muted); font-size:11px;">Encontrei mais ${resultadosEncontrados.length - 6} itens. Seja mais específico se precisar!</span>`;
+        }
+        
+        return respostaFormatada;
+    }
+
+    // Se não encontrou no banco, cai na resposta padrão / recusa
+    return "Desculpe, não localizei nenhuma informação no sistema sobre isso. 🤔<br><br>Lembre-se: eu busco apenas informações cadastradas internamente (Médicos, Exames, Ramais e Convênios). Tente usar uma palavra-chave mais curta!";
+}
