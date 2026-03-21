@@ -77,8 +77,77 @@ const paletaGradientes = [
 ];
 
 // ==========================================
-// 2. FUNÇÕES GLOBAIS (HOISTING)
+// 2. LÓGICA DE LOGIN BLINDADA (SEM DOMContentLoaded)
 // ==========================================
+
+const formLogin = document.getElementById('form-login');
+if(formLogin) {
+    formLogin.addEventListener('submit', (e) => {
+        e.preventDefault(); // A Mágica que impede a página de recarregar e piscar!
+        
+        const email = document.getElementById('email').value.trim();
+        const senha = document.getElementById('senha').value.trim();
+        const btn = document.getElementById('btn-login');
+        
+        if(!email || !senha) {
+            alert("Por favor, preencha o e-mail e a senha.");
+            return;
+        }
+        
+        const textoOriginal = btn.innerHTML;
+        btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> Autenticando...";
+        
+        signInWithEmailAndPassword(auth, email, senha)
+            .then(() => {
+                btn.innerHTML = textoOriginal;
+            })
+            .catch(err => {
+                alert("Erro ao entrar: Verifique seu e-mail e senha.");
+                btn.innerHTML = textoOriginal;
+            });
+    });
+}
+
+const btnLogout = document.getElementById('btn-logout');
+if(btnLogout) btnLogout.addEventListener('click', () => signOut(auth));
+
+onAuthStateChanged(auth, (user) => {
+    const loginScreen = document.getElementById('login-screen');
+    const dashboardScreen = document.getElementById('dashboard-screen');
+    
+    if (user) {
+        if(loginScreen) loginScreen.style.display = 'none';
+        if(dashboardScreen) dashboardScreen.style.display = 'flex';
+        isAdmin = (user.email === EMAIL_GESTAO);
+        
+        const badge = document.getElementById('user-role-badge');
+        if(badge) badge.textContent = isAdmin ? "Gestão Administrador" : "Acesso Geral";
+        
+        if(isAdmin) {
+            if(badge) badge.classList.add('admin');
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+        } else {
+            if(badge) badge.classList.remove('admin');
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        }
+        
+        Object.keys(configuracaoAbas).forEach(idColecao => renderizarCards(idColecao));
+        carregarConfiguracoes(); 
+        window.buscarClimaAraucaria(); 
+    } else {
+        if(loginScreen) loginScreen.style.display = 'flex';
+        if(dashboardScreen) dashboardScreen.style.display = 'none';
+    }
+});
+
+
+// ==========================================
+// 3. DECLARAÇÃO DE TODAS AS FUNÇÕES GLOBAIS BLINDADAS
+// ==========================================
+
+setInterval(() => { const rl = document.getElementById('relogio'); if(rl) rl.innerText = new Date().toLocaleTimeString('pt-BR'); }, 1000);
+const frases = ["O sucesso é a soma de pequenos esforços.", "A empatia é a medicina que o mundo precisa.", "Trabalho em equipe multiplica o sucesso."];
+const fm = document.getElementById('frase-dia'); if(fm) fm.innerText = frases[Math.floor(Math.random() * frases.length)];
 
 function formatarLinkImagem(link) {
     if (!link || link.includes('file:///')) return null;
@@ -112,7 +181,7 @@ window.buscarClimaAraucaria = async function() {
         const wDesc = document.getElementById('weather-desc');
         if(wDesc) wDesc.textContent = "Clima indisponível"; 
     }
-};
+}
 
 function obterPublicoAlvo(setoresAlvoString) {
     if (!setoresAlvoString || setoresAlvoString.includes('Geral')) return listaColaboradoresGlobal.map(c => c.nome);
@@ -144,24 +213,24 @@ window.verificarUrgentesHome = function() {
     if(totalUrgentesPendentes > 0) {
         area.innerHTML = `<div class="alerta-urgente-home" onclick="window.irParaAba('boletins')"><i class="ri-alarm-warning-fill"></i><div><strong>Atenção! Informativos Urgentes</strong><span>Existem <b>${totalUrgentesPendentes}</b> informativos com prioridade urgente aguardando assinatura.</span></div></div>`;
     }
-};
+}
 
 window.irParaAba = function(aba) { 
     const btn = document.querySelector(`.nav-btn[data-tab='${aba}']`); 
     if(btn) btn.click(); 
-};
+}
 
 window.abrirSubAba = function(subAbaId) { 
     const menu = document.getElementById('menu-contatos'); if(menu) menu.style.display = 'none'; 
     const sub = document.getElementById('sub-' + subAbaId); if(sub) sub.style.display = 'block'; 
-};
+}
 
 window.voltarSubAba = function() { 
     ['ramais', 'emails', 'contatos-gerais', 'contatos-convenios', 'senhas'].forEach(id => {
         const sub = document.getElementById('sub-' + id); if(sub) sub.style.display = 'none';
     }); 
     const menu = document.getElementById('menu-contatos'); if(menu) menu.style.display = 'grid'; 
-};
+}
 
 window.abrirPastaGenerica = function(colecao, valorPasta) {
     window[`pasta_${colecao}_Atual`] = valorPasta;
@@ -171,8 +240,8 @@ window.abrirPastaGenerica = function(colecao, valorPasta) {
     if(foldEl) foldEl.style.display = 'none';
     if(listEl) listEl.style.display = 'block';
     if(titleEl && configuracaoAbas[colecao]) titleEl.innerHTML = `<i class="${configuracaoAbas[colecao].icone}"></i> Pasta: ${valorPasta}`;
-    window.renderizarListaGenerica(colecao);
-};
+    renderizarListaGenerica(colecao);
+}
 
 window.fecharPastaGenerica = function(colecao) {
     window[`pasta_${colecao}_Atual`] = null;
@@ -180,8 +249,8 @@ window.fecharPastaGenerica = function(colecao) {
     const listEl = document.getElementById(`${colecao}-view-list`);
     if(listEl) listEl.style.display = 'none';
     if(foldEl) foldEl.style.display = 'block';
-    window.renderizarPastasGenericas(colecao);
-};
+    renderizarPastasGenericas(colecao);
+}
 
 window.abrirPastaBoletim = function(pasta) {
     window.pastaBoletimAtual = pasta;
@@ -191,8 +260,8 @@ window.abrirPastaBoletim = function(pasta) {
     if(viewFold) viewFold.style.display = 'none';
     if(viewList) viewList.style.display = 'block';
     if(title) title.innerHTML = `<i class="ri-folder-open-line"></i> Setor: ${pasta}`;
-    window.renderizarListaBoletins();
-};
+    renderizarListaBoletins();
+}
 
 window.fecharPastaBoletim = function() {
     window.pastaBoletimAtual = null;
@@ -200,8 +269,8 @@ window.fecharPastaBoletim = function() {
     const viewList = document.getElementById('boletins-view-list');
     if(viewList) viewList.style.display = 'none';
     if(viewFold) viewFold.style.display = 'block';
-    window.renderizarPastasBoletins();
-};
+    renderizarPastasBoletins();
+}
 
 window.abrirPastaPrivado = function(colabNome) {
     window.pastaPrivadoAtual = colabNome;
@@ -211,8 +280,8 @@ window.abrirPastaPrivado = function(colabNome) {
     if(viewFold) viewFold.style.display = 'none';
     if(viewList) viewList.style.display = 'block';
     if(title) title.innerHTML = `<i class="ri-folder-user-line"></i> ${colabNome}`;
-    window.renderizarListaPrivados();
-};
+    renderizarListaPrivados();
+}
 
 window.fecharPastaPrivado = function() {
     window.pastaPrivadoAtual = null;
@@ -220,8 +289,8 @@ window.fecharPastaPrivado = function() {
     const viewList = document.getElementById('privados-view-list');
     if(viewList) viewList.style.display = 'none';
     if(viewFold) viewFold.style.display = 'block';
-    window.renderizarPastasPrivados();
-};
+    renderizarPastasPrivados();
+}
 
 window.atualizarGrafico = function(canvasId, refInstancia, dados, labelGrafico) {
     const ctx = document.getElementById(canvasId);
@@ -234,12 +303,12 @@ window.atualizarGrafico = function(canvasId, refInstancia, dados, labelGrafico) 
         data: { labels: Object.keys(contagemMotivos), datasets: [{ label: labelGrafico, data: Object.values(contagemMotivos), backgroundColor: '#8B252C', borderRadius: 5 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
     });
-};
+}
 
 window.fecharModal = function() {
     const modalEl = document.getElementById('modal-cadastro');
     if(modalEl) modalEl.style.display = 'none';
-};
+}
 
 window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
     const config = configuracaoAbas[colecao];
@@ -330,7 +399,7 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
     
     const modalEl = document.getElementById('modal-cadastro');
     if(modalEl) modalEl.style.display = 'flex';
-};
+}
 
 window.abrirMidaFlutuante = function(url) {
     let u = url;
@@ -341,7 +410,7 @@ window.abrirMidaFlutuante = function(url) {
     const modalMedia = document.getElementById('modal-media');
     if(iframe) iframe.src = u; 
     if(modalMedia) modalMedia.style.display = 'flex';
-};
+}
 
 window.desfazerLeitura = async function(docId, nomeColab, colecao) {
     if(!isAdmin) return;
@@ -356,7 +425,7 @@ window.desfazerLeitura = async function(docId, nomeColab, colecao) {
         const modalLeituras = document.getElementById('modal-leituras');
         if(modalLeituras) modalLeituras.style.display = 'none';
     }
-};
+}
 
 window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
     const data = window.dadosBoletins[docId];
@@ -388,7 +457,7 @@ window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
     
     const modalEl = document.getElementById('modal-leituras');
     if(modalEl) modalEl.style.display = 'flex';
-};
+}
 
 window.gerarHTMLCard = function(colecaoNome, docId, data) {
     const config = configuracaoAbas[colecaoNome];
@@ -462,7 +531,7 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
     if (isAdmin) cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
     cardHtml += `</div>`;
     return cardHtml;
-};
+}
 
 window.renderizarListaGenerica = function(colecao) {
     const grid = document.getElementById(`grid-${colecao}-list`); 
@@ -471,7 +540,7 @@ window.renderizarListaGenerica = function(colecao) {
     const nomePasta = window[`pasta_${colecao}_Atual`];
     const itensExibir = (window.dadosGlobaisAbas[colecao] || []).filter(i => (i.data[configuracaoAbas[colecao].campoAgrupador] || 'Geral (Sem Categoria)') === nomePasta);
     itensExibir.forEach(item => { grid.innerHTML += window.gerarHTMLCard(colecao, item.id, item.data); });
-};
+}
 
 window.renderizarPastasGenericas = function(colecao) {
     const grid = document.getElementById(`grid-${colecao}-folders`);
@@ -500,7 +569,7 @@ window.renderizarPastasGenericas = function(colecao) {
         
         grid.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaGenerica('${colecao}', '${nomePasta}')" style="text-align: left; padding: 20px; border-left: 6px solid ${corIcone};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">${iconeHtml}<div style="font-size: 16px; font-weight: 600;">${nomePasta}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;">Cadastros na pasta: <b style="color:var(--text-main);">${qtd}</b></div></div>`;
     });
-};
+}
 
 window.renderizarPastasBoletins = function() {
     const gridFolders = document.getElementById('grid-boletins-folders');
@@ -535,7 +604,7 @@ window.renderizarPastasBoletins = function() {
 
         gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaBoletim('${pasta}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; border-left: 6px solid ${corStatusPasta};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: var(--bg-color); padding: 15px; border-radius: 12px; color: var(--primary-color); font-size: 24px; flex-shrink:0;"><i class="${icone}"></i></div><div style="font-size: 16px; font-weight: 600; line-height:1.2; word-wrap:break-word;">${pasta}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Boletins Ativos: <b style="color: var(--text-main);">${boletinsDaPasta.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos Acumulados: <b>${totalLidos}</b></div><div style="color: #e53e3e;">Pendências: <b>${totalFaltam}</b></div></div></div>`;
     });
-};
+}
 
 window.renderizarListaBoletins = function() {
     const grid = document.getElementById('grid-boletins'); 
@@ -601,7 +670,7 @@ window.renderizarListaBoletins = function() {
         if (isAdmin) cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="boletins" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="boletins" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
         grid.innerHTML += cardHtml + `</div>`;
     });
-};
+}
 
 window.renderizarPastasPrivados = function() {
     const gridFolders = document.getElementById('grid-privados-folders');
@@ -627,7 +696,7 @@ window.renderizarPastasPrivados = function() {
 
         gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaPrivado('${nome}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; border-left: 6px solid ${corStatusPasta};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: #e2e8f0; padding: 15px; border-radius: 12px; color: var(--text-main); font-size: 24px; flex-shrink:0;"><i class="ri-user-star-fill"></i></div><div style="font-size: 16px; font-weight: 600; line-height:1.2; word-wrap:break-word;">${nome}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Documentos: <b style="color: var(--text-main);">${boletinsDele.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos: <b>${lidos}</b></div><div style="color: #e53e3e;">Pendentes: <b>${faltam}</b></div></div></div>`;
     });
-};
+}
 
 window.renderizarListaPrivados = function() {
     const grid = document.getElementById('grid-boletins-privados-list'); 
@@ -680,44 +749,8 @@ window.renderizarListaPrivados = function() {
         if (isAdmin) cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="boletins-privados" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="boletins-privados" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
         grid.innerHTML += cardHtml + `</div>`;
     });
-};
-
-// ================= LÓGICA DE LOGIN (BLINDADA VIA JS) =================
-function logarSistema() {
-    const email = document.getElementById('email').value;
-    const senha = document.getElementById('senha').value;
-    const btn = document.getElementById('btn-login');
-    if(!email || !senha) return;
-    
-    const textoOriginal = btn.innerHTML;
-    btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> Autenticando...";
-    
-    signInWithEmailAndPassword(auth, email, senha)
-        .then(() => {
-            btn.innerHTML = textoOriginal;
-        })
-        .catch(err => {
-            alert("Erro ao entrar: E-mail ou Senha incorretos.");
-            btn.innerHTML = textoOriginal;
-        });
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    const btnLoginNode = document.getElementById('btn-login');
-    if(btnLoginNode) btnLoginNode.addEventListener('click', logarSistema);
-    
-    const inputSenhaNode = document.getElementById('senha');
-    if(inputSenhaNode) {
-        inputSenhaNode.addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') {
-                e.preventDefault();
-                logarSistema();
-            }
-        });
-    }
-});
-
-// ================= RENDERIZADOR MASTER DO FIREBASE =================
 window.renderizarCards = function(colecaoNome) {
     const grid = document.getElementById(`grid-${colecaoNome}`);
     if(!grid && colecaoNome !== 'boletins' && colecaoNome !== 'boletins-privados' && !configuracaoAbas[colecaoNome]?.campoAgrupador) return;
@@ -797,7 +830,7 @@ window.renderizarCards = function(colecaoNome) {
 
         itens.forEach((item) => { grid.innerHTML += window.gerarHTMLCard(colecaoNome, item.id, item.data); });
     });
-};
+}
 
 // ================= EVENTOS DA MAIN CONTENT =================
 const mainContent = document.querySelector('.main-content');
@@ -819,7 +852,6 @@ if(mainContent) {
     });
 }
 
-// ================= LÓGICA DE SALVAR CONFIGURAÇÕES =================
 const btnSalvarAjustes = document.getElementById('btn-salvar-ajustes');
 if(btnSalvarAjustes) {
     btnSalvarAjustes.addEventListener('click', async () => {
@@ -886,8 +918,8 @@ window.carregarConfiguracoes = function() {
             
             const fabImg = document.getElementById('chat-fab-img');
             const headerImg = document.getElementById('chat-header-img');
-            if(fabImg) fabImg.src = formatarLinkImagem(chatLogo) || chatLogo;
-            if(headerImg) headerImg.src = formatarLinkImagem(chatLogo) || chatLogo;
+            if(fabImg) fabImg.src = window.formatarLinkImagem(chatLogo) || chatLogo;
+            if(headerImg) headerImg.src = window.formatarLinkImagem(chatLogo) || chatLogo;
             
             const inChatLogo = document.getElementById('tab-input-chat-logo');
             const inChatCor = document.getElementById('tab-color-chat');
@@ -1090,244 +1122,3 @@ if(inputPesqAba) {
         });
     });
 }
-
-// ==========================================
-// 13. CORREÇÕES E INICIALIZAÇÃO GERAL
-// ==========================================
-const loginScreenEl = document.getElementById('login-screen');
-const dashboardScreenEl = document.getElementById('dashboard-screen');
-const userEmailEl = document.getElementById('user-email');
-const userBadgeEl = document.getElementById('user-badge');
-const btnLogoutEl = document.getElementById('btn-logout');
-const btnSalvarDadosEl = document.getElementById('btn-salvar-dados');
-
-let listenersIniciados = false;
-let navegacaoIniciada = false;
-
-function mostrarTelaLogin() {
-    document.body.classList.remove('logged-in');
-    if (loginScreenEl) loginScreenEl.style.display = 'flex';
-    if (dashboardScreenEl) dashboardScreenEl.style.display = 'none';
-    const chatWin = document.getElementById('chat-window');
-    if (chatWin) chatWin.style.display = 'none';
-}
-
-function mostrarTelaDashboard(user) {
-    document.body.classList.add('logged-in');
-    if (loginScreenEl) loginScreenEl.style.display = 'none';
-    if (dashboardScreenEl) dashboardScreenEl.style.display = 'flex';
-    if (userEmailEl) userEmailEl.textContent = user?.email || '';
-
-    isAdmin = !!user && user.email === EMAIL_GESTAO;
-    if (userBadgeEl) {
-        userBadgeEl.textContent = isAdmin ? 'Administrador' : 'Colaborador';
-        userBadgeEl.className = isAdmin ? 'badge admin' : 'badge';
-    }
-}
-
-function inicializarNavegacao() {
-    if (navegacaoIniciada) return;
-    navegacaoIniciada = true;
-
-    const botoesAba = document.querySelectorAll('.nav-btn[data-tab]');
-    const tabs = document.querySelectorAll('.tab-content');
-
-    botoesAba.forEach((btn) => {
-        btn.addEventListener('click', () => {
-            const tab = btn.dataset.tab;
-            abaAtual = tab;
-
-            botoesAba.forEach((b) => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            tabs.forEach((sec) => { sec.style.display = 'none'; });
-            const abaEl = document.getElementById(`tab-${tab}`);
-            if (abaEl) abaEl.style.display = 'block';
-
-            if (tab === 'boletins') {
-                if (window.pastaBoletimAtual && typeof window.renderizarListaBoletins === 'function') window.renderizarListaBoletins();
-                else if (typeof window.renderizarPastasBoletins === 'function') window.renderizarPastasBoletins();
-            }
-
-            if (tab === 'boletins-privados') {
-                if (window.pastaPrivadoAtual && typeof window.renderizarListaPrivados === 'function') window.renderizarListaPrivados();
-                else if (typeof window.renderizarPastasPrivados === 'function') window.renderizarPastasPrivados();
-            }
-
-            if (configuracaoAbas[tab]?.campoAgrupador && typeof window.renderizarPastasGenericas === 'function') {
-                window.renderizarPastasGenericas(tab);
-            }
-
-            if (tab === 'contatos') {
-                const menu = document.getElementById('menu-contatos');
-                if (menu) menu.style.display = 'grid';
-                ['ramais', 'emails', 'contatos-gerais', 'contatos-convenios', 'senhas'].forEach(id => {
-                    const sub = document.getElementById('sub-' + id);
-                    if (sub) sub.style.display = 'none';
-                });
-            }
-        });
-    });
-}
-
-function salvarRegistro() {
-    if (!btnSalvarDadosEl) return;
-    btnSalvarDadosEl.addEventListener('click', async () => {
-        const colecao = btnSalvarDadosEl.getAttribute('data-colecao');
-        if (!colecao || !configuracaoAbas[colecao]) return;
-
-        const btnTxtOriginal = btnSalvarDadosEl.innerHTML;
-        btnSalvarDadosEl.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Salvando...';
-
-        try {
-            const dados = {};
-            const docId = document.getElementById('modal-doc-id')?.value || '';
-
-            configuracaoAbas[colecao].campos.forEach((campo) => {
-                if (colecao === 'boletins' && campo === 'Para quais Setores?') {
-                    const marcados = [...document.querySelectorAll('.check-setor:checked')].map(el => el.value);
-                    dados[campo] = marcados.length ? marcados.join(', ') : 'Geral';
-                    return;
-                }
-
-                const input = document.getElementById(`input-${campo}`);
-                if (!input) {
-                    dados[campo] = '';
-                    return;
-                }
-
-                if (input.tagName === 'SELECT') dados[campo] = input.value;
-                else if (input.type === 'checkbox') dados[campo] = input.checked ? 'Sim' : 'Não';
-                else dados[campo] = input.value.trim();
-            });
-
-            const corCard = document.getElementById('card-color')?.value || '#ffffff';
-            dados.corCard = corCard;
-
-            if (docId) {
-                await updateDoc(doc(db, colecao, docId), dados);
-            } else {
-                await addDoc(collection(db, colecao), dados);
-            }
-
-            window.fecharModal();
-        } catch (error) {
-            console.error('Erro ao salvar registro:', error);
-            alert('Não foi possível salvar o registro. Verifique o console para detalhes.');
-        } finally {
-            btnSalvarDadosEl.innerHTML = btnTxtOriginal;
-        }
-    });
-}
-
-function registrarListenersGerais() {
-    if (listenersIniciados) return;
-    listenersIniciados = true;
-
-    inicializarNavegacao();
-    salvarRegistro();
-
-    if (btnLogoutEl) {
-        btnLogoutEl.addEventListener('click', async () => {
-            try {
-                await signOut(auth);
-            } catch (error) {
-                console.error('Erro ao sair:', error);
-                alert('Não foi possível sair do sistema.');
-            }
-        });
-    }
-
-    const modalCadastro = document.getElementById('modal-cadastro');
-    const modalMedia = document.getElementById('modal-media');
-    const modalLeituras = document.getElementById('modal-leituras');
-    const iframeMedia = document.getElementById('iframe-media');
-    const chatInput = document.getElementById('chat-input');
-    const fab = document.getElementById('chat-fab');
-
-    [modalCadastro, modalMedia, modalLeituras].forEach((modal) => {
-        if (!modal) return;
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-                if (modal === modalMedia && iframeMedia) iframeMedia.src = '';
-            }
-        });
-    });
-
-    if (chatInput) {
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                window.sendChat();
-            }
-        });
-    }
-
-    if (fab) {
-        setTimeout(() => {
-            const tip = fab.querySelector('.chatbot-tooltip');
-            if (tip) tip.style.display = 'block';
-        }, 1400);
-    }
-
-    const primeiraAba = document.querySelector('.nav-btn[data-tab="home"]');
-    if (primeiraAba) primeiraAba.click();
-}
-
-window.atualizarGrafico = function(canvasId, refInstancia, dados, labelGrafico) {
-    const ctx = document.getElementById(canvasId);
-    if (!ctx || typeof Chart === 'undefined') return refInstancia;
-
-    const contagemMotivos = {};
-    (dados || []).forEach((b) => {
-        const m = b.data?.['Motivo'] || 'Sem Motivo';
-        contagemMotivos[m] = (contagemMotivos[m] || 0) + 1;
-    });
-
-    if (refInstancia) refInstancia.destroy();
-
-    return new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: Object.keys(contagemMotivos),
-            datasets: [{
-                label: labelGrafico,
-                data: Object.values(contagemMotivos),
-                backgroundColor: '#8B252C',
-                borderRadius: 5
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-        }
-    });
-};
-
-onAuthStateChanged(auth, (user) => {
-    registrarListenersGerais();
-
-    if (user) {
-        mostrarTelaDashboard(user);
-
-        Object.keys(configuracaoAbas).forEach((colecao) => {
-            if (!window.__listenersColecoes) window.__listenersColecoes = {};
-            if (window.__listenersColecoes[colecao]) return;
-            window.__listenersColecoes[colecao] = true;
-            try {
-                window.renderizarCards(colecao);
-            } catch (error) {
-                console.error(`Erro ao iniciar coleção ${colecao}:`, error);
-            }
-        });
-
-        if (typeof window.buscarClimaAraucaria === 'function') {
-            window.buscarClimaAraucaria();
-        }
-    } else {
-        mostrarTelaLogin();
-    }
-});
