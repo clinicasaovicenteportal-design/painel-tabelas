@@ -1,455 +1,465 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Clínico</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#8B252C">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#8B252C" />
+  <title>Painel Clínica São Vicente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
-    <div id="login-screen" class="screen">
-        <div class="login-box glass-effect">
-            <img src="logo.png" alt="Logo" class="login-logo" onerror="this.style.display='none'">
-            <h2 style="color: var(--primary-color);">Painel de Gestão</h2>
-            <div class="input-group"><i class="ri-mail-line"></i><input type="email" id="email" placeholder="E-mail" required></div>
-            <div class="input-group"><i class="ri-lock-line"></i><input type="password" id="senha" placeholder="Senha" required></div>
-            <button id="btn-login" class="btn-hover color-11" style="width: 100%;">Entrar no Painel</button>
-        </div>
+  <section id="login-screen">
+    <div class="login-box">
+      <img class="login-logo" src="https://www.csv.med.br/wp-content/uploads/2022/08/logo-csv.png" alt="Clínica São Vicente">
+      <h2>Acesso ao Painel</h2>
+      <div class="input-group">
+        <i class="ri-mail-line"></i>
+        <input id="email" type="email" placeholder="Seu e-mail" autocomplete="username">
+      </div>
+      <div class="input-group">
+        <i class="ri-lock-password-line"></i>
+        <input id="senha" type="password" placeholder="Sua senha" autocomplete="current-password">
+      </div>
+      <button id="btn-login" class="btn-hover color-11" style="width:100%;"><i class="ri-login-box-line"></i> Entrar</button>
     </div>
+  </section>
 
-    <div id="dashboard-screen" class="screen" style="display: none;">
-        
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <img src="logo.png" alt="Logo" class="sidebar-logo" onerror="this.style.display='none'">
-                <h2 style="color: var(--primary-color); font-weight: 800; font-size: 24px; margin-top: 10px;">Painel<br>Clínico</h2>
+  <section id="dashboard-screen" style="display:none;">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img class="sidebar-logo" src="https://www.csv.med.br/wp-content/uploads/2022/08/logo-csv.png" alt="Logo">
+        <div style="margin-top:12px;">
+          <div id="user-email" style="font-size:13px; font-weight:600;"></div>
+          <div id="user-badge" class="badge">Colaborador</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-btn" data-tab="home"><i class="ri-home-5-line"></i> <span>Início</span></button>
+<button class="nav-btn" data-tab="colaboradores"><i class="ri-user-3-line"></i> <span>Colaboradores</span></button>
+<button class="nav-btn" data-tab="corpo-clinico"><i class="ri-team-line"></i> <span>Corpo Clínico</span></button>
+<button class="nav-btn" data-tab="convenios"><i class="ri-shield-cross-line"></i> <span>Convênios</span></button>
+<button class="nav-btn" data-tab="ultrassom"><i class="ri-heart-pulse-line"></i> <span>Ultrassom</span></button>
+<button class="nav-btn" data-tab="consultas"><i class="ri-stethoscope-line"></i> <span>Consultas</span></button>
+<button class="nav-btn" data-tab="pacotes"><i class="ri-archive-line"></i> <span>Pacotes</span></button>
+<button class="nav-btn" data-tab="exames-imagem"><i class="ri-body-scan-line"></i> <span>Exames de Imagem</span></button>
+<button class="nav-btn" data-tab="institutos"><i class="ri-building-2-line"></i> <span>Institutos</span></button>
+<button class="nav-btn" data-tab="remocoes"><i class="ri-map-pin-2-line"></i> <span>Remoções</span></button>
+<button class="nav-btn" data-tab="contatos"><i class="ri-contacts-book-2-line"></i> <span>Contatos</span></button>
+<button class="nav-btn" data-tab="boletins"><i class="ri-notification-3-line"></i> <span>Boletins</span></button>
+<button class="nav-btn" data-tab="boletins-privados"><i class="ri-lock-2-line"></i> <span>Boletins Privados</span></button>
+<button class="nav-btn" data-tab="configuracoes"><i class="ri-settings-3-line"></i> <span>Configurações</span></button>
+      </nav>
+      <button id="btn-logout" class="nav-btn logout-btn"><i class="ri-logout-box-r-line"></i> Sair</button>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <div>
+          <h1>Painel de Tabelas</h1>
+          <p style="color:var(--text-muted);">Consulta rápida, boletins, contatos e configurações do sistema.</p>
+        </div>
+        <div class="search-container">
+          <input id="input-pesquisa-global" type="text" placeholder="Busca global no sistema...">
+        </div>
+      </header>
+
+      <div id="resultados-globais" class="results-grid"></div>
+
+      <section class="tab-content" id="tab-home">
+        <div class="home-grid">
+          <div class="banner-box">
+            <h3><i class="ri-megaphone-line"></i> Aviso do dia</h3>
+            <div id="banner-content">Carregando comunicado...</div>
+            <div id="area-alertas-home" style="margin-top:16px;"></div>
+          </div>
+          <div class="weather-box">
+            <h3><i class="ri-sun-cloudy-line"></i> Clima</h3>
+            <div class="weather-main">
+              <i id="weather-icon-class" class="ri-sun-line"></i>
+              <div>
+                <div class="weather-temp"><span id="weather-deg">--</span>°C</div>
+                <div id="weather-desc">Carregando...</div>
+              </div>
             </div>
-            <nav class="sidebar-nav">
-                <button class="nav-btn active" data-tab="home"><i class="ri-home-4-line"></i> Início</button>
-                <button class="nav-btn" data-tab="corpo-clinico"><i class="ri-team-line"></i> Corpo Clínico</button>
-                <button class="nav-btn" data-tab="convenios"><i class="ri-shield-cross-fill"></i> Convênios</button>
-                <button class="nav-btn" data-tab="ultrassom"><i class="ri-pulse-line"></i> Ultrassom</button>
-                <button class="nav-btn" data-tab="consultas"><i class="ri-stethoscope-line"></i> Consultas e Proc.</button>
-                <button class="nav-btn" data-tab="pacotes"><i class="ri-first-aid-kit-line"></i> Pacotes PS</button>
-                <button class="nav-btn" data-tab="exames-imagem"><i class="ri-body-scan-line"></i> Exames Imagem</button>
-                <button class="nav-btn" data-tab="institutos"><i class="ri-building-line"></i> Tabela Instituto</button>
-                <button class="nav-btn" data-tab="contatos"><i class="ri-contacts-book-line"></i> Contatos Úteis</button>
-                <button class="nav-btn" data-tab="remocoes"><i class="ri-ambulance-line"></i> Remoções</button>
-                
-                <button class="nav-btn" data-tab="boletins" style="margin-top: 15px; border-top: 1px solid #eee; border-radius: 0; padding-top: 15px;"><i class="ri-newspaper-line"></i> Boletins Gerais</button>
-                
-                <button class="nav-btn admin-only" id="btn-nav-privados" data-tab="boletins-privados" style="display: none;"><i class="ri-user-star-line"></i> Informativos Diretos</button>
-                <button class="nav-btn admin-only" id="btn-nav-colaboradores" data-tab="colaboradores" style="display: none;"><i class="ri-group-line"></i> Gerenciar Equipe</button>
-                <button class="nav-btn admin-only" id="btn-nav-ajustes" data-tab="ajustes" style="display: none;"><i class="ri-settings-4-line"></i> Ajustes Globais</button>
-            </nav>
-            <div class="sidebar-footer"><button id="btn-logout" class="nav-btn logout-btn"><i class="ri-logout-box-r-line"></i> Sair do Painel</button></div>
-        </aside>
+          </div>
+        </div>
+        <div class="shortcuts-grid">
+          <div class="shortcut-card" onclick="window.irParaAba('corpo-clinico')"><i class="ri-team-line"></i><h3>Corpo Clínico</h3><p>Acesse médicos e especialidades.</p></div>
+          <div class="shortcut-card" onclick="window.irParaAba('convenios')"><i class="ri-shield-cross-line"></i><h3>Convênios</h3><p>Consulte regras e coberturas.</p></div>
+          <div class="shortcut-card" onclick="window.irParaAba('boletins')"><i class="ri-notification-3-line"></i><h3>Boletins</h3><p>Veja informativos e assinaturas.</p></div>
+          <div class="shortcut-card" onclick="window.irParaAba('contatos')"><i class="ri-contacts-book-2-line"></i><h3>Contatos</h3><p>Ramais, e-mails e acessos.</p></div>
+        </div>
+      </section>
 
-        <main class="main-content">
-            <header class="top-header">
-                <div>
-                    <h1 id="page-title">Início</h1>
-                    <p id="user-role-badge" class="badge">Visualização</p>
-                </div>
-                <div class="search-container" id="search-box" style="display: none; flex: 1; max-width: 400px; margin: 0 20px;">
-                    <i class="ri-search-line"></i>
-                    <input type="text" id="input-pesquisa" class="search-input" placeholder="Pesquisar nesta aba...">
-                </div>
-            </header>
+      
+<section class="tab-content" id="tab-colaboradores">
+  <div class="section-toolbar">
+    <h2>Colaboradores</h2>
+    <div class="actions"><button class='btn-hover color-9' onclick="window.abrirModal('colaboradores')"><i class='ri-add-line'></i> Novo cadastro</button></div>
+  </div>
+  <div class="cards-grid" id="grid-colaboradores"></div>
+</section>
 
-            <section id="tab-home" class="tab-content active">
-                <div class="home-top-bar">
-                    <div class="relogio-digital" id="relogio">00:00:00</div>
-                    <div class="frase-motivacional" id="frase-dia">"Carregando motivação..."</div>
-                </div>
-
-                <div class="search-container">
-                    <i class="ri-search-line" style="color: var(--primary-color); font-size: 20px;"></i>
-                    <input type="text" id="input-pesquisa-global" class="search-input" placeholder="Pesquisar em todo o sistema (Exames, Médicos, Convênios)..." style="border: 2px solid var(--primary-color);">
-                </div>
-                <div id="resultados-globais" class="cards-grid" style="display: none; margin-bottom: 30px; padding: 15px; background: #fff; border-radius: 15px; box-shadow: var(--shadow-soft);"></div>
-
-                <div class="home-banner" id="banner-area">
-                    <div id="banner-content"><h2>Bem-vindo ao Painel Clínico</h2></div>
-                </div>
-
-                <div class="weather-widget">
-                    <div class="weather-info">
-                        <h3 id="weather-city"><i class="ri-map-pin-line"></i> Araucária, PR</h3>
-                        <div class="weather-temp"><span id="weather-deg">--</span>°C</div>
-                        <div id="weather-desc">Buscando previsão do tempo...</div>
-                    </div>
-                    <div class="weather-icon">
-                        <i id="weather-icon-class" class="ri-sun-cloudy-line"></i>
-                    </div>
-                </div>
-
-                <div id="area-alertas-home"></div>
-
-                <h2 style="margin-bottom: 20px; font-weight: 500; color: var(--text-muted); margin-top: 10px;">Acesso Rápido</h2>
-                <div class="home-grid">
-                    <div class="shortcut-card" onclick="window.irParaAba('boletins')"><div class="shortcut-icon"><i class="ri-alarm-warning-line"></i></div><div class="shortcut-title">Boletins Gerais</div></div>
-                    <div class="shortcut-card" onclick="window.irParaAba('corpo-clinico')"><div class="shortcut-icon"><i class="ri-team-fill"></i></div><div class="shortcut-title">Corpo Clínico</div></div>
-                    <div class="shortcut-card" onclick="window.abrirSubAba('ramais'); window.irParaAba('contatos');"><div class="shortcut-icon"><i class="ri-phone-fill"></i></div><div class="shortcut-title">Ramais Internos</div></div>
-                </div>
-            </section>
-
-            <section id="tab-ajustes" class="tab-content" style="display: none;">
-                <div class="card" style="max-width: 600px; margin: 0 auto;">
-                    <h2 style="margin-bottom: 20px; color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Configurações do Sistema</h2>
-                    
-                    <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px;">Aviso Animado na Tela Inicial (Banner)</label>
-                    <textarea id="tab-input-banner" class="form-input" style="height: 80px; resize: vertical;" placeholder="Ex: Campanha de Vacinação iniciada!"></textarea>
-                    
-                    <div style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
-                        <h4 style="color: var(--primary-color); margin-bottom: 10px;"><i class="ri-robot-2-fill"></i> Personalização (Chatbot & Pastas)</h4>
-                        
-                        <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 5px;">Imagem/Avatar da Assistente Virtual (Link)</label>
-                        <input type="text" id="tab-input-chat-logo" class="form-input" placeholder="Ex: https://imgur.com/avatar.png">
-                        
-                        <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 5px;">Cor Temática da Assistente Virtual</label>
-                        <input type="color" id="tab-color-chat" class="form-input" style="height:50px; padding:5px; cursor:pointer;" value="#0ba360">
-
-                        <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 5px; margin-top: 15px;">Imagem/Logo Padrão das Pastas (Link)</label>
-                        <input type="text" id="tab-input-imagem-pastas" class="form-input" placeholder="Ex: https://imgur.com/sua-logo.png">
-                    </div>
-
-                    <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Locais/Prédios (Para os Contatos)</label>
-                    <textarea id="tab-input-locais" class="form-input" style="height: 100px; resize: vertical;" placeholder="MATRIZ&#10;CASA DE VIDRO"></textarea>
-
-                    <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Setores da Clínica (Para os Boletins)</label>
-                    <textarea id="tab-input-setores" class="form-input" style="height: 100px; resize: vertical;" placeholder="Recepção&#10;Enfermagem"></textarea>
-                    
-                    <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Especialidades (Corpo Clínico)</label>
-                    <p style="font-size: 12px; margin-bottom: 10px; color: var(--text-muted);">Digite as especialidades para criar as Pastas dos Médicos.</p>
-                    <textarea id="tab-input-especialidades" class="form-input" style="height: 100px; resize: vertical;" placeholder="Cardiologia&#10;Pediatria&#10;Ginecologia"></textarea>
-
-                    <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Motivos dos Informativos (Para os Gráficos)</label>
-                    <textarea id="tab-input-motivos" class="form-input" style="height: 100px; resize: vertical;" placeholder="Aviso Geral&#10;Nova Regra&#10;Elogio"></textarea>
-
-                    <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Cores de Status (Informativos)</label>
-                    <div style="display:flex; gap: 15px;">
-                        <div style="flex:1;"><span style="font-size:12px; color:var(--text-muted);">Pendente / Falta Ler:</span><input type="color" id="tab-color-pendente" class="form-input" style="height:50px; padding:5px; cursor:pointer;" value="#e53e3e"></div>
-                        <div style="flex:1;"><span style="font-size:12px; color:var(--text-muted);">Concluído / Todos Leram:</span><input type="color" id="tab-color-concluido" class="form-input" style="height:50px; padding:5px; cursor:pointer;" value="#38a169"></div>
-                    </div>
-
-                    <button id="btn-salvar-ajustes" class="btn-hover color-5" style="margin-top: 20px; width: 100%;">Salvar Alterações</button>
-                </div>
-            </section>
-
-            <section id="tab-colaboradores" class="tab-content" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <p style="color: var(--text-muted);">Gerenciamento da Equipe Base.</p>
-                    <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('colaboradores')" style="display:none;"><i class="ri-add-line"></i> Adicionar Colaborador</button>
-                </div>
-                <div class="cards-grid" id="grid-colaboradores"></div>
-            </section>
-            
-            <section id="tab-pacotes" class="tab-content" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <p style="color: var(--text-muted);">Gestão de Pacotes do Pronto Socorro.</p>
-                    <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('pacotes')" style="display:none;"><i class="ri-add-line"></i> Adicionar Pacote</button>
-                </div>
-                <div class="cards-grid" id="grid-pacotes"></div>
-            </section>
-            
-            <section id="tab-remocoes" class="tab-content" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <p style="color: var(--text-muted);">Contatos e informações de Remoção.</p>
-                    <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('remocoes')" style="display:none;"><i class="ri-add-line"></i> Adicionar Remoção</button>
-                </div>
-                <div class="cards-grid" id="grid-remocoes"></div>
-            </section>
-            
-            <section id="tab-corpo-clinico" class="tab-content" style="display: none;">
-                <div id="corpo-clinico-view-folders">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <p style="color: var(--text-muted);">Selecione a Especialidade do Médico.</p>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('corpo-clinico')" style="display:none;"><i class="ri-add-line"></i> Adicionar Médico</button>
-                    </div>
-                    <div class="home-grid" id="grid-corpo-clinico-folders"></div>
-                </div>
-                <div id="corpo-clinico-view-list" style="display:none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <button class="btn-hover color-8" onclick="window.fecharPastaGenerica('corpo-clinico')"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 id="titulo-pasta-corpo-clinico" style="color: var(--primary-color);">Pasta</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('corpo-clinico')" style="display:none;"><i class="ri-add-line"></i> Adicionar Médico</button>
-                    </div>
-                    <div class="cards-grid" id="grid-corpo-clinico-list"></div>
-                </div>
-            </section>
-            
-            <section id="tab-convenios" class="tab-content" style="display: none;">
-                <div id="convenios-view-folders">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <p style="color: var(--text-muted);">Selecione o Convênio para visualizar serviços.</p>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('convenios')" style="display:none;"><i class="ri-add-line"></i> Novo Serviço/Convênio</button>
-                    </div>
-                    <div class="home-grid" id="grid-convenios-folders"></div>
-                </div>
-                <div id="convenios-view-list" style="display:none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <button class="btn-hover color-8" onclick="window.fecharPastaGenerica('convenios')"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 id="titulo-pasta-convenios" style="color: var(--primary-color);">Pasta</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('convenios')" style="display:none;"><i class="ri-add-line"></i> Novo Serviço</button>
-                    </div>
-                    <div class="cards-grid" id="grid-convenios-list"></div>
-                </div>
-            </section>
-            
-            <section id="tab-ultrassom" class="tab-content" style="display: none;">
-                <div id="ultrassom-view-folders">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <p style="color: var(--text-muted);">Selecione o Tipo de Exame.</p>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('ultrassom')" style="display:none;"><i class="ri-add-line"></i> Novo Ultrassom</button>
-                    </div>
-                    <div class="home-grid" id="grid-ultrassom-folders"></div>
-                </div>
-                <div id="ultrassom-view-list" style="display:none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <button class="btn-hover color-8" onclick="window.fecharPastaGenerica('ultrassom')"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 id="titulo-pasta-ultrassom" style="color: var(--primary-color);">Pasta</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('ultrassom')" style="display:none;"><i class="ri-add-line"></i> Novo Ultrassom</button>
-                    </div>
-                    <div class="cards-grid" id="grid-ultrassom-list"></div>
-                </div>
-            </section>
-            
-            <section id="tab-consultas" class="tab-content" style="display: none;">
-                <div id="consultas-view-folders">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <p style="color: var(--text-muted);">Selecione a Categoria/Setor.</p>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('consultas')" style="display:none;"><i class="ri-add-line"></i> Nova Consulta/Proc.</button>
-                    </div>
-                    <div class="home-grid" id="grid-consultas-folders"></div>
-                </div>
-                <div id="consultas-view-list" style="display:none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <button class="btn-hover color-8" onclick="window.fecharPastaGenerica('consultas')"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 id="titulo-pasta-consultas" style="color: var(--primary-color);">Pasta</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('consultas')" style="display:none;"><i class="ri-add-line"></i> Novo Item</button>
-                    </div>
-                    <div class="cards-grid" id="grid-consultas-list"></div>
-                </div>
-            </section>
-            
-            <section id="tab-exames-imagem" class="tab-content" style="display: none;">
-                <div id="exames-imagem-view-folders">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <p style="color: var(--text-muted);">Selecione a Categoria do Exame.</p>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('exames-imagem')" style="display:none;"><i class="ri-add-line"></i> Novo Exame de Imagem</button>
-                    </div>
-                    <div class="home-grid" id="grid-exames-imagem-folders"></div>
-                </div>
-                <div id="exames-imagem-view-list" style="display:none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <button class="btn-hover color-8" onclick="window.fecharPastaGenerica('exames-imagem')"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 id="titulo-pasta-exames-imagem" style="color: var(--primary-color);">Pasta</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('exames-imagem')" style="display:none;"><i class="ri-add-line"></i> Novo Exame</button>
-                    </div>
-                    <div class="cards-grid" id="grid-exames-imagem-list"></div>
-                </div>
-            </section>
-            
-            <section id="tab-institutos" class="tab-content" style="display: none;">
-                <div id="institutos-view-folders">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <p style="color: var(--text-muted);">Selecione o Número da Tabela.</p>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('institutos')" style="display:none;"><i class="ri-add-line"></i> Novo Instituto</button>
-                    </div>
-                    <div class="home-grid" id="grid-institutos-folders"></div>
-                </div>
-                <div id="institutos-view-list" style="display:none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <button class="btn-hover color-8" onclick="window.fecharPastaGenerica('institutos')"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 id="titulo-pasta-institutos" style="color: var(--primary-color);">Pasta</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('institutos')" style="display:none;"><i class="ri-add-line"></i> Novo Instituto</button>
-                    </div>
-                    <div class="cards-grid" id="grid-institutos-list"></div>
-                </div>
-            </section>
-
-            <section id="tab-boletins" class="tab-content" style="display: none;">
-                <div id="boletins-view-folders">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <p style="color: var(--text-muted);">Selecione o setor para ver os informativos direcionados.</p>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('boletins')" style="display:none;"><i class="ri-add-line"></i> Novo Boletim</button>
-                    </div>
-                    <div class="home-grid" id="grid-boletins-folders"></div>
-                </div>
-                <div id="boletins-view-list" style="display:none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <button class="btn-hover color-8" onclick="window.fecharPastaBoletim()"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 id="titulo-pasta-boletins" style="color: var(--primary-color);">Setor</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('boletins')" style="display:none;"><i class="ri-add-line"></i> Novo Boletim</button>
-                    </div>
-                    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: var(--shadow-soft); margin-bottom: 25px; height: 300px;">
-                        <canvas id="chart-boletins"></canvas>
-                    </div>
-                    <div class="cards-grid" id="grid-boletins"></div>
-                </div>
-            </section>
-
-            <section id="tab-boletins-privados" class="tab-content" style="display: none;">
-                <div id="privados-view-folders">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <p style="color: var(--text-muted);">Pastas Individuais dos Colaboradores.</p>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('boletins-privados')" style="display:none;"><i class="ri-add-line"></i> Novo Doc Privado</button>
-                    </div>
-                    <div class="home-grid" id="grid-privados-folders"></div>
-                </div>
-                <div id="privados-view-list" style="display:none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <button class="btn-hover color-8" onclick="window.fecharPastaPrivado()"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 id="titulo-pasta-privados" style="color: var(--primary-color);">Colaborador</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('boletins-privados')" style="display:none;"><i class="ri-add-line"></i> Novo Documento</button>
-                    </div>
-                    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: var(--shadow-soft); margin-bottom: 25px; height: 300px;">
-                        <canvas id="chart-privados"></canvas>
-                    </div>
-                    <div class="cards-grid" id="grid-boletins-privados-list"></div>
-                </div>
-            </section>
-
-            <section id="tab-contatos" class="tab-content" style="display: none;">
-                <div class="cards-grid" id="menu-contatos">
-                    <div class="card" onclick="window.abrirSubAba('ramais')" style="cursor:pointer; text-align:center;"><h3>Ramais Internos</h3></div>
-                    <div class="card" onclick="window.abrirSubAba('emails')" style="cursor:pointer; text-align:center;"><h3>E-mails</h3></div>
-                    <div class="card" onclick="window.abrirSubAba('contatos-gerais')" style="cursor:pointer; text-align:center;"><h3>Contatos Gerais</h3></div>
-                    <div class="card" onclick="window.abrirSubAba('contatos-convenios')" style="cursor:pointer; text-align:center;"><h3>Contatos Convênios</h3></div>
-                    <div class="card" onclick="window.abrirSubAba('senhas')" style="cursor:pointer; text-align:center;"><h3>Senhas e Logins</h3></div>
-                </div>
-                
-                <div id="sub-ramais" style="display:none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-                        <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('ramais')" style="display:none;"><i class="ri-add-line"></i> Novo Ramal</button>
-                    </div>
-                    <div class="cards-grid" id="grid-ramais"></div>
-                </div>
-                
-                <div id="sub-emails" style="display:none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-                        <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('emails')" style="display:none;"><i class="ri-add-line"></i> Novo E-mail</button>
-                    </div>
-                    <div class="cards-grid" id="grid-emails"></div>
-                </div>
-                
-                <div id="sub-contatos-gerais" style="display:none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-                        <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('contatos-gerais')" style="display:none;"><i class="ri-add-line"></i> Novo Contato Geral</button>
-                    </div>
-                    <div class="cards-grid" id="grid-contatos-gerais"></div>
-                </div>
-                
-                <div id="sub-contatos-convenios" style="display:none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-                        <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('contatos-convenios')" style="display:none;"><i class="ri-add-line"></i> Novo Contato Convênio</button>
-                    </div>
-                    <div class="cards-grid" id="grid-contatos-convenios"></div>
-                </div>
-                
-                <div id="sub-senhas" style="display:none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-                        <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('senhas')" style="display:none;"><i class="ri-add-line"></i> Nova Senha</button>
-                    </div>
-                    <div class="cards-grid" id="grid-senhas"></div>
-                </div>
-            </section>
-        </main>
+      
+<section class="tab-content" id="tab-corpo-clinico">
+  <div class="section-toolbar">
+    <h2>Corpo Clínico</h2>
+    <div class="actions"><button class='btn-hover color-9' onclick="window.abrirModal('corpo-clinico')"><i class='ri-add-line'></i> Novo cadastro</button></div>
+  </div>
+  <div id="corpo-clinico-view-folders">
+    <div class="pastas-grid" id="grid-corpo-clinico-folders"></div>
+  </div>
+  <div id="corpo-clinico-view-list" style="display:none;">
+    <div class="list-header">
+      <h3 id="titulo-pasta-corpo-clinico">Corpo Clínico</h3>
+      <div class="actions">
+        <button class="back-btn" onclick="window.fecharPastaGenerica('corpo-clinico')"><i class="ri-arrow-left-line"></i> Voltar</button>
+        <button class='btn-hover color-9' onclick="window.abrirModal('corpo-clinico')"><i class='ri-add-line'></i> Novo cadastro</button>
+      </div>
     </div>
+    <div class="cards-grid" id="grid-corpo-clinico-list"></div>
+  </div>
+</section>
 
-    <div id="modal-cadastro" class="modal-overlay" style="display: none;">
-        <div class="modal-box glass-effect" style="max-height: 95vh; overflow-y: auto;">
-            <header class="modal-header"><h3 id="modal-title">Cadastrar</h3><button id="btn-fechar-modal" class="btn-icon" onclick="window.fecharModal()"><i class="ri-close-line"></i></button></header>
-            <div class="modal-body" style="overflow-y: visible;">
-                <input type="hidden" id="modal-doc-id">
-                <div id="modal-form-area"></div>
-                <div style="margin-top: 15px;">
-                    <label style="font-size: 13px; font-weight: 500; color: var(--text-muted);">Cor do Item / Cor da Pasta:</label>
-                    <input type="hidden" id="card-color" value="#ffffff">
-                    <div id="gradient-picker" class="gradient-picker-container"></div>
-                </div>
+      
+<section class="tab-content" id="tab-convenios">
+  <div class="section-toolbar">
+    <h2>Convênios</h2>
+    <div class="actions"><button class='btn-hover color-9' onclick="window.abrirModal('convenios')"><i class='ri-add-line'></i> Novo cadastro</button></div>
+  </div>
+  <div id="convenios-view-folders">
+    <div class="pastas-grid" id="grid-convenios-folders"></div>
+  </div>
+  <div id="convenios-view-list" style="display:none;">
+    <div class="list-header">
+      <h3 id="titulo-pasta-convenios">Convênios</h3>
+      <div class="actions">
+        <button class="back-btn" onclick="window.fecharPastaGenerica('convenios')"><i class="ri-arrow-left-line"></i> Voltar</button>
+        <button class='btn-hover color-9' onclick="window.abrirModal('convenios')"><i class='ri-add-line'></i> Novo cadastro</button>
+      </div>
+    </div>
+    <div class="cards-grid" id="grid-convenios-list"></div>
+  </div>
+</section>
+
+      
+<section class="tab-content" id="tab-ultrassom">
+  <div class="section-toolbar">
+    <h2>Ultrassom</h2>
+    <div class="actions"><button class='btn-hover color-9' onclick="window.abrirModal('ultrassom')"><i class='ri-add-line'></i> Novo cadastro</button></div>
+  </div>
+  <div id="ultrassom-view-folders">
+    <div class="pastas-grid" id="grid-ultrassom-folders"></div>
+  </div>
+  <div id="ultrassom-view-list" style="display:none;">
+    <div class="list-header">
+      <h3 id="titulo-pasta-ultrassom">Ultrassom</h3>
+      <div class="actions">
+        <button class="back-btn" onclick="window.fecharPastaGenerica('ultrassom')"><i class="ri-arrow-left-line"></i> Voltar</button>
+        <button class='btn-hover color-9' onclick="window.abrirModal('ultrassom')"><i class='ri-add-line'></i> Novo cadastro</button>
+      </div>
+    </div>
+    <div class="cards-grid" id="grid-ultrassom-list"></div>
+  </div>
+</section>
+
+      
+<section class="tab-content" id="tab-consultas">
+  <div class="section-toolbar">
+    <h2>Consultas / Procedimentos</h2>
+    <div class="actions"><button class='btn-hover color-9' onclick="window.abrirModal('consultas')"><i class='ri-add-line'></i> Novo cadastro</button></div>
+  </div>
+  <div id="consultas-view-folders">
+    <div class="pastas-grid" id="grid-consultas-folders"></div>
+  </div>
+  <div id="consultas-view-list" style="display:none;">
+    <div class="list-header">
+      <h3 id="titulo-pasta-consultas">Consultas / Procedimentos</h3>
+      <div class="actions">
+        <button class="back-btn" onclick="window.fecharPastaGenerica('consultas')"><i class="ri-arrow-left-line"></i> Voltar</button>
+        <button class='btn-hover color-9' onclick="window.abrirModal('consultas')"><i class='ri-add-line'></i> Novo cadastro</button>
+      </div>
+    </div>
+    <div class="cards-grid" id="grid-consultas-list"></div>
+  </div>
+</section>
+
+      
+<section class="tab-content" id="tab-pacotes">
+  <div class="section-toolbar">
+    <h2>Pacotes</h2>
+    <div class="actions"><button class='btn-hover color-9' onclick="window.abrirModal('pacotes')"><i class='ri-add-line'></i> Novo cadastro</button></div>
+  </div>
+  <div class="cards-grid" id="grid-pacotes"></div>
+</section>
+
+      
+<section class="tab-content" id="tab-exames-imagem">
+  <div class="section-toolbar">
+    <h2>Exames de Imagem</h2>
+    <div class="actions"><button class='btn-hover color-9' onclick="window.abrirModal('exames-imagem')"><i class='ri-add-line'></i> Novo cadastro</button></div>
+  </div>
+  <div id="exames-imagem-view-folders">
+    <div class="pastas-grid" id="grid-exames-imagem-folders"></div>
+  </div>
+  <div id="exames-imagem-view-list" style="display:none;">
+    <div class="list-header">
+      <h3 id="titulo-pasta-exames-imagem">Exames de Imagem</h3>
+      <div class="actions">
+        <button class="back-btn" onclick="window.fecharPastaGenerica('exames-imagem')"><i class="ri-arrow-left-line"></i> Voltar</button>
+        <button class='btn-hover color-9' onclick="window.abrirModal('exames-imagem')"><i class='ri-add-line'></i> Novo cadastro</button>
+      </div>
+    </div>
+    <div class="cards-grid" id="grid-exames-imagem-list"></div>
+  </div>
+</section>
+
+      
+<section class="tab-content" id="tab-institutos">
+  <div class="section-toolbar">
+    <h2>Institutos</h2>
+    <div class="actions"><button class='btn-hover color-9' onclick="window.abrirModal('institutos')"><i class='ri-add-line'></i> Novo cadastro</button></div>
+  </div>
+  <div id="institutos-view-folders">
+    <div class="pastas-grid" id="grid-institutos-folders"></div>
+  </div>
+  <div id="institutos-view-list" style="display:none;">
+    <div class="list-header">
+      <h3 id="titulo-pasta-institutos">Institutos</h3>
+      <div class="actions">
+        <button class="back-btn" onclick="window.fecharPastaGenerica('institutos')"><i class="ri-arrow-left-line"></i> Voltar</button>
+        <button class='btn-hover color-9' onclick="window.abrirModal('institutos')"><i class='ri-add-line'></i> Novo cadastro</button>
+      </div>
+    </div>
+    <div class="cards-grid" id="grid-institutos-list"></div>
+  </div>
+</section>
+
+      
+<section class="tab-content" id="tab-remocoes">
+  <div class="section-toolbar">
+    <h2>Remoções</h2>
+    <div class="actions"><button class='btn-hover color-9' onclick="window.abrirModal('remocoes')"><i class='ri-add-line'></i> Novo cadastro</button></div>
+  </div>
+  <div class="cards-grid" id="grid-remocoes"></div>
+</section>
+
+
+      <section class="tab-content" id="tab-contatos">
+        <div class="section-toolbar">
+          <h2>Central de Contatos</h2>
+        </div>
+        <div id="menu-contatos" class="submenu-grid">
+          <div class="mini-card" onclick="window.abrirSubAba('ramais')"><i class="ri-phone-line"></i><h3>Ramais</h3></div>
+          <div class="mini-card" onclick="window.abrirSubAba('emails')"><i class="ri-mail-line"></i><h3>E-mails</h3></div>
+          <div class="mini-card" onclick="window.abrirSubAba('contatos-gerais')"><i class="ri-user-voice-line"></i><h3>Contatos Gerais</h3></div>
+          <div class="mini-card" onclick="window.abrirSubAba('contatos-convenios')"><i class="ri-shield-user-line"></i><h3>Contatos Convênios</h3></div>
+          <div class="mini-card" onclick="window.abrirSubAba('senhas')"><i class="ri-key-2-line"></i><h3>Senhas</h3></div>
+        </div>
+        <div id="sub-ramais" style="display:none;">
+      <div class="list-header">
+        <h3>Ramais</h3>
+        <div class="actions">
+          <button class="back-btn" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
+          <button class="btn-hover color-9" onclick="window.abrirModal('ramais')"><i class="ri-add-line"></i> Novo cadastro</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="grid-ramais"></div>
+    </div><div id="sub-emails" style="display:none;">
+      <div class="list-header">
+        <h3>E-mails</h3>
+        <div class="actions">
+          <button class="back-btn" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
+          <button class="btn-hover color-9" onclick="window.abrirModal('emails')"><i class="ri-add-line"></i> Novo cadastro</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="grid-emails"></div>
+    </div><div id="sub-contatos-gerais" style="display:none;">
+      <div class="list-header">
+        <h3>Contatos Gerais</h3>
+        <div class="actions">
+          <button class="back-btn" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
+          <button class="btn-hover color-9" onclick="window.abrirModal('contatos-gerais')"><i class="ri-add-line"></i> Novo cadastro</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="grid-contatos-gerais"></div>
+    </div><div id="sub-contatos-convenios" style="display:none;">
+      <div class="list-header">
+        <h3>Contatos Convênios</h3>
+        <div class="actions">
+          <button class="back-btn" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
+          <button class="btn-hover color-9" onclick="window.abrirModal('contatos-convenios')"><i class="ri-add-line"></i> Novo cadastro</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="grid-contatos-convenios"></div>
+    </div><div id="sub-senhas" style="display:none;">
+      <div class="list-header">
+        <h3>Senhas</h3>
+        <div class="actions">
+          <button class="back-btn" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
+          <button class="btn-hover color-9" onclick="window.abrirModal('senhas')"><i class="ri-add-line"></i> Novo cadastro</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="grid-senhas"></div>
+    </div>
+      </section>
+
+      <section class="tab-content" id="tab-boletins">
+        <div class="section-toolbar">
+          <h2>Boletins Informativos</h2>
+          <div class="actions">
+            <button class="btn-hover color-9" onclick="window.abrirModal('boletins')"><i class="ri-add-line"></i> Novo boletim</button>
+          </div>
+        </div>
+        <div id="boletins-view-folders">
+          <div class="chart-box"><canvas id="chart-boletins"></canvas></div>
+          <div class="pastas-grid" id="grid-boletins-folders"></div>
+        </div>
+        <div id="boletins-view-list" style="display:none;">
+          <div class="list-header">
+            <h3 id="titulo-pasta-boletins">Boletins</h3>
+            <div class="actions">
+              <button class="back-btn" onclick="window.fecharPastaBoletim()"><i class="ri-arrow-left-line"></i> Voltar</button>
+              <button class="btn-hover color-9" onclick="window.abrirModal('boletins')"><i class="ri-add-line"></i> Novo boletim</button>
             </div>
-            <button id="btn-salvar-dados" class="btn-hover color-9" style="width: 100%; margin-top: 20px;"><i class="ri-save-line"></i> Salvar Dados no Servidor</button>
+          </div>
+          <div class="cards-grid" id="grid-boletins"></div>
         </div>
-    </div>
+      </section>
 
-    <div id="modal-leituras" class="modal-overlay" style="display: none; z-index: 10000;">
-        <div class="modal-box modal-leituras-box glass-effect" style="max-width: 650px;">
-            <header class="modal-header"><h3 id="modal-leitura-titulo">Status de Assinaturas</h3><button onclick="document.getElementById('modal-leituras').style.display='none'" class="btn-icon"><i class="ri-close-line"></i></button></header>
-            <div class="modal-body" style="display: flex; gap: 20px;">
-                <div style="flex: 1;">
-                    <h4 style="color: #38a169; margin-bottom: 15px; border-bottom: 2px solid #c6f6d5; padding-bottom: 5px;"><i class="ri-check-double-line"></i> Já Assinaram</h4>
-                    <div id="lista-lidos-content" style="font-size: 13px; max-height: 400px; overflow-y: auto;"></div>
-                </div>
-                <div style="flex: 1;">
-                    <h4 style="color: #e53e3e; margin-bottom: 15px; border-bottom: 2px solid #fed7d7; padding-bottom: 5px;"><i class="ri-time-line"></i> Faltam Assinar</h4>
-                    <div id="lista-falta-content" style="font-size: 13px; max-height: 400px; overflow-y: auto;"></div>
-                </div>
+      <section class="tab-content" id="tab-boletins-privados">
+        <div class="section-toolbar">
+          <h2>Boletins Privados</h2>
+          <div class="actions">
+            <button class="btn-hover color-9" onclick="window.abrirModal('boletins-privados')"><i class="ri-add-line"></i> Novo privado</button>
+          </div>
+        </div>
+        <div id="privados-view-folders">
+          <div class="chart-box"><canvas id="chart-privados"></canvas></div>
+          <div class="pastas-grid" id="grid-privados-folders"></div>
+        </div>
+        <div id="privados-view-list" style="display:none;">
+          <div class="list-header">
+            <h3 id="titulo-pasta-privados">Privados</h3>
+            <div class="actions">
+              <button class="back-btn" onclick="window.fecharPastaPrivado()"><i class="ri-arrow-left-line"></i> Voltar</button>
+              <button class="btn-hover color-9" onclick="window.abrirModal('boletins-privados')"><i class="ri-add-line"></i> Novo privado</button>
             </div>
+          </div>
+          <div class="cards-grid" id="grid-boletins-privados-list"></div>
         </div>
-    </div>
+      </section>
 
-    <div id="modal-media" class="modal-overlay" style="display: none; z-index: 9999;">
-        <div class="modal-box glass-effect" style="width: 95vw; height: 90vh; max-width: 1200px; padding: 20px;">
-            <header class="modal-header" style="margin-bottom: 10px;"><h3>Visualização de Material</h3><button id="btn-fechar-media" class="btn-icon"><i class="ri-close-line"></i></button></header>
-            <div class="modal-body" style="height: 100%; border-radius: 15px; overflow:hidden;"><iframe id="iframe-media" src="" allowfullscreen style="width: 100%; height: 100%; border: none; background-color: #e2e8f0;"></iframe></div>
+      <section class="tab-content" id="tab-configuracoes">
+        <div class="section-toolbar">
+          <h2>Configurações Gerais</h2>
+          <div class="actions">
+            <button id="btn-salvar-ajustes" class="btn-hover color-1"><i class="ri-save-line"></i> Salvar ajustes</button>
+          </div>
         </div>
-    </div>
+        <div class="cards-grid">
+          <div class="settings-card" style="padding:24px;">
+            <h3>Textos e listas</h3>
+            <textarea id="tab-input-banner" class="form-input" placeholder="Texto do banner inicial"></textarea>
+            <textarea id="tab-input-locais" class="form-input" placeholder="Locais, um por linha"></textarea>
+            <textarea id="tab-input-setores" class="form-input" placeholder="Setores, um por linha"></textarea>
+            <textarea id="tab-input-especialidades" class="form-input" placeholder="Especialidades, uma por linha"></textarea>
+            <textarea id="tab-input-motivos" class="form-input" placeholder="Motivos, um por linha"></textarea>
+          </div>
+          <div class="settings-card" style="padding:24px;">
+            <h3>Visual e chatbot</h3>
+            <input id="tab-input-imagem-pastas" class="form-input" type="url" placeholder="Imagem padrão das pastas (URL)">
+            <input id="tab-input-chat-logo" class="form-input" type="url" placeholder="Logo do chatbot (URL)">
+            <label style="display:block; margin-bottom:8px; font-weight:600;">Cor do chat</label>
+            <input id="tab-color-chat" class="form-input" type="color" value="#0ba360">
+            <label style="display:block; margin-bottom:8px; font-weight:600;">Cor status pendente</label>
+            <input id="tab-color-pendente" class="form-input" type="color" value="#e53e3e">
+            <label style="display:block; margin-bottom:8px; font-weight:600;">Cor status concluído</label>
+            <input id="tab-color-concluido" class="form-input" type="color" value="#38a169">
+          </div>
+        </div>
+      </section>
+    </main>
+  </section>
 
-    <div id="chat-fab" onclick="window.toggleChat()">
-        <img id="chat-fab-img" src="https://cdn-icons-png.flaticon.com/512/8943/8943377.png" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+  <div id="modal-cadastro" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-title">Novo cadastro</h3>
+        <button class="btn-icon" onclick="window.fecharModal()"><i class="ri-close-line"></i></button>
+      </div>
+      <input type="hidden" id="modal-doc-id">
+      <div class="modal-body">
+        <input type="hidden" id="card-color" value="#ffffff">
+        <div id="gradient-picker" class="color-picker"></div>
+        <div id="modal-form-area"></div>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+        <button class="back-btn" onclick="window.fecharModal()">Cancelar</button>
+        <button id="btn-salvar-dados" class="btn-hover color-1"><i class="ri-save-line"></i> Salvar</button>
+      </div>
     </div>
-    
-    <div id="chat-window" style="display:none;">
-        <div class="chat-header">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <img id="chat-header-img" src="https://cdn-icons-png.flaticon.com/512/8943/8943377.png" style="width:30px; height:30px; border-radius:50%; object-fit:cover; background:white;">
-                <span>Assistente Clínica</span>
-            </div>
-            <button onclick="window.toggleChat()"><i class="ri-close-line"></i></button>
-        </div>
-        <div class="chat-body" id="chat-body">
-            <div class="chat-msg bot">Olá! Sou a inteligência virtual da clínica. Como posso ajudar? Busque por especialidades, médicos ou exames!</div>
-        </div>
-        <div class="chat-quick-replies">
-            <button onclick="window.sendQuickMsg('Cardiologia')">Cardiologia</button>
-            <button onclick="window.sendQuickMsg('Ultrassom')">Ultrassom</button>
-            <button onclick="window.sendQuickMsg('Unimed')">Unimed</button>
-        </div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-input" placeholder="Escreva aqui..." onkeypress="if(event.key === 'Enter') window.sendChat()">
-            <button onclick="window.sendChat()"><i class="ri-send-plane-fill"></i></button>
-        </div>
-    </div>
+  </div>
 
-    <script type="module" src="app.js"></script>
+  <div id="modal-media" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Visualização de material</h3>
+        <button class="btn-icon" onclick="document.getElementById('modal-media').style.display='none'; document.getElementById('iframe-media').src='' "><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <iframe id="iframe-media" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-leituras" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-leituras-box" style="max-width:860px;">
+      <div class="modal-header">
+        <h3 id="modal-leitura-titulo">Status de leitura</h3>
+        <button class="btn-icon" onclick="document.getElementById('modal-leituras').style.display='none'"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body status-columns">
+        <div class="status-box">
+          <h4 style="margin-bottom:10px; color:var(--primary-color);">Lidos</h4>
+          <div id="lista-lidos-content" class="modal-list"></div>
+        </div>
+        <div class="status-box">
+          <h4 style="margin-bottom:10px; color:var(--primary-color);">Pendentes</h4>
+          <div id="lista-falta-content" class="modal-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button id="chat-fab" class="chat-fab" onclick="window.toggleChat()">
+    <span class="chatbot-tooltip">Precisa de ajuda?</span>
+    <img id="chat-fab-img" src="https://cdn-icons-png.flaticon.com/512/8943/8943377.png" alt="Chatbot">
+  </button>
+
+  <div id="chat-window" class="chat-window">
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <img id="chat-header-img" src="https://cdn-icons-png.flaticon.com/512/8943/8943377.png" alt="Assistente">
+        <div>
+          <strong>Assistente CSV</strong>
+          <div style="font-size:12px; opacity:.9;">Busca interna do sistema</div>
+        </div>
+      </div>
+      <button class="btn-icon" onclick="window.toggleChat()"><i class="ri-close-line"></i></button>
+    </div>
+    <div id="chat-body"></div>
+    <div class="chat-input-area">
+      <input id="chat-input" type="text" placeholder="Digite sua pergunta...">
+      <button onclick="window.sendChat()"><i class="ri-send-plane-fill"></i></button>
+    </div>
+  </div>
+
+  <script type="module" src="script.js"></script>
 </body>
 </html>
