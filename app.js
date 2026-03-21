@@ -1,4 +1,11 @@
 // ==========================================
+// BLOQUEIO NUCLEAR CONTRA PISCADAS DE TELA
+// ==========================================
+window.addEventListener('submit', function(e) {
+    e.preventDefault(); 
+}, true);
+
+// ==========================================
 // 1. CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
 // ==========================================
 const configuracaoAbas = {
@@ -77,11 +84,11 @@ const paletaGradientes = [
 ];
 
 // ==========================================
-// 2. FUNÇÕES GLOBAIS (HOISTING SEGURO)
+// 2. LÓGICA DE LOGIN BLINDADA
 // ==========================================
 
-window.efetuarLogin = function(e) {
-    if(e && e.preventDefault) e.preventDefault(); 
+window.tentarLogar = function(e) {
+    if(e) e.preventDefault(); 
     
     const email = document.getElementById('email').value.trim();
     const senha = document.getElementById('senha').value.trim();
@@ -92,7 +99,7 @@ window.efetuarLogin = function(e) {
         return;
     }
     
-    const textoOriginal = btn ? btn.innerHTML : "Entrar no Painel";
+    const textoOriginal = btn ? btn.innerHTML : "Entrar";
     if(btn) btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> Autenticando...";
     
     signInWithEmailAndPassword(auth, email, senha)
@@ -100,10 +107,76 @@ window.efetuarLogin = function(e) {
             if(btn) btn.innerHTML = textoOriginal;
         })
         .catch(err => {
-            alert("Erro ao entrar: Verifique seu e-mail e senha.");
+            console.error(err);
+            alert("Erro ao entrar: E-mail ou Senha incorretos.\nDetalhe: " + err.message);
             if(btn) btn.innerHTML = textoOriginal;
         });
-};
+}
+
+// Vincula o botão de login e esconde o Chatbot inicialmente
+window.addEventListener('DOMContentLoaded', () => {
+    const btnLogin = document.getElementById('btn-login');
+    const formLogin = document.getElementById('form-login');
+    const chatFab = document.getElementById('chat-fab');
+    const chatWin = document.getElementById('chat-window');
+    
+    // Esconde a Lúcia na tela de login logo que abre
+    if(chatFab) chatFab.style.display = 'none';
+    if(chatWin) chatWin.style.display = 'none';
+    
+    if(btnLogin) btnLogin.onclick = window.tentarLogar;
+    if(formLogin) formLogin.onsubmit = window.tentarLogar;
+});
+
+const btnLogout = document.getElementById('btn-logout');
+if(btnLogout) btnLogout.addEventListener('click', () => signOut(auth));
+
+onAuthStateChanged(auth, (user) => {
+    const loginScreen = document.getElementById('login-screen');
+    const dashboardScreen = document.getElementById('dashboard-screen');
+    const chatFab = document.getElementById('chat-fab');
+    const chatWin = document.getElementById('chat-window');
+    
+    if (user) {
+        if(loginScreen) loginScreen.style.display = 'none';
+        if(dashboardScreen) dashboardScreen.style.display = 'flex';
+        
+        // MOSTRA O CHATBOT SÓ QUANDO LOGAR
+        if(chatFab) chatFab.style.display = 'flex';
+        
+        isAdmin = (user.email === EMAIL_GESTAO);
+        
+        const badge = document.getElementById('user-role-badge');
+        if(badge) badge.textContent = isAdmin ? "Gestão Administrador" : "Acesso Geral";
+        
+        if(isAdmin) {
+            if(badge) badge.classList.add('admin');
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+        } else {
+            if(badge) badge.classList.remove('admin');
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        }
+        
+        Object.keys(configuracaoAbas).forEach(idColecao => window.renderizarCards(idColecao));
+        window.carregarConfiguracoes(); 
+        window.buscarClimaAraucaria(); 
+    } else {
+        if(loginScreen) loginScreen.style.display = 'flex';
+        if(dashboardScreen) dashboardScreen.style.display = 'none';
+        // ESCONDE O CHATBOT SE DESLOGAR
+        if(chatFab) chatFab.style.display = 'none';
+        if(chatWin) chatWin.style.display = 'none';
+    }
+});
+
+
+// ==========================================
+// 3. DECLARAÇÃO DE TODAS AS FUNÇÕES GLOBAIS BLINDADAS (HOISTING)
+// ==========================================
+
+setInterval(() => { const rl = document.getElementById('relogio'); if(rl) rl.innerText = new Date().toLocaleTimeString('pt-BR'); }, 1000);
+const frases = ["O sucesso é a soma de pequenos esforços.", "A empatia é a medicina que o mundo precisa.", "Trabalho em equipe multiplica o sucesso."];
+const fm = document.getElementById('frase-dia'); if(fm) fm.innerText = frases[Math.floor(Math.random() * frases.length)];
 
 window.formatarLinkImagem = function(link) {
     if (!link || link.includes('file:///')) return null;
@@ -671,6 +744,8 @@ window.renderizarListaPrivados = function() {
         const isUrgente = data['Tipo (Urgente, Norma, Regra, etc)'] && String(data['Tipo (Urgente, Norma, Regra, etc)']).toLowerCase().includes('urgente');
         const corSalva = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
         const configCor = paletaGradientes.find(p => p.valor === corSalva);
+        
+        // A LINHA QUE QUEBROU O SISTEMA FOI CONSERTADA AQUI! 👇
         const gradientClass = (configCor ? configCor.dark : false) ? 'has-gradient' : ''; 
 
         const jaLeu = (data.leituras || []).find(txt => txt.startsWith(colabAtual));
@@ -973,8 +1048,9 @@ window.processarLogicaDoBot = function(mensagemUser) {
     return "Desculpe, não localizei nenhuma informação no sistema sobre isso. 🤔<br><br>Tente pesquisar pelo nome de um exame ou especialidade!";
 };
 
+
 // ==========================================
-// 4. ATRIBUIÇÃO DE EVENTOS GERAIS E INICIALIZAÇÃO
+// 4. ATRIBUIÇÃO DE EVENTOS E NAVEGAÇÃO
 // ==========================================
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -1082,4 +1158,34 @@ window.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
+    document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.nav-btn[data-tab]').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            btn.classList.add('active');
+            abaAtual = btn.getAttribute('data-tab');
+            const tabEl = document.getElementById(`tab-${abaAtual}`);
+            if(tabEl) tabEl.style.display = 'block';
+            
+            const titleEl = document.getElementById('page-title');
+            if(titleEl) titleEl.textContent = btn.textContent.trim();
+            
+            const searchBox = document.getElementById('search-box');
+            if(searchBox) searchBox.style.display = (abaAtual !== 'home' && abaAtual !== 'ajustes') ? 'flex' : 'none';
+            
+            const inputPesqLocal = document.getElementById('input-pesquisa');
+            if(inputPesqLocal) inputPesqLocal.value = ''; 
+            
+            if(abaAtual === 'boletins' && typeof window.fecharPastaBoletim === 'function') window.fecharPastaBoletim(); 
+            if(abaAtual === 'boletins-privados' && typeof window.fecharPastaPrivado === 'function') window.fecharPastaPrivado();
+            ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico'].forEach(col => {
+                if(abaAtual === col && typeof window.fecharPastaGenerica === 'function') window.fecharPastaGenerica(col);
+            });
+            
+            if(abaAtual === 'home') {
+                window.verificarUrgentesHome();
+            }
+        });
+    });
 });
