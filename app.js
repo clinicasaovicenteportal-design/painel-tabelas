@@ -1,5 +1,5 @@
 // ==========================================
-// BLOQUEIO NUCLEAR CONTRA PISCADAS DE TELA
+// BLOQUEIO CONTRA PISCADAS DE TELA
 // ==========================================
 window.addEventListener('submit', function(e) {
     e.preventDefault(); 
@@ -108,19 +108,17 @@ window.tentarLogar = function(e) {
         })
         .catch(err => {
             console.error(err);
-            alert("Erro ao entrar: E-mail ou Senha incorretos.\nDetalhe: " + err.message);
+            alert("Erro ao entrar: E-mail ou Senha incorretos.");
             if(btn) btn.innerHTML = textoOriginal;
         });
 }
 
-// Vincula o botão de login e esconde o Chatbot inicialmente
 window.addEventListener('DOMContentLoaded', () => {
     const btnLogin = document.getElementById('btn-login');
     const formLogin = document.getElementById('form-login');
     const chatFab = document.getElementById('chat-fab');
     const chatWin = document.getElementById('chat-window');
     
-    // Esconde a Lúcia na tela de login logo que abre
     if(chatFab) chatFab.style.display = 'none';
     if(chatWin) chatWin.style.display = 'none';
     
@@ -141,7 +139,6 @@ onAuthStateChanged(auth, (user) => {
         if(loginScreen) loginScreen.style.display = 'none';
         if(dashboardScreen) dashboardScreen.style.display = 'flex';
         
-        // MOSTRA O CHATBOT SÓ QUANDO LOGAR
         if(chatFab) chatFab.style.display = 'flex';
         
         isAdmin = (user.email === EMAIL_GESTAO);
@@ -163,7 +160,6 @@ onAuthStateChanged(auth, (user) => {
     } else {
         if(loginScreen) loginScreen.style.display = 'flex';
         if(dashboardScreen) dashboardScreen.style.display = 'none';
-        // ESCONDE O CHATBOT SE DESLOGAR
         if(chatFab) chatFab.style.display = 'none';
         if(chatWin) chatWin.style.display = 'none';
     }
@@ -171,7 +167,7 @@ onAuthStateChanged(auth, (user) => {
 
 
 // ==========================================
-// 3. DECLARAÇÃO DE TODAS AS FUNÇÕES GLOBAIS BLINDADAS (HOISTING)
+// 3. DECLARAÇÃO DE TODAS AS FUNÇÕES GLOBAIS (O MOTOR DA UI)
 // ==========================================
 
 setInterval(() => { const rl = document.getElementById('relogio'); if(rl) rl.innerText = new Date().toLocaleTimeString('pt-BR'); }, 1000);
@@ -605,6 +601,11 @@ window.renderizarPastasBoletins = function() {
     if(!gridFolders) return;
     gridFolders.innerHTML = '';
     
+    if (window.todosBoletinsData.length === 0) {
+        gridFolders.innerHTML = '<div style="grid-column: 1/-1; background: #fff5f5; color: #c53030; padding: 15px; border-radius: 8px; border-left: 4px solid #e53e3e; font-size:14px; text-align:center;">Nenhum Boletim cadastrado ou regras de segurança bloqueando o acesso.</div>';
+        return;
+    }
+
     let todosOsSetores = new Set(['Geral', ...setoresGlobais]);
     window.todosBoletinsData.forEach(b => {
         let setoresDoBoletim = b.data['Para quais Setores?'];
@@ -613,6 +614,8 @@ window.renderizarPastasBoletins = function() {
         }
     });
 
+    let desenhouAlgum = false;
+
     Array.from(todosOsSetores).sort().forEach(pasta => {
         const boletinsDaPasta = window.todosBoletinsData.filter(item => {
             let s = String(item.data['Para quais Setores?'] || 'Geral');
@@ -620,6 +623,7 @@ window.renderizarPastasBoletins = function() {
         });
         
         if(boletinsDaPasta.length === 0) return; 
+        desenhouAlgum = true;
         
         let totalLidos = 0; let totalFaltam = 0;
         boletinsDaPasta.forEach(b => {
@@ -628,11 +632,17 @@ window.renderizarPastasBoletins = function() {
             const leram = publicoDaqui.filter(n => lidosNames.includes(n)).length;
             totalLidos += leram; totalFaltam += Math.max(0, publicoDaqui.length - leram);
         });
+        
         const icone = pasta === 'Geral' ? 'ri-global-line' : 'ri-folder-user-line';
         const corStatusPasta = totalFaltam > 0 ? window.corStatusPendente : window.corStatusConcluido;
+        const pastaSegura = pasta.replace(/'/g, "\\'"); 
 
-        gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaBoletim('${pasta}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; border-left: 6px solid ${corStatusPasta};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: var(--bg-color); padding: 15px; border-radius: 12px; color: var(--primary-color); font-size: 24px; flex-shrink:0;"><i class="${icone}"></i></div><div style="font-size: 16px; font-weight: 600; line-height:1.2; word-wrap:break-word;">${pasta}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Boletins Ativos: <b style="color: var(--text-main);">${boletinsDaPasta.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos Acumulados: <b>${totalLidos}</b></div><div style="color: #e53e3e;">Pendências: <b>${totalFaltam}</b></div></div></div>`;
+        gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaBoletim('${pastaSegura}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; border-left: 6px solid ${corStatusPasta};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: var(--bg-color); padding: 15px; border-radius: 12px; color: var(--primary-color); font-size: 24px; flex-shrink:0;"><i class="${icone}"></i></div><div style="font-size: 16px; font-weight: 600; line-height:1.2; word-wrap:break-word;">${pasta}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Boletins Ativos: <b style="color: var(--text-main);">${boletinsDaPasta.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos Acumulados: <b>${totalLidos}</b></div><div style="color: #e53e3e;">Pendências: <b>${totalFaltam}</b></div></div></div>`;
     });
+    
+    if (!desenhouAlgum) {
+        gridFolders.innerHTML = '<div style="grid-column: 1/-1; padding: 15px; color: var(--text-muted); text-align:center;">Nenhuma pasta com boletins encontrada.</div>';
+    }
 };
 
 window.renderizarListaBoletins = function() {
@@ -706,14 +716,22 @@ window.renderizarPastasPrivados = function() {
     if(!gridFolders) return;
     gridFolders.innerHTML = '';
     
+    if (window.todosPrivadosData.length === 0) {
+        gridFolders.innerHTML = '<div style="grid-column: 1/-1; background: #fff5f5; color: #c53030; padding: 15px; border-radius: 8px; border-left: 4px solid #e53e3e; font-size:14px; text-align:center;">Nenhum documento privado encontrado.</div>';
+        return;
+    }
+    
     let todosOsNomes = new Set(listaColaboradoresGlobal.map(c => c.nome));
     window.todosPrivadosData.forEach(b => {
         if(b.data['Para qual Colaborador?']) todosOsNomes.add(String(b.data['Para qual Colaborador?']));
     });
     
+    let desenhouAlgum = false;
+
     Array.from(todosOsNomes).sort().forEach(nome => {
         const boletinsDele = window.todosPrivadosData.filter(item => item.data['Para qual Colaborador?'] === nome);
         if(boletinsDele.length === 0) return; 
+        desenhouAlgum = true;
         
         let lidos = 0; let faltam = 0;
         boletinsDele.forEach(b => {
@@ -722,9 +740,14 @@ window.renderizarPastasPrivados = function() {
         });
 
         let corStatusPasta = faltam > 0 ? window.corStatusPendente : window.corStatusConcluido;
+        const nomeSeguro = nome.replace(/'/g, "\\'");
 
-        gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaPrivado('${nome}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; border-left: 6px solid ${corStatusPasta};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: #e2e8f0; padding: 15px; border-radius: 12px; color: var(--text-main); font-size: 24px; flex-shrink:0;"><i class="ri-user-star-fill"></i></div><div style="font-size: 16px; font-weight: 600; line-height:1.2; word-wrap:break-word;">${nome}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Documentos: <b style="color: var(--text-main);">${boletinsDele.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos: <b>${lidos}</b></div><div style="color: #e53e3e;">Pendentes: <b>${faltam}</b></div></div></div>`;
+        gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaPrivado('${nomeSeguro}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; border-left: 6px solid ${corStatusPasta};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: #e2e8f0; padding: 15px; border-radius: 12px; color: var(--text-main); font-size: 24px; flex-shrink:0;"><i class="ri-user-star-fill"></i></div><div style="font-size: 16px; font-weight: 600; line-height:1.2; word-wrap:break-word;">${nome}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Documentos: <b style="color: var(--text-main);">${boletinsDele.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos: <b>${lidos}</b></div><div style="color: #e53e3e;">Pendentes: <b>${faltam}</b></div></div></div>`;
     });
+    
+    if (!desenhouAlgum) {
+        gridFolders.innerHTML = '<div style="grid-column: 1/-1; padding: 15px; color: var(--text-muted); text-align:center;">Nenhuma pasta privada encontrada.</div>';
+    }
 };
 
 window.renderizarListaPrivados = function() {
@@ -744,8 +767,6 @@ window.renderizarListaPrivados = function() {
         const isUrgente = data['Tipo (Urgente, Norma, Regra, etc)'] && String(data['Tipo (Urgente, Norma, Regra, etc)']).toLowerCase().includes('urgente');
         const corSalva = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
         const configCor = paletaGradientes.find(p => p.valor === corSalva);
-        
-        // A LINHA QUE QUEBROU O SISTEMA FOI CONSERTADA AQUI! 👇
         const gradientClass = (configCor ? configCor.dark : false) ? 'has-gradient' : ''; 
 
         const jaLeu = (data.leituras || []).find(txt => txt.startsWith(colabAtual));
@@ -1048,7 +1069,6 @@ window.processarLogicaDoBot = function(mensagemUser) {
     return "Desculpe, não localizei nenhuma informação no sistema sobre isso. 🤔<br><br>Tente pesquisar pelo nome de um exame ou especialidade!";
 };
 
-
 // ==========================================
 // 4. ATRIBUIÇÃO DE EVENTOS E NAVEGAÇÃO
 // ==========================================
@@ -1071,6 +1091,47 @@ window.addEventListener('DOMContentLoaded', () => {
                 const registro = `${nomeColaborador} (Lido em: ${new Date().toLocaleString('pt-BR')})`;
                 await updateDoc(doc(db, col, idDoc), { leituras: arrayUnion(registro) });
             }
+        });
+    }
+
+    // A MÁGICA QUE SALVA OS NOVOS DADOS VOLTOU!
+    const btnSalvar = document.getElementById('btn-salvar-dados');
+    if(btnSalvar) {
+        btnSalvar.addEventListener('click', async () => {
+            const colecao = btnSalvar.getAttribute('data-colecao');
+            const docId = document.getElementById('modal-doc-id').value;
+            const config = configuracaoAbas[colecao];
+            
+            if(!config) return;
+            
+            const btnOriginal = btnSalvar.innerHTML;
+            btnSalvar.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Salvando...';
+            
+            let dados = { 
+                corCard: document.getElementById('card-color') ? document.getElementById('card-color').value : '#ffffff' 
+            };
+            
+            config.campos.forEach(c => {
+                const val = document.getElementById('input-'+c);
+                if(colecao === 'boletins' && c === 'Para quais Setores?') {
+                    const checks = Array.from(document.querySelectorAll('.check-setor:checked')).map(el => el.value);
+                    dados[c] = checks.join(', ');
+                } else if(val) {
+                    dados[c] = val.value;
+                }
+            });
+            
+            try {
+                if(docId) {
+                    await updateDoc(doc(db, colecao, docId), dados);
+                } else {
+                    await addDoc(collection(db, colecao), dados);
+                }
+                window.fecharModal();
+            } catch(e) {
+                alert("Erro ao salvar: " + e.message);
+            }
+            btnSalvar.innerHTML = btnOriginal;
         });
     }
 
