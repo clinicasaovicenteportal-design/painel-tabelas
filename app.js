@@ -77,17 +77,8 @@ const paletaGradientes = [
 ];
 
 // ==========================================
-// 2. DECLARAÇÃO DE FUNÇÕES GLOBAIS BLINDADAS (HOISTING TOTAL)
+// 2. LÓGICA DE LOGIN BLINDADA
 // ==========================================
-
-window.formatarLinkImagem = function(link) {
-    if (!link || link.includes('file:///')) return null;
-    if (link.includes("drive.google.com")) {
-        const match = link.match(/\/d\/([a-zA-Z0-9_-]+)/) || link.match(/id=([a-zA-Z0-9_-]+)/);
-        if (match && match[1]) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
-    }
-    return link;
-};
 
 window.efetuarLogin = function(e) {
     if(e) e.preventDefault(); 
@@ -146,9 +137,23 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
+
+// ==========================================
+// 3. DECLARAÇÃO DE TODAS AS FUNÇÕES GLOBAIS BLINDADAS (HOISTING)
+// ==========================================
+
 setInterval(() => { const rl = document.getElementById('relogio'); if(rl) rl.innerText = new Date().toLocaleTimeString('pt-BR'); }, 1000);
 const frases = ["O sucesso é a soma de pequenos esforços.", "A empatia é a medicina que o mundo precisa.", "Trabalho em equipe multiplica o sucesso."];
 const fm = document.getElementById('frase-dia'); if(fm) fm.innerText = frases[Math.floor(Math.random() * frases.length)];
+
+window.formatarLinkImagem = function(link) {
+    if (!link || link.includes('file:///')) return null;
+    if (link.includes("drive.google.com")) {
+        const match = link.match(/\/d\/([a-zA-Z0-9_-]+)/) || link.match(/id=([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+    }
+    return link;
+};
 
 window.buscarClimaAraucaria = async function() {
     try {
@@ -824,66 +829,6 @@ window.renderizarCards = function(colecaoNome) {
     });
 };
 
-const mainContent = document.querySelector('.main-content');
-if(mainContent) {
-    mainContent.addEventListener('click', async (e) => {
-        const btnExcluir = e.target.closest('.btn-delete'); const btnEditar = e.target.closest('.btn-edit'); const btnAssinar = e.target.closest('.btn-assinar');
-        if (btnExcluir && isAdmin && confirm("Excluir permanentemente?")) await deleteDoc(doc(db, btnExcluir.dataset.colecao, btnExcluir.dataset.id));
-        if (btnEditar && isAdmin) window.abrirModal(btnEditar.dataset.colecao, btnEditar.dataset.id, JSON.parse(btnEditar.dataset.info));
-        if (btnAssinar && isAdmin) {
-            const idDoc = btnAssinar.dataset.id;
-            const col = btnAssinar.dataset.colecao;
-            const inputLeitor = document.getElementById(`leitor-${idDoc}`);
-            if(!inputLeitor) return;
-            const nomeColaborador = inputLeitor.value;
-            if(!nomeColaborador) return alert("Selecione um colaborador na lista!");
-            const registro = `${nomeColaborador} (Lido em: ${new Date().toLocaleString('pt-BR')})`;
-            await updateDoc(doc(db, col, idDoc), { leituras: arrayUnion(registro) });
-        }
-    });
-}
-
-const btnSalvarAjustes = document.getElementById('btn-salvar-ajustes');
-if(btnSalvarAjustes) {
-    btnSalvarAjustes.addEventListener('click', async () => {
-        if(!isAdmin) return;
-        const texto = document.getElementById('tab-input-banner').value;
-        const locaisTexto = document.getElementById('tab-input-locais').value; 
-        const setoresTexto = document.getElementById('tab-input-setores').value; 
-        const especialidadesTexto = document.getElementById('tab-input-especialidades').value; 
-        const motivosTexto = document.getElementById('tab-input-motivos').value; 
-        const corPend = document.getElementById('tab-color-pendente').value; 
-        const corConc = document.getElementById('tab-color-concluido').value; 
-        
-        const imgPastaInput = document.getElementById('tab-input-imagem-pastas');
-        const imgPastasTexto = imgPastaInput ? imgPastaInput.value : "";
-
-        const chatLogoInput = document.getElementById('tab-input-chat-logo');
-        const chatLogoTexto = chatLogoInput ? chatLogoInput.value : "";
-        
-        const chatCorInput = document.getElementById('tab-color-chat');
-        const chatCorVal = chatCorInput ? chatCorInput.value : "#0ba360";
-        
-        btnSalvarAjustes.innerHTML = "Salvando...";
-        try {
-            await setDoc(doc(db, "configuracoes", "gerais"), { 
-                banner_texto: texto, 
-                locais: locaisTexto, 
-                setores: setoresTexto, 
-                especialidades: especialidadesTexto,
-                motivos: motivosTexto, 
-                cor_pendente: corPend, 
-                cor_concluido: corConc,
-                imagem_padrao_pastas: imgPastasTexto,
-                chat_logo: chatLogoTexto,
-                chat_cor: chatCorVal
-            });
-            alert("Configurações salvas com sucesso!");
-        } catch(e) { alert("Erro ao salvar configurações."); }
-        btnSalvarAjustes.innerHTML = 'Salvar Alterações';
-    });
-}
-
 window.carregarConfiguracoes = function() {
     onSnapshot(doc(db, "configuracoes", "gerais"), (docSnap) => {
         const area = document.getElementById('banner-content');
@@ -1069,6 +1014,74 @@ window.processarLogicaDoBot = function(mensagemUser) {
     return "Desculpe, não localizei nenhuma informação no sistema sobre isso. 🤔<br><br>Tente pesquisar pelo nome de um exame ou especialidade!";
 };
 
+
+// ==========================================
+// 4. ATRIBUIÇÃO DE EVENTOS DE CLIQUE GERAIS E EVENT LISTNERS (FIM DO ARQUIVO)
+// ==========================================
+
+// --- Eventos de Clicks (Excluir, Editar, Assinar) ---
+const mainContent = document.querySelector('.main-content');
+if(mainContent) {
+    mainContent.addEventListener('click', async (e) => {
+        const btnExcluir = e.target.closest('.btn-delete'); const btnEditar = e.target.closest('.btn-edit'); const btnAssinar = e.target.closest('.btn-assinar');
+        if (btnExcluir && isAdmin && confirm("Excluir permanentemente?")) await deleteDoc(doc(db, btnExcluir.dataset.colecao, btnExcluir.dataset.id));
+        if (btnEditar && isAdmin) window.abrirModal(btnEditar.dataset.colecao, btnEditar.dataset.id, JSON.parse(btnEditar.dataset.info));
+        if (btnAssinar && isAdmin) {
+            const idDoc = btnAssinar.dataset.id;
+            const col = btnAssinar.dataset.colecao;
+            const inputLeitor = document.getElementById(`leitor-${idDoc}`);
+            if(!inputLeitor) return;
+            const nomeColaborador = inputLeitor.value;
+            if(!nomeColaborador) return alert("Selecione um colaborador na lista!");
+            const registro = `${nomeColaborador} (Lido em: ${new Date().toLocaleString('pt-BR')})`;
+            await updateDoc(doc(db, col, idDoc), { leituras: arrayUnion(registro) });
+        }
+    });
+}
+
+// --- Salvar Ajustes ---
+const btnSalvarAjustes = document.getElementById('btn-salvar-ajustes');
+if(btnSalvarAjustes) {
+    btnSalvarAjustes.addEventListener('click', async () => {
+        if(!isAdmin) return;
+        const texto = document.getElementById('tab-input-banner').value;
+        const locaisTexto = document.getElementById('tab-input-locais').value; 
+        const setoresTexto = document.getElementById('tab-input-setores').value; 
+        const especialidadesTexto = document.getElementById('tab-input-especialidades').value; 
+        const motivosTexto = document.getElementById('tab-input-motivos').value; 
+        const corPend = document.getElementById('tab-color-pendente').value; 
+        const corConc = document.getElementById('tab-color-concluido').value; 
+        
+        const imgPastaInput = document.getElementById('tab-input-imagem-pastas');
+        const imgPastasTexto = imgPastaInput ? imgPastaInput.value : "";
+
+        const chatLogoInput = document.getElementById('tab-input-chat-logo');
+        const chatLogoTexto = chatLogoInput ? chatLogoInput.value : "";
+        
+        const chatCorInput = document.getElementById('tab-color-chat');
+        const chatCorVal = chatCorInput ? chatCorInput.value : "#0ba360";
+        
+        btnSalvarAjustes.innerHTML = "Salvando...";
+        try {
+            await setDoc(doc(db, "configuracoes", "gerais"), { 
+                banner_texto: texto, 
+                locais: locaisTexto, 
+                setores: setoresTexto, 
+                especialidades: especialidadesTexto,
+                motivos: motivosTexto, 
+                cor_pendente: corPend, 
+                cor_concluido: corConc,
+                imagem_padrao_pastas: imgPastasTexto,
+                chat_logo: chatLogoTexto,
+                chat_cor: chatCorVal
+            });
+            alert("Configurações salvas com sucesso!");
+        } catch(e) { alert("Erro ao salvar configurações."); }
+        btnSalvarAjustes.innerHTML = 'Salvar Alterações';
+    });
+}
+
+// --- Busca Global ---
 const inputPesqGlobal = document.getElementById('input-pesquisa-global');
 if(inputPesqGlobal) {
     inputPesqGlobal.addEventListener('keyup', (e) => {
@@ -1099,6 +1112,7 @@ if(inputPesqGlobal) {
     });
 }
 
+// --- Busca Específica da Aba ---
 const inputPesqAba = document.getElementById('input-pesquisa');
 if(inputPesqAba) {
     inputPesqAba.addEventListener('keyup', (e) => {
@@ -1112,3 +1126,30 @@ if(inputPesqAba) {
         });
     });
 }
+
+// --- Navegação das Abas do Menu (O CORAÇÃO DO SISTEMA) ---
+document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.nav-btn[data-tab]').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        btn.classList.add('active');
+        abaAtual = btn.getAttribute('data-tab');
+        const tabEl = document.getElementById(`tab-${abaAtual}`);
+        if(tabEl) tabEl.style.display = 'block';
+        
+        const titleEl = document.getElementById('page-title');
+        if(titleEl) titleEl.textContent = btn.textContent.trim();
+        
+        const searchBox = document.getElementById('search-box');
+        if(searchBox) searchBox.style.display = (abaAtual !== 'home' && abaAtual !== 'ajustes') ? 'flex' : 'none';
+        
+        const inputPesq = document.getElementById('input-pesquisa');
+        if(inputPesq) inputPesq.value = ''; 
+        
+        if(abaAtual === 'boletins' && typeof window.fecharPastaBoletim === 'function') window.fecharPastaBoletim(); 
+        if(abaAtual === 'boletins-privados' && typeof window.fecharPastaPrivado === 'function') window.fecharPastaPrivado();
+        ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico'].forEach(col => {
+            if(abaAtual === col && typeof window.fecharPastaGenerica === 'function') window.fecharPastaGenerica(col);
+        });
+    });
+});
