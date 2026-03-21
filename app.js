@@ -1,12 +1,4 @@
 // ==========================================
-// BLOQUEIO NUCLEAR CONTRA PISCADAS DE TELA
-// ==========================================
-window.addEventListener('submit', function(e) {
-    e.preventDefault(); // Impede que QUALQUER formulário recarregue a página
-}, true);
-
-
-// ==========================================
 // 1. CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
 // ==========================================
 const configuracaoAbas = {
@@ -85,11 +77,11 @@ const paletaGradientes = [
 ];
 
 // ==========================================
-// 2. LÓGICA DE LOGIN 
+// 2. FUNÇÕES GLOBAIS (HOISTING SEGURO)
 // ==========================================
 
-window.tentarLogar = function(e) {
-    if(e) e.preventDefault(); // Trava dupla
+window.efetuarLogin = function(e) {
+    if(e && e.preventDefault) e.preventDefault(); 
     
     const email = document.getElementById('email').value.trim();
     const senha = document.getElementById('senha').value.trim();
@@ -100,7 +92,7 @@ window.tentarLogar = function(e) {
         return;
     }
     
-    const textoOriginal = btn ? btn.innerHTML : "Entrar";
+    const textoOriginal = btn ? btn.innerHTML : "Entrar no Painel";
     if(btn) btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> Autenticando...";
     
     signInWithEmailAndPassword(auth, email, senha)
@@ -108,61 +100,10 @@ window.tentarLogar = function(e) {
             if(btn) btn.innerHTML = textoOriginal;
         })
         .catch(err => {
-            console.error(err);
-            alert("Erro ao entrar: E-mail ou Senha incorretos.\nDetalhe: " + err.message);
+            alert("Erro ao entrar: Verifique seu e-mail e senha.");
             if(btn) btn.innerHTML = textoOriginal;
         });
-}
-
-// Vincula o botão de login 
-window.addEventListener('DOMContentLoaded', () => {
-    const btnLogin = document.getElementById('btn-login');
-    const formLogin = document.getElementById('form-login');
-    
-    if(btnLogin) btnLogin.onclick = window.tentarLogar;
-    if(formLogin) formLogin.onsubmit = window.tentarLogar;
-});
-
-const btnLogout = document.getElementById('btn-logout');
-if(btnLogout) btnLogout.addEventListener('click', () => signOut(auth));
-
-onAuthStateChanged(auth, (user) => {
-    const loginScreen = document.getElementById('login-screen');
-    const dashboardScreen = document.getElementById('dashboard-screen');
-    
-    if (user) {
-        if(loginScreen) loginScreen.style.display = 'none';
-        if(dashboardScreen) dashboardScreen.style.display = 'flex';
-        isAdmin = (user.email === EMAIL_GESTAO);
-        
-        const badge = document.getElementById('user-role-badge');
-        if(badge) badge.textContent = isAdmin ? "Gestão Administrador" : "Acesso Geral";
-        
-        if(isAdmin) {
-            if(badge) badge.classList.add('admin');
-            document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
-        } else {
-            if(badge) badge.classList.remove('admin');
-            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-        }
-        
-        Object.keys(configuracaoAbas).forEach(idColecao => window.renderizarCards(idColecao));
-        window.carregarConfiguracoes(); 
-        window.buscarClimaAraucaria(); 
-    } else {
-        if(loginScreen) loginScreen.style.display = 'flex';
-        if(dashboardScreen) dashboardScreen.style.display = 'none';
-    }
-});
-
-
-// ==========================================
-// 3. DECLARAÇÃO DE TODAS AS FUNÇÕES GLOBAIS BLINDADAS (HOISTING)
-// ==========================================
-
-setInterval(() => { const rl = document.getElementById('relogio'); if(rl) rl.innerText = new Date().toLocaleTimeString('pt-BR'); }, 1000);
-const frases = ["O sucesso é a soma de pequenos esforços.", "A empatia é a medicina que o mundo precisa.", "Trabalho em equipe multiplica o sucesso."];
-const fm = document.getElementById('frase-dia'); if(fm) fm.innerText = frases[Math.floor(Math.random() * frases.length)];
+};
 
 window.formatarLinkImagem = function(link) {
     if (!link || link.includes('file:///')) return null;
@@ -730,7 +671,7 @@ window.renderizarListaPrivados = function() {
         const isUrgente = data['Tipo (Urgente, Norma, Regra, etc)'] && String(data['Tipo (Urgente, Norma, Regra, etc)']).toLowerCase().includes('urgente');
         const corSalva = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
         const configCor = paletaGradientes.find(p => p.valor === corSalva);
-        const gradientClass = (configCor ? configCor.dark : false) ? 'has-gradient' : 
+        const gradientClass = (configCor ? configCor.dark : false) ? 'has-gradient' : ''; 
 
         const jaLeu = (data.leituras || []).find(txt => txt.startsWith(colabAtual));
         const corStatus = jaLeu ? window.corStatusConcluido : window.corStatusPendente;
@@ -864,20 +805,16 @@ window.carregarConfiguracoes = function() {
                 if(el) el.value = data[dataKeys[idx]] || '';
             });
 
-            // CHATBOT SETTINGS E LOGO PADRÃO
+            // CHATBOT SETTINGS
             const chatLogo = data.chat_logo || "https://cdn-icons-png.flaticon.com/512/8943/8943377.png";
             const chatCor = data.chat_cor || "#0ba360";
-            imagemPadraoPastas = data.imagem_padrao_pastas ? window.formatarLinkImagem(data.imagem_padrao_pastas) : "";
             
             document.documentElement.style.setProperty('--chat-primary', chatCor);
             
             const fabImg = document.getElementById('chat-fab-img');
             const headerImg = document.getElementById('chat-header-img');
-            const imgInputPastas = document.getElementById('tab-input-imagem-pastas');
-
             if(fabImg) fabImg.src = window.formatarLinkImagem(chatLogo) || chatLogo;
             if(headerImg) headerImg.src = window.formatarLinkImagem(chatLogo) || chatLogo;
-            if(imgInputPastas) imgInputPastas.value = data.imagem_padrao_pastas || '';
             
             const inChatLogo = document.getElementById('tab-input-chat-logo');
             const inChatCor = document.getElementById('tab-color-chat');
@@ -1037,33 +974,112 @@ window.processarLogicaDoBot = function(mensagemUser) {
 };
 
 // ==========================================
-// 4. INICIALIZAÇÃO DE EVENTOS
+// 4. ATRIBUIÇÃO DE EVENTOS GERAIS E INICIALIZAÇÃO
 // ==========================================
 
 window.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.nav-btn[data-tab]').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-            btn.classList.add('active');
-            abaAtual = btn.getAttribute('data-tab');
-            const tabEl = document.getElementById(`tab-${abaAtual}`);
-            if(tabEl) tabEl.style.display = 'block';
+    
+    const mainContent = document.querySelector('.main-content');
+    if(mainContent) {
+        mainContent.addEventListener('click', async (e) => {
+            const btnExcluir = e.target.closest('.btn-delete'); const btnEditar = e.target.closest('.btn-edit'); const btnAssinar = e.target.closest('.btn-assinar');
+            if (btnExcluir && isAdmin && confirm("Excluir permanentemente?")) await deleteDoc(doc(db, btnExcluir.dataset.colecao, btnExcluir.dataset.id));
+            if (btnEditar && isAdmin) window.abrirModal(btnEditar.dataset.colecao, btnEditar.dataset.id, JSON.parse(btnEditar.dataset.info));
+            if (btnAssinar && isAdmin) {
+                const idDoc = btnAssinar.dataset.id;
+                const col = btnAssinar.dataset.colecao;
+                const inputLeitor = document.getElementById(`leitor-${idDoc}`);
+                if(!inputLeitor) return;
+                const nomeColaborador = inputLeitor.value;
+                if(!nomeColaborador) return alert("Selecione um colaborador na lista!");
+                const registro = `${nomeColaborador} (Lido em: ${new Date().toLocaleString('pt-BR')})`;
+                await updateDoc(doc(db, col, idDoc), { leituras: arrayUnion(registro) });
+            }
+        });
+    }
+
+    const btnSalvarAjustes = document.getElementById('btn-salvar-ajustes');
+    if(btnSalvarAjustes) {
+        btnSalvarAjustes.addEventListener('click', async () => {
+            if(!isAdmin) return;
+            const texto = document.getElementById('tab-input-banner').value;
+            const locaisTexto = document.getElementById('tab-input-locais').value; 
+            const setoresTexto = document.getElementById('tab-input-setores').value; 
+            const especialidadesTexto = document.getElementById('tab-input-especialidades').value; 
+            const motivosTexto = document.getElementById('tab-input-motivos').value; 
+            const corPend = document.getElementById('tab-color-pendente').value; 
+            const corConc = document.getElementById('tab-color-concluido').value; 
             
-            const titleEl = document.getElementById('page-title');
-            if(titleEl) titleEl.textContent = btn.textContent.trim();
+            const imgPastaInput = document.getElementById('tab-input-imagem-pastas');
+            const imgPastasTexto = imgPastaInput ? imgPastaInput.value : "";
+
+            const chatLogoInput = document.getElementById('tab-input-chat-logo');
+            const chatLogoTexto = chatLogoInput ? chatLogoInput.value : "";
             
-            const searchBox = document.getElementById('search-box');
-            if(searchBox) searchBox.style.display = (abaAtual !== 'home' && abaAtual !== 'ajustes') ? 'flex' : 'none';
+            const chatCorInput = document.getElementById('tab-color-chat');
+            const chatCorVal = chatCorInput ? chatCorInput.value : "#0ba360";
             
-            const inputPesq = document.getElementById('input-pesquisa');
-            if(inputPesq) inputPesq.value = ''; 
+            btnSalvarAjustes.innerHTML = "Salvando...";
+            try {
+                await setDoc(doc(db, "configuracoes", "gerais"), { 
+                    banner_texto: texto, 
+                    locais: locaisTexto, 
+                    setores: setoresTexto, 
+                    especialidades: especialidadesTexto,
+                    motivos: motivosTexto, 
+                    cor_pendente: corPend, 
+                    cor_concluido: corConc,
+                    imagem_padrao_pastas: imgPastasTexto,
+                    chat_logo: chatLogoTexto,
+                    chat_cor: chatCorVal
+                });
+                alert("Configurações salvas com sucesso!");
+            } catch(e) { alert("Erro ao salvar configurações."); }
+            btnSalvarAjustes.innerHTML = 'Salvar Alterações';
+        });
+    }
+
+    const inputPesqGlobal = document.getElementById('input-pesquisa-global');
+    if(inputPesqGlobal) {
+        inputPesqGlobal.addEventListener('keyup', (e) => {
+            const texto = e.target.value.toLowerCase().trim();
+            const areaRes = document.getElementById('resultados-globais');
+            if(!areaRes) return;
+            if(texto.length < 2) { areaRes.style.display = 'none'; return; }
             
-            if(abaAtual === 'boletins' && typeof window.fecharPastaBoletim === 'function') window.fecharPastaBoletim(); 
-            if(abaAtual === 'boletins-privados' && typeof window.fecharPastaPrivado === 'function') window.fecharPastaPrivado();
-            ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico'].forEach(col => {
-                if(abaAtual === col && typeof window.fecharPastaGenerica === 'function') window.fecharPastaGenerica(col);
+            areaRes.style.display = 'grid'; 
+            areaRes.innerHTML = '<h3 style="grid-column: 1/-1; margin-bottom: 10px; border-bottom: 2px solid var(--border-color); padding-bottom: 5px; color: var(--primary-color);">Resultados da Busca Global:</h3>';
+            let encontrou = false;
+            
+            const colecoesBusca = ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico', 'pacotes', 'remocoes', 'colaboradores'];
+            
+            colecoesBusca.forEach(colecao => {
+                const itens = window.todosOsDadosDoSistema[colecao] || window.dadosGlobaisAbas[colecao] || [];
+                itens.forEach(item => {
+                    const valoresStr = Object.values(item.data).join(' ').toLowerCase();
+                    const chavesStr = Object.keys(item.data).join(' ').toLowerCase();
+                    if(valoresStr.includes(texto) || chavesStr.includes(texto)) {
+                        areaRes.innerHTML += window.gerarHTMLCard(colecao, item.id, item.data);
+                        encontrou = true;
+                    }
+                });
+            });
+
+            if(!encontrou) areaRes.innerHTML += '<p style="color:var(--text-muted); font-size:14px; grid-column: 1/-1;">Nenhum resultado encontrado no sistema.</p>';
+        });
+    }
+
+    const inputPesqAba = document.getElementById('input-pesquisa');
+    if(inputPesqAba) {
+        inputPesqAba.addEventListener('keyup', (e) => {
+            const texto = e.target.value.toLowerCase();
+            const abaContainer = document.getElementById(`tab-${abaAtual}`);
+            if(!abaContainer) return;
+            
+            abaContainer.querySelectorAll('.card, .shortcut-card, .mini-card').forEach(card => {
+                if(card.innerText.toLowerCase().includes(texto)) card.style.display = 'flex';
+                else card.style.display = 'none';
             });
         });
-    });
+    }
 });
