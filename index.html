@@ -14,13 +14,13 @@
 <body>
 
     <div id="login-screen" class="screen">
-        <form id="form-login" class="login-box glass-effect">
+        <div class="login-box glass-effect">
             <img src="logo.png" alt="Logo" class="login-logo" onerror="this.style.display='none'">
             <h2 style="color: var(--primary-color);">Painel de Gestão</h2>
             <div class="input-group"><i class="ri-mail-line"></i><input type="email" id="email" placeholder="E-mail" required></div>
-            <div class="input-group"><i class="ri-lock-line"></i><input type="password" id="senha" placeholder="Senha" required></div>
-            <button type="submit" id="btn-login" class="btn-hover color-11" style="width: 100%;">Entrar no Painel</button>
-        </form>
+            <div class="input-group"><i class="ri-lock-line"></i><input type="password" id="senha" placeholder="Senha" required onkeypress="if(event.key === 'Enter') window.efetuarLogin()"></div>
+            <button id="btn-login" class="btn-hover color-11" style="width: 100%;" onclick="window.efetuarLogin()">Entrar no Painel</button>
+        </div>
     </div>
 
     <div id="dashboard-screen" class="screen" style="display: none;">
@@ -387,7 +387,7 @@
 
     <div id="modal-cadastro" class="modal-overlay" style="display: none;">
         <div class="modal-box glass-effect" style="max-height: 95vh; overflow-y: auto;">
-            <header class="modal-header"><h3 id="modal-title">Cadastrar</h3><button id="btn-fechar-modal" class="btn-icon"><i class="ri-close-line"></i></button></header>
+            <header class="modal-header"><h3 id="modal-title">Cadastrar</h3><button id="btn-fechar-modal" class="btn-icon" onclick="window.fecharModal()"><i class="ri-close-line"></i></button></header>
             <div class="modal-body" style="overflow-y: visible;">
                 <input type="hidden" id="modal-doc-id">
                 <div id="modal-form-area"></div>
