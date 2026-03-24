@@ -22,7 +22,7 @@ const configuracaoAbas = {
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'], campoAgrupador: 'Convênio', icone: 'ri-shield-cross-fill' },
     'ultrassom': { titulo: 'Exame de Ultrassom', campos: ['Exame', 'Código', 'Profissional', 'Restrição de Idade', 'Observação'], campoAgrupador: 'Exame', icone: 'ri-pulse-line' },
     'consultas': { titulo: 'Consulta / Procedimento', campos: ['Tipo', 'Outro Subtítulo da Pasta (Opcional)', 'Código', 'Descrição', 'Procedimentos Inclusos (1 por linha)', 'Valor', 'Observações'], campoAgrupador: 'Tipo', icone: 'ri-stethoscope-line' },
-    'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor ou Informacao', 'O que está incluso', 'Observações', 'Pacotes', 'Kit'] },
+    'pacotes': { titulo: 'Pacote PS', campos: ['Pacotes', 'Descrição', 'Valor ou Informacao', 'O que está incluso', 'Observações', 'Kit'], campoAgrupador: 'Pacotes', icone: 'ri-folder-5-line' },
     'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Categoria do Exame', 'Código', 'Descrição', 'Valor', 'Prazo de Laudo', 'Onde encontrar resultado', 'Observações', 'Convênios'], campoAgrupador: 'Categoria do Exame', icone: 'ri-body-scan-line' },
     'institutos': { titulo: 'Instituto Tabela', campos: ['Número da Tabela', 'Valor da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'], campoAgrupador: 'Número da Tabela', icone: 'ri-building-line' },
     'remocoes': { titulo: 'Remoção', campos: ['Nome do Lugar', 'Números (Separe por vírgula)', 'Local e Link Maps', 'Observações Importantes'] },
@@ -87,6 +87,15 @@ let chartBoletinsInst = null;
 let chartPrivadosInst = null;
 let chartHomeInst = null;            
 let chartPrivadosGeralInst = null;   
+
+window.encodeInlinePayload = function(str) {
+    try { return btoa(unescape(encodeURIComponent(String(str || '')))); }
+    catch(e) { console.error('encodeInlinePayload falhou:', e); return ''; }
+};
+window.decodeInlinePayload = function(str) {
+    try { return decodeURIComponent(escape(atob(String(str || '')))); }
+    catch(e) { console.error('decodeInlinePayload falhou:', e); return ''; }
+};
 
 const paletaGradientes = [
     { valor: "#ffffff", nome: "Branco Padrão", dark: false },
@@ -587,6 +596,10 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
         else if(colecao === 'consultas' && campo === 'Procedimentos Inclusos (1 por linha)') {
             htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:110px; resize:vertical;" placeholder="Digite um procedimento por linha para agrupar vários itens no mesmo card">${valorAntigo}</textarea>`;
         }
+        else if(colecao === 'pacotes' && (campo === 'Descrição' || campo === 'O que está incluso' || campo === 'Observações' || campo === 'Kit')) {
+            const altura = campo === 'Descrição' ? 90 : 110;
+            htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:${altura}px; resize:vertical;" placeholder="${campo}">${valorAntigo}</textarea>`;
+        }
         else if(campo === 'Local ou Prédio') {
             htmlCampos += `<select id="input-${campo}" class="form-input"><option value="">Selecione o Local...</option>`;
             locaisGlobais.forEach(loc => { const l = loc.trim(); if(l) htmlCampos += `<option value="${l}" ${valorAntigo === l ? 'selected' : ''}>${l}</option>`; });
@@ -767,7 +780,8 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
                 const textoSemUrl = String(valor).replace(url, '').trim();
                 cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4;"><strong>${chave}:</strong> <span>${textoSemUrl}</span><br><button onclick="window.open('${url}', '_blank')" class="btn-hover color-5" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 5px;"><i class="ri-map-pin-user-fill"></i> Ver no Mapa</button></div>`;
             } else {
-                cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span>${valor}</span></div>`; 
+                const estiloTexto = (colecaoNome === 'pacotes' && (chave === 'Descrição' || chave === 'O que está incluso' || chave === 'Observações' || chave === 'Kit')) ? 'white-space: pre-line; display:block; line-height:1.45;' : '';
+                cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="${estiloTexto}">${valor}</span></div>`; 
             }
         }
     });
@@ -832,7 +846,8 @@ window.renderizarPastasGenericas = function(colecao) {
             iconeHtml = `<div style="background: white; padding: 10px; border-radius: 12px; box-shadow: var(--shadow-soft); display:flex; align-items:center; justify-content:center; height: 55px; width: 65px;"><img src="${imagemPadraoPastas}" style="max-height:100%; max-width:100%; object-fit:contain;" onerror="this.style.display='none'"></div>`;
         }
         
-        grid.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaGenerica('${colecao}', '${nomePasta}')" style="text-align: left; padding: 20px; border-left: 6px solid ${corIcone};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">${iconeHtml}<div style="font-size: 16px; font-weight: 600;">${nomePasta}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;">Cadastros na pasta: <b style="color:var(--text-main);">${qtd}</b></div></div>`;
+        const nomePastaSeguro = String(nomePasta).replace(/'/g, "\\'");
+        grid.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaGenerica('${colecao}', '${nomePastaSeguro}')" style="text-align: left; padding: 20px; border-left: 6px solid ${corIcone};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">${iconeHtml}<div style="font-size: 16px; font-weight: 600;">${nomePasta}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;">Cadastros na pasta: <b style="color:var(--text-main);">${qtd}</b></div></div>`;
     });
 };
 
