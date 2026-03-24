@@ -68,6 +68,8 @@ window.corStatusConcluido = "#38a169";
 
 let chartBoletinsInst = null;
 let chartPrivadosInst = null;
+let chartHomeInst = null;            // NOVO: Gráfico Home
+let chartPrivadosGeralInst = null;   // NOVO: Gráfico Privados (Geral)
 
 const paletaGradientes = [
     { valor: "#ffffff", nome: "Branco Padrão", dark: false },
@@ -316,27 +318,16 @@ window.fecharPastaPrivado = function() {
     window.renderizarPastasPrivados();
 };
 
-// 🎨 GRÁFICO COLORIDO AQUI!
+// 🎨 ATUALIZAÇÃO DO GRÁFICO (COM CORES VARIADAS)
 window.atualizarGrafico = function(canvasId, refInstancia, dados, labelGrafico) {
     const ctx = document.getElementById(canvasId);
     if(!ctx) return refInstancia;
     const contagemMotivos = {};
     dados.forEach(b => { const m = b.data['Motivo'] || 'Sem Motivo'; contagemMotivos[m] = (contagemMotivos[m] || 0) + 1; });
     
-    // Paleta de Cores Moderna e Vibrante
     const paletaGrafico = [
-        '#3182ce', // Azul
-        '#38a169', // Verde
-        '#ecc94b', // Amarelo
-        '#e53e3e', // Vermelho
-        '#805ad5', // Roxo
-        '#38b2ac', // Turquesa
-        '#dd6b20', // Laranja
-        '#ed64a6', // Rosa
-        '#4a5568', // Cinza
-        '#667eea', // Lilás
-        '#48bb78', // Verde Claro
-        '#ed8936'  // Laranja Claro
+        '#3182ce', '#38a169', '#ecc94b', '#e53e3e', '#805ad5', '#38b2ac', 
+        '#dd6b20', '#ed64a6', '#4a5568', '#667eea', '#48bb78', '#ed8936'
     ];
 
     if(refInstancia) refInstancia.destroy(); 
@@ -359,6 +350,46 @@ window.atualizarGrafico = function(canvasId, refInstancia, dados, labelGrafico) 
         }
     });
 };
+
+// 📊 NOVOS FILTROS DE DATA E GRÁFICOS GERAIS
+window.renderizarGraficoHome = function() {
+    const dtInicio = document.getElementById('home-data-inicio') ? document.getElementById('home-data-inicio').value : '';
+    const dtFim = document.getElementById('home-data-fim') ? document.getElementById('home-data-fim').value : '';
+    
+    let dadosFiltrados = window.todosBoletinsData;
+    
+    if (dtInicio || dtFim) {
+        dadosFiltrados = window.todosBoletinsData.filter(item => {
+            const d = item.data['Data de Publicação'];
+            if (!d) return false; 
+            if (dtInicio && d < dtInicio) return false;
+            if (dtFim && d > dtFim) return false;
+            return true;
+        });
+    }
+    
+    chartHomeInst = window.atualizarGrafico('chart-home', chartHomeInst, dadosFiltrados, 'Motivos Gerais (Empresa)');
+};
+
+window.renderizarGraficoPrivadosGeral = function() {
+    const dtInicio = document.getElementById('privado-data-inicio') ? document.getElementById('privado-data-inicio').value : '';
+    const dtFim = document.getElementById('privado-data-fim') ? document.getElementById('privado-data-fim').value : '';
+    
+    let dadosFiltrados = window.todosPrivadosData;
+    
+    if (dtInicio || dtFim) {
+        dadosFiltrados = window.todosPrivadosData.filter(item => {
+            const d = item.data['Data de Publicação'];
+            if (!d) return false; 
+            if (dtInicio && d < dtInicio) return false;
+            if (dtFim && d > dtFim) return false;
+            return true;
+        });
+    }
+    
+    chartPrivadosGeralInst = window.atualizarGrafico('chart-privados-geral', chartPrivadosGeralInst, dadosFiltrados, 'Motivos Diretos (Equipe)');
+};
+
 
 window.fecharModal = function() {
     const modalEl = document.getElementById('modal-cadastro');
@@ -842,8 +873,8 @@ window.renderizarCards = function(colecaoNome) {
 
     onSnapshot(collection(db, colecaoNome), (snapshot) => {
         if(snapshot.empty) {
-            if(colecaoNome === 'boletins') { window.todosBoletinsData = []; window.verificarUrgentesHome(); }
-            if(colecaoNome === 'boletins-privados') { window.todosPrivadosData = []; window.verificarUrgentesHome(); }
+            if(colecaoNome === 'boletins') { window.todosBoletinsData = []; window.verificarUrgentesHome(); window.renderizarGraficoHome(); }
+            if(colecaoNome === 'boletins-privados') { window.todosPrivadosData = []; window.verificarUrgentesHome(); window.renderizarGraficoPrivadosGeral(); }
             if(configuracaoAbas[colecaoNome] && configuracaoAbas[colecaoNome].campoAgrupador) {
                 window.dadosGlobaisAbas[colecaoNome] = [];
                 if(abaAtual === colecaoNome) window.renderizarPastasGenericas(colecaoNome);
@@ -864,13 +895,17 @@ window.renderizarCards = function(colecaoNome) {
         if(colecaoNome === 'boletins') {
             window.todosBoletinsData = itens;
             if(abaAtual === 'boletins') { if(window.pastaBoletimAtual) window.renderizarListaBoletins(); else window.renderizarPastasBoletins(); }
-            window.verificarUrgentesHome(); return;
+            window.verificarUrgentesHome(); 
+            window.renderizarGraficoHome();
+            return;
         }
 
         if(colecaoNome === 'boletins-privados') {
             window.todosPrivadosData = itens;
             if(abaAtual === 'boletins-privados') { if(window.pastaPrivadoAtual) window.renderizarListaPrivados(); else window.renderizarPastasPrivados(); }
-            window.verificarUrgentesHome(); return;
+            window.verificarUrgentesHome(); 
+            window.renderizarGraficoPrivadosGeral();
+            return;
         }
         
         if(configuracaoAbas[colecaoNome] && configuracaoAbas[colecaoNome].campoAgrupador) {
@@ -966,8 +1001,6 @@ window.carregarConfiguracoes = function() {
         }
     });
 };
-
-// ================== CHATBOT LÓGICA AVANÇADA (DICAS E BOLETINS) ==================
 
 window.toggleChat = function() {
     const win = document.getElementById('chat-window');
@@ -1159,6 +1192,45 @@ window.processarLogicaDoBot = function(mensagemUser) {
 
     return "Desculpe, não localizei nenhuma informação no sistema sobre isso. 🤔<br><br>Tente pesquisar por uma palavra-chave mais simples, como o nome de um exame ou especialidade!";
 };
+
+window.renderizarGraficoHome = function() {
+    const dtInicio = document.getElementById('home-data-inicio') ? document.getElementById('home-data-inicio').value : '';
+    const dtFim = document.getElementById('home-data-fim') ? document.getElementById('home-data-fim').value : '';
+    
+    let dadosFiltrados = window.todosBoletinsData;
+    
+    if (dtInicio || dtFim) {
+        dadosFiltrados = window.todosBoletinsData.filter(item => {
+            const d = item.data['Data de Publicação'];
+            if (!d) return false; 
+            if (dtInicio && d < dtInicio) return false;
+            if (dtFim && d > dtFim) return false;
+            return true;
+        });
+    }
+    
+    chartHomeInst = window.atualizarGrafico('chart-home', chartHomeInst, dadosFiltrados, 'Motivos Gerais (Empresa)');
+};
+
+window.renderizarGraficoPrivadosGeral = function() {
+    const dtInicio = document.getElementById('privado-data-inicio') ? document.getElementById('privado-data-inicio').value : '';
+    const dtFim = document.getElementById('privado-data-fim') ? document.getElementById('privado-data-fim').value : '';
+    
+    let dadosFiltrados = window.todosPrivadosData;
+    
+    if (dtInicio || dtFim) {
+        dadosFiltrados = window.todosPrivadosData.filter(item => {
+            const d = item.data['Data de Publicação'];
+            if (!d) return false; 
+            if (dtInicio && d < dtInicio) return false;
+            if (dtFim && d > dtFim) return false;
+            return true;
+        });
+    }
+    
+    chartPrivadosGeralInst = window.atualizarGrafico('chart-privados-geral', chartPrivadosGeralInst, dadosFiltrados, 'Motivos Diretos (Equipe)');
+};
+
 
 // ==========================================
 // 5. ATRIBUIÇÃO DE EVENTOS E NAVEGAÇÃO
