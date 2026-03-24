@@ -8,11 +8,7 @@ window.addEventListener('submit', function(e) {
 // ==========================================
 // 1. CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
 // ==========================================
-// ==========================================
-// 1. CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
-// ==========================================
 const configuracaoAbas = {
-    // 👇 AQUI ESTÁ A CORREÇÃO: Tiramos a regra de pastas, mas mantivemos o campo de PIN!
     'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da Clínica', 'PIN de Acesso (Treinamentos)'] },
     
     'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' }, 
@@ -73,8 +69,8 @@ window.corStatusConcluido = "#38a169";
 
 let chartBoletinsInst = null;
 let chartPrivadosInst = null;
-let chartHomeInst = null;            // NOVO: Gráfico Home
-let chartPrivadosGeralInst = null;   // NOVO: Gráfico Privados (Geral)
+let chartHomeInst = null;            
+let chartPrivadosGeralInst = null;   
 
 const paletaGradientes = [
     { valor: "#ffffff", nome: "Branco Padrão", dark: false },
@@ -323,7 +319,6 @@ window.fecharPastaPrivado = function() {
     window.renderizarPastasPrivados();
 };
 
-// 🎨 ATUALIZAÇÃO DO GRÁFICO (COM CORES VARIADAS)
 window.atualizarGrafico = function(canvasId, refInstancia, dados, labelGrafico) {
     const ctx = document.getElementById(canvasId);
     if(!ctx) return refInstancia;
@@ -356,7 +351,6 @@ window.atualizarGrafico = function(canvasId, refInstancia, dados, labelGrafico) 
     });
 };
 
-// 📊 NOVOS FILTROS DE DATA E GRÁFICOS GERAIS
 window.renderizarGraficoHome = function() {
     const dtInicio = document.getElementById('home-data-inicio') ? document.getElementById('home-data-inicio').value : '';
     const dtFim = document.getElementById('home-data-fim') ? document.getElementById('home-data-fim').value : '';
@@ -622,6 +616,12 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
     });
     
     if(hasFlexLayout) cardHtml += `</div></div>`; 
+    
+    // 👇 ADICIONADO: Mostra o PIN visível no Card da tela de Gestão!
+    if(colecaoNome === 'colaboradores' && data['PIN de Acesso (Treinamentos)']) {
+         cardHtml += `<div style="margin-top:10px; background:rgba(0,0,0,0.05); padding:8px; border-radius:6px; font-size:12px; border: 1px dashed var(--border-color);"><strong>🔑 PIN de Acesso:</strong> ${data['PIN de Acesso (Treinamentos)']}</div>`;
+    }
+
     if (isAdmin) cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
     cardHtml += `</div>`;
     return cardHtml;
@@ -1198,47 +1198,31 @@ window.processarLogicaDoBot = function(mensagemUser) {
     return "Desculpe, não localizei nenhuma informação no sistema sobre isso. 🤔<br><br>Tente pesquisar por uma palavra-chave mais simples, como o nome de um exame ou especialidade!";
 };
 
-window.renderizarGraficoHome = function() {
-    const dtInicio = document.getElementById('home-data-inicio') ? document.getElementById('home-data-inicio').value : '';
-    const dtFim = document.getElementById('home-data-fim') ? document.getElementById('home-data-fim').value : '';
-    
-    let dadosFiltrados = window.todosBoletinsData;
-    
-    if (dtInicio || dtFim) {
-        dadosFiltrados = window.todosBoletinsData.filter(item => {
-            const d = item.data['Data de Publicação'];
-            if (!d) return false; 
-            if (dtInicio && d < dtInicio) return false;
-            if (dtFim && d > dtFim) return false;
-            return true;
-        });
-    }
-    
-    chartHomeInst = window.atualizarGrafico('chart-home', chartHomeInst, dadosFiltrados, 'Motivos Gerais (Empresa)');
-};
+window.entrarPortalAluno = function() {
+    const nomeDigitado = document.getElementById('login-aluno-nome').value.trim().toLowerCase();
+    const pinDigitado = document.getElementById('login-aluno-pin').value.trim();
 
-window.renderizarGraficoPrivadosGeral = function() {
-    const dtInicio = document.getElementById('privado-data-inicio') ? document.getElementById('privado-data-inicio').value : '';
-    const dtFim = document.getElementById('privado-data-fim') ? document.getElementById('privado-data-fim').value : '';
-    
-    let dadosFiltrados = window.todosPrivadosData;
-    
-    if (dtInicio || dtFim) {
-        dadosFiltrados = window.todosPrivadosData.filter(item => {
-            const d = item.data['Data de Publicação'];
-            if (!d) return false; 
-            if (dtInicio && d < dtInicio) return false;
-            if (dtFim && d > dtFim) return false;
-            return true;
-        });
-    }
-    
-    chartPrivadosGeralInst = window.atualizarGrafico('chart-privados-geral', chartPrivadosGeralInst, dadosFiltrados, 'Motivos Diretos (Equipe)');
-};
+    if(!nomeDigitado || !pinDigitado) return alert("Preencha Nome e PIN!");
 
+    const dadosColaboradores = window.todosOsDadosDoSistema['colaboradores'] || [];
+    
+    const colaboradorEncontrado = dadosColaboradores.find(item => {
+        const nomeBanco = (item.data['Nome Completo do Colaborador'] || "").toLowerCase();
+        const pinBanco = item.data['PIN de Acesso (Treinamentos)'] || "";
+        return nomeBanco === nomeDigitado && pinBanco === pinDigitado;
+    });
+
+    if(colaboradorEncontrado) {
+        document.getElementById('ensino-login-area').style.display = 'none';
+        document.getElementById('ensino-dashboard-area').style.display = 'block';
+        document.getElementById('nome-aluno-logado').textContent = colaboradorEncontrado.data['Nome Completo do Colaborador'];
+    } else {
+        alert("Nome ou PIN incorretos. Verifique com a Gestão.");
+    }
+};
 
 // ==========================================
-// 5. ATRIBUIÇÃO DE EVENTOS E NAVEGAÇÃO
+// 4. ATRIBUIÇÃO DE EVENTOS E NAVEGAÇÃO
 // ==========================================
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -1417,27 +1401,3 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
-// COLE NO FINAL DO SEU app.js
-window.entrarPortalAluno = function() {
-    const nomeDigitado = document.getElementById('login-aluno-nome').value.trim().toLowerCase();
-    const pinDigitado = document.getElementById('login-aluno-pin').value.trim();
-
-    if(!nomeDigitado || !pinDigitado) return alert("Preencha Nome e PIN!");
-
-    // Procura na lista global que o sistema já carrega automaticamente!
-    const dadosColaboradores = window.todosOsDadosDoSistema['colaboradores'] || [];
-    
-    const colaboradorEncontrado = dadosColaboradores.find(item => {
-        const nomeBanco = (item.data['Nome Completo do Colaborador'] || "").toLowerCase();
-        const pinBanco = item.data['PIN de Acesso (Treinamentos)'] || "";
-        return nomeBanco === nomeDigitado && pinBanco === pinDigitado;
-    });
-
-    if(colaboradorEncontrado) {
-        document.getElementById('ensino-login-area').style.display = 'none';
-        document.getElementById('ensino-dashboard-area').style.display = 'block';
-        document.getElementById('nome-aluno-logado').textContent = colaboradorEncontrado.data['Nome Completo do Colaborador'];
-    } else {
-        alert("Nome ou PIN incorretos. Verifique com a Gestão.");
-    }
-};
