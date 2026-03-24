@@ -11,6 +11,9 @@ window.addEventListener('submit', function(e) {
 const configuracaoAbas = {
     'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da Clínica', 'PIN de Acesso (Treinamentos)'] },
     
+    // 👇 A MÁGICA DO ENSINO: Configuração do Painel do Admin
+    'treinamentos': { titulo: 'Conteúdo de Ensino', campos: ['Título do Treinamento', 'Categoria (Vídeo, PDF, Tarefa)', 'Link do Material', 'Para quais Setores?', 'Pontos Valendo'], campoAgrupador: 'Categoria (Vídeo, PDF, Tarefa)', icone: 'ri-book-read-fill' },
+
     'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' }, 
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'], campoAgrupador: 'Convênio', icone: 'ri-shield-cross-fill' },
     'ultrassom': { titulo: 'Exame de Ultrassom', campos: ['Exame', 'Código', 'Profissional', 'Restrição de Idade', 'Observação'], campoAgrupador: 'Exame', icone: 'ri-pulse-line' },
@@ -45,6 +48,12 @@ const app = initializeApp(firebaseConfig);
 const db = initializeFirestore(app, { localCache: persistentLocalCache() });
 const auth = getAuth(app);
 
+// Deixando o DB global para usar nas funções de pontos
+window.db = db;
+window.updateDoc = updateDoc;
+window.doc = doc;
+window.arrayUnion = arrayUnion;
+
 let isAdmin = false;
 let abaAtual = 'home'; 
 const EMAIL_GESTAO = "gestao@clinica.com";
@@ -58,11 +67,14 @@ let imagemPadraoPastas = "";
 
 window.todosBoletinsData = [];
 window.todosPrivadosData = [];
+window.todosTreinamentosData = []; // NOVO
 window.dadosGlobaisAbas = {}; 
 window.todosOsDadosDoSistema = {}; 
 window.dadosBoletins = {}; 
 window.pastaBoletimAtual = null;
 window.pastaPrivadoAtual = null;
+
+window.alunoLogado = null; // NOVO
 
 window.corStatusPendente = "#e53e3e";
 window.corStatusConcluido = "#38a169";
@@ -116,13 +128,11 @@ window.efetuarLogin = function(e) {
         });
 }
 
-// Esconde a Lúcia na tela de login logo que abre
 const chatFabInit = document.getElementById('chat-fab');
 const chatWinInit = document.getElementById('chat-window');
 if(chatFabInit) chatFabInit.style.display = 'none';
 if(chatWinInit) chatWinInit.style.display = 'none';
 
-// Vincula o botão de login direto na raiz
 const btnLoginInit = document.getElementById('btn-login');
 const formLoginInit = document.getElementById('form-login');
 if(btnLoginInit) btnLoginInit.onclick = window.efetuarLogin;
@@ -428,9 +438,16 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
     let htmlCampos = '';
     config.campos.forEach(campo => {
         const valorAntigo = (dadosAntigos && dadosAntigos[campo]) ? dadosAntigos[campo] : '';
+        
         if(colecao === 'colaboradores' && campo === 'Setor da Clínica') {
             htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Geral">Setor Padrão (Geral)</option>`;
             setoresGlobais.forEach(s => { htmlCampos += `<option value="${s}" ${valorAntigo === s ? 'selected' : ''}>${s}</option>`; });
+            htmlCampos += `</select>`;
+        }
+        else if(colecao === 'treinamentos' && campo === 'Categoria (Vídeo, PDF, Tarefa)') {
+            const opcoes = ['Vídeo', 'PDF/Documento', 'Tarefa Prática', 'Mini Prova'];
+            htmlCampos += `<select id="input-${campo}" class="form-input">`;
+            opcoes.forEach(op => { htmlCampos += `<option value="${op}" ${valorAntigo === op ? 'selected' : ''}>${op}</option>`; });
             htmlCampos += `</select>`;
         }
         else if(colecao === 'corpo-clinico' && campo === 'Especialidade') {
@@ -443,7 +460,7 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
             listaColaboradoresGlobal.forEach(c => { htmlCampos += `<option value="${c.nome}" ${valorAntigo === c.nome ? 'selected' : ''}>${c.nome}</option>`; });
             htmlCampos += `</select>`;
         } 
-        else if(colecao === 'boletins' && campo === 'Para quais Setores?') {
+        else if((colecao === 'boletins' || colecao === 'treinamentos') && campo === 'Para quais Setores?') {
             htmlCampos += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px;">Para quais setores? (Marque 1 ou mais)</label><div class="checkbox-group" style="margin-bottom:15px; display:grid; grid-template-columns: 1fr 1fr; gap:8px;">`;
             const valoresSalvos = valorAntigo ? String(valorAntigo).split(', ') : ['Geral'];
             ['Geral', ...setoresGlobais].forEach(setor => {
@@ -501,26 +518,36 @@ window.desfazerLeitura = async function(docId, nomeColab, colecao) {
     if(!isAdmin) return;
     if(!confirm(`Tem certeza que deseja remover a assinatura de ${nomeColab}?`)) return;
     
-    const docData = window.dadosBoletins[docId];
+    let docData = null;
+    if(colecao === 'treinamentos') docData = window.todosTreinamentosData.find(i=>i.id===docId)?.data;
+    else docData = window.dadosBoletins[docId];
+
     if(!docData || !docData.leituras) return;
     
     const stringExata = docData.leituras.find(txt => txt.startsWith(nomeColab));
     if(stringExata) {
-        await updateDoc(doc(db, colecao, docId), { leituras: arrayRemove(stringExata) });
+        await window.updateDoc(window.doc(window.db, colecao, docId), { leituras: window.arrayRemove(stringExata) });
         const modalLeituras = document.getElementById('modal-leituras');
         if(modalLeituras) modalLeituras.style.display = 'none';
     }
 };
 
 window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
-    const data = window.dadosBoletins[docId];
+    let data = null;
+    if(colecaoOrigem === 'treinamentos') {
+        data = window.todosTreinamentosData.find(i=>i.id===docId)?.data;
+    } else {
+        data = window.dadosBoletins[docId];
+    }
+    
     if(!data) return;
+    
     const titleEl = document.getElementById('modal-leitura-titulo');
-    if(titleEl) titleEl.textContent = data['Título do Informativo'] || data['Título do Documento'] || 'Status';
+    if(titleEl) titleEl.textContent = data['Título do Informativo'] || data['Título do Treinamento'] || data['Título do Documento'] || 'Status';
     
     let publicoAlvoNomes = [];
-    if(colecaoOrigem === 'boletins') {
-        publicoAlvoNomes = window.obterPublicoAlvo(window.pastaBoletimAtual || data['Para quais Setores?']);
+    if(colecaoOrigem === 'boletins' || colecaoOrigem === 'treinamentos') {
+        publicoAlvoNomes = window.obterPublicoAlvo(data['Para quais Setores?']);
     } else {
         publicoAlvoNomes = [data['Para qual Colaborador?']]; 
     }
@@ -540,8 +567,8 @@ window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
     const lidosContent = document.getElementById('lista-lidos-content');
     const faltaContent = document.getElementById('lista-falta-content');
     
-    if(lidosContent) lidosContent.innerHTML = htmlLidos || '<p style="color:var(--text-muted);">Ninguém desta pasta assinou ainda.</p>';
-    if(faltaContent) faltaContent.innerHTML = htmlNaoLidos || '<p style="color:#38a169;">Todos desta pasta assinaram!</p>';
+    if(lidosContent) lidosContent.innerHTML = htmlLidos || '<p style="color:var(--text-muted);">Ninguém concluiu ainda.</p>';
+    if(faltaContent) faltaContent.innerHTML = htmlNaoLidos || '<p style="color:#38a169;">Todos concluíram!</p>';
     
     const modalEl = document.getElementById('modal-leituras');
     if(modalEl) modalEl.style.display = 'flex';
@@ -617,9 +644,18 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
     
     if(hasFlexLayout) cardHtml += `</div></div>`; 
     
-    // 👇 ADICIONADO: Mostra o PIN visível no Card da tela de Gestão!
+    // Mostra o PIN na tela de Gestão
     if(colecaoNome === 'colaboradores' && data['PIN de Acesso (Treinamentos)']) {
          cardHtml += `<div style="margin-top:10px; background:rgba(0,0,0,0.05); padding:8px; border-radius:6px; font-size:12px; border: 1px dashed var(--border-color);"><strong>🔑 PIN de Acesso:</strong> ${data['PIN de Acesso (Treinamentos)']}</div>`;
+    }
+
+    // Botão de Detalhes (Leituras) na aba do Admin de Treinamentos
+    if(colecaoNome === 'treinamentos' && isAdmin) {
+        const concluidosCount = (data.leituras || []).length;
+        cardHtml += `<div style="margin-top:15px; padding-top:15px; border-top: 1px dashed rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size:12px; color:var(--primary-color);"><b>Conclusões:</b> ${concluidosCount} colaborador(es).</div>
+                        <button onclick="window.abrirListaLeituras('${docId}', 'treinamentos')" style="background: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; cursor:pointer; font-size: 12px; font-weight: 500; color: var(--primary-color);"><i class="ri-team-line"></i> Detalhes</button>
+                     </div>`;
     }
 
     if (isAdmin) cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
@@ -880,6 +916,7 @@ window.renderizarCards = function(colecaoNome) {
         if(snapshot.empty) {
             if(colecaoNome === 'boletins') { window.todosBoletinsData = []; window.verificarUrgentesHome(); window.renderizarGraficoHome(); }
             if(colecaoNome === 'boletins-privados') { window.todosPrivadosData = []; window.verificarUrgentesHome(); window.renderizarGraficoPrivadosGeral(); }
+            if(colecaoNome === 'treinamentos') { window.todosTreinamentosData = []; if(window.alunoLogado) window.renderizarTrilhaAluno(); }
             if(configuracaoAbas[colecaoNome] && configuracaoAbas[colecaoNome].campoAgrupador) {
                 window.dadosGlobaisAbas[colecaoNome] = [];
                 if(abaAtual === colecaoNome) window.renderizarPastasGenericas(colecaoNome);
@@ -913,6 +950,11 @@ window.renderizarCards = function(colecaoNome) {
             return;
         }
         
+        if(colecaoNome === 'treinamentos') {
+            window.todosTreinamentosData = itens;
+            if(window.alunoLogado) window.renderizarTrilhaAluno();
+        }
+
         if(configuracaoAbas[colecaoNome] && configuracaoAbas[colecaoNome].campoAgrupador) {
             window.dadosGlobaisAbas[colecaoNome] = itens;
             if(abaAtual === colecaoNome) {
@@ -1006,6 +1048,8 @@ window.carregarConfiguracoes = function() {
         }
     });
 };
+
+// ================== CHATBOT LÓGICA AVANÇADA (DICAS E BOLETINS) ==================
 
 window.toggleChat = function() {
     const win = document.getElementById('chat-window');
@@ -1198,6 +1242,95 @@ window.processarLogicaDoBot = function(mensagemUser) {
     return "Desculpe, não localizei nenhuma informação no sistema sobre isso. 🤔<br><br>Tente pesquisar por uma palavra-chave mais simples, como o nome de um exame ou especialidade!";
 };
 
+// ==========================================
+// 6. LÓGICA DA JORNADA DE APRENDIZADO (ENSINO)
+// ==========================================
+
+window.sairPortalAluno = function() {
+    window.alunoLogado = null;
+    document.getElementById('ensino-dashboard-area').style.display = 'none';
+    document.getElementById('ensino-login-area').style.display = 'block';
+    document.getElementById('login-aluno-pin').value = '';
+};
+
+window.renderizarTrilhaAluno = function() {
+    if(!window.alunoLogado) return;
+    const grid = document.getElementById('grid-trilha-aluno');
+    if(!grid) return;
+    grid.innerHTML = '';
+
+    const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'];
+    const setorAluno = window.alunoLogado['Setor da Clínica'] || 'Geral';
+
+    let pontos = 0;
+    let pendentes = 0;
+
+    const treinamentosAluno = window.todosTreinamentosData.filter(item => {
+        const alvo = String(item.data['Para quais Setores?'] || 'Geral');
+        return alvo.includes('Geral') || alvo.includes(setorAluno);
+    });
+
+    if(treinamentosAluno.length === 0) {
+        grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:var(--text-muted); background: white; padding: 20px; border-radius: 10px;">Você não possui nenhum treinamento pendente no momento. Parabéns! 🎉</p>';
+    }
+
+    treinamentosAluno.forEach(item => {
+        const d = item.data;
+        const docId = item.id;
+        const concluidos = d.leituras || [];
+        const jaFez = concluidos.some(txt => txt.startsWith(nomeAluno));
+        const pontosItem = parseInt(d['Pontos Valendo']) || 0;
+
+        if(jaFez) pontos += pontosItem;
+        else pendentes++;
+
+        const corStatus = jaFez ? '#38a169' : '#e53e3e';
+        const iconeStatus = jaFez ? 'ri-checkbox-circle-fill' : 'ri-time-line';
+        const textoStatus = jaFez ? 'Concluído' : 'Pendente';
+
+        let btnAcao = '';
+        if(d['Link do Material']) {
+            btnAcao += `<button onclick="window.abrirMidaFlutuante('${String(d['Link do Material']).trim()}')" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-bottom: 8px;"><i class="ri-eye-line"></i> Acessar Material</button>`;
+        }
+
+        if(!jaFez) {
+            btnAcao += `<button onclick="window.concluirTreinamento('${docId}')" class="btn-hover color-11" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; background: #38a169; color:white; border:none;"><i class="ri-check-double-line"></i> Marcar como Concluído</button>`;
+        }
+
+        let cardHtml = `
+            <div class="card" style="border: 2px solid ${corStatus}; display:flex; flex-direction:column; background: white; border-radius: 10px; padding: 15px;">
+                <div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--primary-color);"><i class="ri-book-open-line"></i> ${d['Categoria (Vídeo, PDF, Tarefa)']}</div>
+                <div style="font-size:16px; font-weight:600; margin-bottom:10px; line-height: 1.2;">${d['Título do Treinamento']}</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; flex:1;">
+                    <b>Pontos Valendo:</b> <span style="color:#e75516; font-weight:700;">+${pontosItem} XP</span><br>
+                    <b>Status:</b> <span style="color:${corStatus}; font-weight:600;"><i class="${iconeStatus}"></i> ${textoStatus}</span>
+                </div>
+                ${btnAcao}
+            </div>
+        `;
+        grid.innerHTML += cardHtml;
+    });
+
+    const ptsEl = document.getElementById('aluno-pontos');
+    const pendEl = document.getElementById('aluno-tarefas-pendentes');
+    if(ptsEl) ptsEl.textContent = pontos;
+    if(pendEl) pendEl.textContent = pendentes;
+};
+
+window.concluirTreinamento = async function(docId) {
+    if(!window.alunoLogado) return;
+    const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'];
+    if(!confirm(`Você realmente assistiu/leu este material, ${nomeAluno}?\nAo confirmar, os pontos serão computados na sua jornada.`)) return;
+
+    const registro = `${nomeAluno} (Concluído em: ${new Date().toLocaleString('pt-BR')})`;
+    try {
+        await window.updateDoc(window.doc(window.db, 'treinamentos', docId), { leituras: window.arrayUnion(registro) });
+        alert("Treinamento concluído com sucesso! +XP 🎉");
+    } catch(e) {
+        alert("Erro ao salvar: " + e.message);
+    }
+};
+
 window.entrarPortalAluno = function() {
     const nomeDigitado = document.getElementById('login-aluno-nome').value.trim().toLowerCase();
     const pinDigitado = document.getElementById('login-aluno-pin').value.trim();
@@ -1207,22 +1340,24 @@ window.entrarPortalAluno = function() {
     const dadosColaboradores = window.todosOsDadosDoSistema['colaboradores'] || [];
     
     const colaboradorEncontrado = dadosColaboradores.find(item => {
-        const nomeBanco = (item.data['Nome Completo do Colaborador'] || "").toLowerCase();
-        const pinBanco = item.data['PIN de Acesso (Treinamentos)'] || "";
+        const nomeBanco = String(item.data['Nome Completo do Colaborador'] || "").toLowerCase();
+        const pinBanco = String(item.data['PIN de Acesso (Treinamentos)'] || "");
         return nomeBanco === nomeDigitado && pinBanco === pinDigitado;
     });
 
     if(colaboradorEncontrado) {
+        window.alunoLogado = colaboradorEncontrado.data;
         document.getElementById('ensino-login-area').style.display = 'none';
         document.getElementById('ensino-dashboard-area').style.display = 'block';
-        document.getElementById('nome-aluno-logado').textContent = colaboradorEncontrado.data['Nome Completo do Colaborador'];
+        document.getElementById('nome-aluno-logado').textContent = window.alunoLogado['Nome Completo do Colaborador'];
+        window.renderizarTrilhaAluno(); // Carrega os vídeos do aluno!
     } else {
         alert("Nome ou PIN incorretos. Verifique com a Gestão.");
     }
 };
 
 // ==========================================
-// 4. ATRIBUIÇÃO DE EVENTOS E NAVEGAÇÃO
+// 7. ATRIBUIÇÃO DE EVENTOS GERAIS
 // ==========================================
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -1264,7 +1399,7 @@ window.addEventListener('DOMContentLoaded', () => {
             
             config.campos.forEach(c => {
                 const val = document.getElementById('input-'+c);
-                if(colecao === 'boletins' && c === 'Para quais Setores?') {
+                if((colecao === 'boletins' || colecao === 'treinamentos') && c === 'Para quais Setores?') {
                     const checks = Array.from(document.querySelectorAll('.check-setor:checked')).map(el => el.value);
                     dados[c] = checks.join(', ');
                 } else if(val) {
@@ -1391,7 +1526,7 @@ window.addEventListener('DOMContentLoaded', () => {
             
             if(abaAtual === 'boletins' && typeof window.fecharPastaBoletim === 'function') window.fecharPastaBoletim(); 
             if(abaAtual === 'boletins-privados' && typeof window.fecharPastaPrivado === 'function') window.fecharPastaPrivado();
-            ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico'].forEach(col => {
+            ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico', 'treinamentos'].forEach(col => {
                 if(abaAtual === col && typeof window.fecharPastaGenerica === 'function') window.fecharPastaGenerica(col);
             });
             
