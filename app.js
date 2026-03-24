@@ -21,7 +21,7 @@ const configuracaoAbas = {
     'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' }, 
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'], campoAgrupador: 'Convênio', icone: 'ri-shield-cross-fill' },
     'ultrassom': { titulo: 'Exame de Ultrassom', campos: ['Exame', 'Código', 'Profissional', 'Restrição de Idade', 'Observação'], campoAgrupador: 'Exame', icone: 'ri-pulse-line' },
-    'consultas': { titulo: 'Consulta / Procedimento', campos: ['Tipo', 'Código', 'Descrição', 'Valor', 'Observações'], campoAgrupador: 'Tipo', icone: 'ri-stethoscope-line' },
+    'consultas': { titulo: 'Consulta / Procedimento', campos: ['Tipo', 'Outro Subtítulo da Pasta (Opcional)', 'Código', 'Descrição', 'Procedimentos Inclusos (1 por linha)', 'Valor', 'Observações'], campoAgrupador: 'Tipo', icone: 'ri-stethoscope-line' },
     'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor ou Informacao', 'O que está incluso', 'Observações', 'Pacotes', 'Kit'] },
     'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Categoria do Exame', 'Código', 'Descrição', 'Valor', 'Prazo de Laudo', 'Onde encontrar resultado', 'Observações', 'Convênios'], campoAgrupador: 'Categoria do Exame', icone: 'ri-body-scan-line' },
     'institutos': { titulo: 'Instituto Tabela', campos: ['Número da Tabela', 'Valor da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'], campoAgrupador: 'Número da Tabela', icone: 'ri-building-line' },
@@ -409,6 +409,13 @@ window.fecharModal = function() {
     const modalEl = document.getElementById('modal-cadastro');
     if(modalEl) modalEl.style.display = 'none';
 };
+window.toggleConsultaTipoCustom = function(valor) {
+    const input = document.getElementById('input-Tipo-Custom');
+    if(!input) return;
+    input.style.display = valor === 'Outros' ? '' : 'none';
+    if(valor !== 'Outros') input.value = '';
+};
+
 
 window.adicionarPerguntaBuilder = function(tipo, objAntigo = null) {
     const container = document.getElementById('quiz-questions-list');
@@ -567,7 +574,18 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
             htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Sim" ${valorAntigo === 'Sim' ? 'selected' : ''}>Sim, aceita.</option><option value="Não" ${valorAntigo === 'Não' ? 'selected' : ''}>Não aceita.</option></select>`;
         }
         else if(colecao === 'consultas' && campo === 'Tipo') {
-            htmlCampos += `<select id="input-${campo}" class="form-input"><option value="">Selecione...</option><option value="Consulta" ${valorAntigo === 'Consulta' ? 'selected' : ''}>Consulta</option><option value="Exame" ${valorAntigo === 'Exame' ? 'selected' : ''}>Exame</option><option value="Pacotes" ${valorAntigo === 'Pacotes' ? 'selected' : ''}>Pacotes</option><option value="Outros" ${valorAntigo === 'Outros' ? 'selected' : ''}>Outros</option></select>`;
+            const tiposPadrao = ['Consulta', 'Exame', 'Pacotes', 'Outros'];
+            const valorTipo = String(valorAntigo || '').trim();
+            const tipoSelecionado = valorTipo && tiposPadrao.includes(valorTipo) ? valorTipo : (valorTipo ? 'Outros' : '');
+            const valorCustom = valorTipo && !tiposPadrao.includes(valorTipo) ? valorTipo : '';
+            htmlCampos += `<select id="input-${campo}" class="form-input" onchange="window.toggleConsultaTipoCustom(this.value)" style="margin-bottom:10px;"><option value="">Selecione...</option><option value="Consulta" ${tipoSelecionado === 'Consulta' ? 'selected' : ''}>Consulta</option><option value="Exame" ${tipoSelecionado === 'Exame' ? 'selected' : ''}>Exame</option><option value="Pacotes" ${tipoSelecionado === 'Pacotes' ? 'selected' : ''}>Pacotes</option><option value="Outros" ${tipoSelecionado === 'Outros' ? 'selected' : ''}>Outros</option></select>`;
+            htmlCampos += `<input type="text" id="input-Tipo-Custom" class="form-input" placeholder="Digite um novo subtítulo / pasta personalizada" value="${valorCustom}" style="${tipoSelecionado === 'Outros' ? '' : 'display:none;'}">`;
+        }
+        else if(colecao === 'consultas' && campo === 'Descrição') {
+            htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:90px; resize:vertical;" placeholder="Descrição principal do card">${valorAntigo}</textarea>`;
+        }
+        else if(colecao === 'consultas' && campo === 'Procedimentos Inclusos (1 por linha)') {
+            htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:110px; resize:vertical;" placeholder="Digite um procedimento por linha para agrupar vários itens no mesmo card">${valorAntigo}</textarea>`;
         }
         else if(campo === 'Local ou Prédio') {
             htmlCampos += `<select id="input-${campo}" class="form-input"><option value="">Selecione o Local...</option>`;
@@ -590,7 +608,15 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
     }
 
     const btnSalvar = document.getElementById('btn-salvar-dados');
-    if(btnSalvar) btnSalvar.setAttribute('data-colecao', colecao);
+    if(btnSalvar) {
+        btnSalvar.setAttribute('data-colecao', colecao);
+        btnSalvar.innerHTML = docId ? '<i class="ri-save-3-line"></i> Atualizar Dados no Servidor' : '<i class="ri-save-3-line"></i> Salvar Dados no Servidor';
+    }
+
+    if(colecao === 'consultas') {
+        const seletorTipo = document.getElementById('input-Tipo');
+        if(seletorTipo) window.toggleConsultaTipoCustom(seletorTipo.value);
+    }
 
     const modalEl = document.getElementById('modal-cadastro');
     if(modalEl) modalEl.style.display = 'flex';
@@ -764,7 +790,10 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
                      </div>`;
     }
 
-    if (isAdmin) cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
+    if (isAdmin) {
+        const payloadEdicao = window.encodeInlinePayload(JSON.stringify(data || {}));
+        cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info-b64="${payloadEdicao}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
+    }
     cardHtml += `</div>`;
     return cardHtml;
 };
@@ -1709,7 +1738,18 @@ window.addEventListener('DOMContentLoaded', () => {
         mainContent.addEventListener('click', async (e) => {
             const btnExcluir = e.target.closest('.btn-delete'); const btnEditar = e.target.closest('.btn-edit'); const btnAssinar = e.target.closest('.btn-assinar');
             if (btnExcluir && isAdmin && confirm("Excluir permanentemente?")) await deleteDoc(doc(db, btnExcluir.dataset.colecao, btnExcluir.dataset.id));
-            if (btnEditar && isAdmin) window.abrirModal(btnEditar.dataset.colecao, btnEditar.dataset.id, JSON.parse(btnEditar.dataset.info));
+            if (btnEditar && isAdmin) {
+                let dadosEdicao = {};
+                try {
+                    const bruto = btnEditar.dataset.infoB64 ? window.decodeInlinePayload(btnEditar.dataset.infoB64) : (btnEditar.dataset.info || '{}');
+                    dadosEdicao = JSON.parse(bruto || '{}');
+                } catch(err) {
+                    console.error('Falha ao abrir edição:', err);
+                    alert('Não foi possível carregar os dados para edição.');
+                    return;
+                }
+                window.abrirModal(btnEditar.dataset.colecao, btnEditar.dataset.id, dadosEdicao);
+            }
             if (btnAssinar && isAdmin) {
                 const idDoc = btnAssinar.dataset.id;
                 const col = btnAssinar.dataset.colecao;
@@ -1747,6 +1787,10 @@ window.addEventListener('DOMContentLoaded', () => {
                 if((colecao === 'boletins' || colecao === 'treinamentos') && c === 'Para quais Setores?') {
                     const checks = Array.from(document.querySelectorAll('.check-setor:checked')).map(el => el.value);
                     dados[c] = checks.join(', ');
+                } else if(colecao === 'consultas' && c === 'Tipo') {
+                    const tipoBase = document.getElementById('input-Tipo')?.value || '';
+                    const tipoCustom = document.getElementById('input-Tipo-Custom')?.value?.trim() || '';
+                    dados[c] = tipoBase === 'Outros' ? (tipoCustom || 'Outros') : tipoBase;
                 } else if(val) {
                     dados[c] = val.value;
                 }
