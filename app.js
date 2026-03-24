@@ -11,8 +11,13 @@ window.addEventListener('submit', function(e) {
 const configuracaoAbas = {
     'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da Clínica', 'PIN de Acesso (Treinamentos)'] },
     
-    // 👇 A MÁGICA DO ENSINO: Configuração do Painel do Admin
-    'treinamentos': { titulo: 'Conteúdo de Ensino', campos: ['Título do Treinamento', 'Categoria (Vídeo, PDF, Tarefa)', 'Link do Material', 'Para quais Setores?', 'Pontos Valendo'], campoAgrupador: 'Categoria (Vídeo, PDF, Tarefa)', icone: 'ri-book-read-fill' },
+    // 👇 A MÁGICA DE HOJE: Pastas, Módulos, Provas e Tarefas no Painel Admin!
+    'treinamentos': { 
+        titulo: 'Material de Ensino', 
+        campos: ['Título da Atividade', 'Pasta / Módulo', 'Tipo (Vídeo, PDF, Tarefa, Prova)', 'Link do Material (Se houver)', 'Enunciado ou Perguntas (Provas/Tarefas)', 'Para quais Setores?', 'Pontos Valendo'], 
+        campoAgrupador: 'Pasta / Módulo', // ISSO AQUI CRIA AS PASTAS AUTOMATICAMENTE!
+        icone: 'ri-book-read-fill' 
+    },
 
     'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' }, 
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'], campoAgrupador: 'Convênio', icone: 'ri-shield-cross-fill' },
@@ -48,11 +53,11 @@ const app = initializeApp(firebaseConfig);
 const db = initializeFirestore(app, { localCache: persistentLocalCache() });
 const auth = getAuth(app);
 
-// Deixando o DB global para usar nas funções de pontos
 window.db = db;
 window.updateDoc = updateDoc;
 window.doc = doc;
 window.arrayUnion = arrayUnion;
+window.arrayRemove = arrayRemove;
 
 let isAdmin = false;
 let abaAtual = 'home'; 
@@ -67,14 +72,14 @@ let imagemPadraoPastas = "";
 
 window.todosBoletinsData = [];
 window.todosPrivadosData = [];
-window.todosTreinamentosData = []; // NOVO
+window.todosTreinamentosData = []; 
 window.dadosGlobaisAbas = {}; 
 window.todosOsDadosDoSistema = {}; 
 window.dadosBoletins = {}; 
 window.pastaBoletimAtual = null;
 window.pastaPrivadoAtual = null;
 
-window.alunoLogado = null; // NOVO
+window.alunoLogado = null; 
 
 window.corStatusPendente = "#e53e3e";
 window.corStatusConcluido = "#38a169";
@@ -444,11 +449,15 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
             setoresGlobais.forEach(s => { htmlCampos += `<option value="${s}" ${valorAntigo === s ? 'selected' : ''}>${s}</option>`; });
             htmlCampos += `</select>`;
         }
-        else if(colecao === 'treinamentos' && campo === 'Categoria (Vídeo, PDF, Tarefa)') {
-            const opcoes = ['Vídeo', 'PDF/Documento', 'Tarefa Prática', 'Mini Prova'];
+        else if(colecao === 'treinamentos' && campo === 'Tipo (Vídeo, PDF, Tarefa, Prova)') {
+            const opcoes = ['Vídeo', 'PDF/Documento', 'Tarefa Prática', 'Prova Múltipla Escolha'];
             htmlCampos += `<select id="input-${campo}" class="form-input">`;
             opcoes.forEach(op => { htmlCampos += `<option value="${op}" ${valorAntigo === op ? 'selected' : ''}>${op}</option>`; });
             htmlCampos += `</select>`;
+        }
+        else if(colecao === 'treinamentos' && campo === 'Enunciado ou Perguntas (Provas/Tarefas)') {
+            htmlCampos += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px; color:var(--text-muted);">Escreva o texto da tarefa ou as perguntas da prova aqui:</label>`;
+            htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:120px; resize:vertical;" placeholder="Exemplo para Prova:&#10;Q: O que fazer em caso de febre? | A: Medicação | B: Alta | Correta: A">${valorAntigo}</textarea>`;
         }
         else if(colecao === 'corpo-clinico' && campo === 'Especialidade') {
             htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Geral (Sem Categoria)">Selecione a Especialidade...</option>`;
@@ -543,7 +552,7 @@ window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
     if(!data) return;
     
     const titleEl = document.getElementById('modal-leitura-titulo');
-    if(titleEl) titleEl.textContent = data['Título do Informativo'] || data['Título do Treinamento'] || data['Título do Documento'] || 'Status';
+    if(titleEl) titleEl.textContent = data['Título do Informativo'] || data['Título da Atividade'] || data['Título do Documento'] || 'Status';
     
     let publicoAlvoNomes = [];
     if(colecaoOrigem === 'boletins' || colecaoOrigem === 'treinamentos') {
@@ -603,7 +612,7 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
     let cardHtml = `<div class="card ${cardClass}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border-left: 6px solid var(--primary-color);">`;
     
     if(config.campoAgrupador && (data[config.campoAgrupador] || 'Geral (Sem Categoria)')) {
-        cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--text-main);"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA: ${data[config.campoAgrupador] || 'Geral (Sem Categoria)'}</div>`;
+        cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--text-main);"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA/MÓDULO: ${data[config.campoAgrupador] || 'Geral (Sem Categoria)'}</div>`;
     }
 
     cardHtml += `<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; gap:10px;">
@@ -624,7 +633,7 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
     camposOrdem.forEach(chave => {
         const valor = data[chave];
         if (valor && chave !== config.campoAgrupador && chave !== campoTitulo) {
-            if (String(chave).includes('Valor') || chave === 'Link da Logo do Convênio' || chave === 'Exibir Logo do Convenio' || chave === 'Link da Foto do Profissional' || chave === 'Link da Imagem Ilustrativa') return; 
+            if (String(chave).includes('Valor') || chave === 'Link da Logo do Convênio' || chave === 'Exibir Logo do Convenio' || chave === 'Link da Foto do Profissional' || chave === 'Link da Imagem Ilustrativa' || chave === 'Enunciado ou Perguntas (Provas/Tarefas)') return; 
             
             if (chave === 'Aceita o Servico?') {
                 const badgeClass = valor === 'Não' ? 'status-negado' : 'status-aceito';
@@ -641,15 +650,17 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
             }
         }
     });
+
+    if(colecaoNome === 'treinamentos' && data['Enunciado ou Perguntas (Provas/Tarefas)']) {
+        cardHtml += `<div class="card-info" style="font-size:13px; margin-top: 10px; padding:10px; background:rgba(0,0,0,0.03); border-radius:8px;"><strong>Enunciado/Perguntas:</strong><br><span style="white-space: pre-wrap;">${data['Enunciado ou Perguntas (Provas/Tarefas)']}</span></div>`;
+    }
     
     if(hasFlexLayout) cardHtml += `</div></div>`; 
     
-    // Mostra o PIN na tela de Gestão
     if(colecaoNome === 'colaboradores' && data['PIN de Acesso (Treinamentos)']) {
          cardHtml += `<div style="margin-top:10px; background:rgba(0,0,0,0.05); padding:8px; border-radius:6px; font-size:12px; border: 1px dashed var(--border-color);"><strong>🔑 PIN de Acesso:</strong> ${data['PIN de Acesso (Treinamentos)']}</div>`;
     }
 
-    // Botão de Detalhes (Leituras) na aba do Admin de Treinamentos
     if(colecaoNome === 'treinamentos' && isAdmin) {
         const concluidosCount = (data.leituras || []).length;
         cardHtml += `<div style="margin-top:15px; padding-top:15px; border-top: 1px dashed rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
@@ -680,7 +691,7 @@ window.renderizarPastasGenericas = function(colecao) {
     const dadosAtuais = window.dadosGlobaisAbas[colecao] || [];
     
     if (dadosAtuais.length === 0) {
-        grid.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">Nenhuma pasta encontrada ou os dados estão carregando...</p>';
+        grid.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">Nenhuma pasta/módulo encontrado. Clique em "Novo" para criar.</p>';
         return;
     }
 
@@ -932,6 +943,7 @@ window.renderizarCards = function(colecaoNome) {
         if(colecaoNome === 'colaboradores') {
             listaColaboradoresGlobal = itens.map(item => { return { nome: item.data['Nome Completo do Colaborador'], setor: item.data['Setor da Clínica'] || 'Geral' }; }).filter(c => c.nome).sort((a,b) => a.nome.localeCompare(b.nome));
             if(abaAtual === 'boletins-privados' && !window.pastaPrivadoAtual) window.renderizarPastasPrivados(); 
+            if(abaAtual === 'colaboradores') window.renderizarListaGenerica(colecaoNome); // Renderiza a lista direto!
         }
 
         if(colecaoNome === 'boletins') {
@@ -955,7 +967,7 @@ window.renderizarCards = function(colecaoNome) {
             if(window.alunoLogado) window.renderizarTrilhaAluno();
         }
 
-        if(configuracaoAbas[colecaoNome] && configuracaoAbas[colecaoNome].campoAgrupador) {
+        if(configuracaoAbas[colecaoNome] && configuracaoAbas[colecaoNome].campoAgrupador && colecaoNome !== 'colaboradores') {
             window.dadosGlobaisAbas[colecaoNome] = itens;
             if(abaAtual === colecaoNome) {
                 if(window[`pasta_${colecaoNome}_Atual`]) window.renderizarListaGenerica(colecaoNome);
@@ -1188,7 +1200,7 @@ window.processarLogicaDoBot = function(mensagemUser) {
                 let pastaAgrupadora = config.campoAgrupador ? item.data[config.campoAgrupador] : null;
                 let btnAction = '';
 
-                if (pastaAgrupadora) {
+                if (pastaAgrupadora && colecao !== 'colaboradores') {
                     btnAction = `<button onclick="window.irParaAba('${colecao}'); setTimeout(() => { window.abrirPastaGenerica('${colecao}', '${pastaAgrupadora}') }, 200); window.toggleChat();" class="btn-hover color-5" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 8px; width: 100%; border-radius: 6px;"><i class="ri-folder-open-line"></i> Abrir Pasta</button>`;
                 } else if (colecao === 'boletins') {
                     const setorBoletim = item.data['Para quais Setores?'] ? String(item.data['Para quais Setores?']).split(',')[0] : 'Geral';
@@ -1289,8 +1301,8 @@ window.renderizarTrilhaAluno = function() {
         const textoStatus = jaFez ? 'Concluído' : 'Pendente';
 
         let btnAcao = '';
-        if(d['Link do Material']) {
-            btnAcao += `<button onclick="window.abrirMidaFlutuante('${String(d['Link do Material']).trim()}')" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-bottom: 8px;"><i class="ri-eye-line"></i> Acessar Material</button>`;
+        if(d['Link do Material (Se houver)']) {
+            btnAcao += `<button onclick="window.abrirMidaFlutuante('${String(d['Link do Material (Se houver)']).trim()}')" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-bottom: 8px;"><i class="ri-eye-line"></i> Acessar Material</button>`;
         }
 
         if(!jaFez) {
@@ -1299,8 +1311,8 @@ window.renderizarTrilhaAluno = function() {
 
         let cardHtml = `
             <div class="card" style="border: 2px solid ${corStatus}; display:flex; flex-direction:column; background: white; border-radius: 10px; padding: 15px;">
-                <div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--primary-color);"><i class="ri-book-open-line"></i> ${d['Categoria (Vídeo, PDF, Tarefa)']}</div>
-                <div style="font-size:16px; font-weight:600; margin-bottom:10px; line-height: 1.2;">${d['Título do Treinamento']}</div>
+                <div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--primary-color);"><i class="ri-book-open-line"></i> MÓDULO: ${d['Pasta / Módulo']} | TIPO: ${d['Tipo (Vídeo, PDF, Tarefa, Prova)']}</div>
+                <div style="font-size:16px; font-weight:600; margin-bottom:10px; line-height: 1.2;">${d['Título da Atividade']}</div>
                 <div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; flex:1;">
                     <b>Pontos Valendo:</b> <span style="color:#e75516; font-weight:700;">+${pontosItem} XP</span><br>
                     <b>Status:</b> <span style="color:${corStatus}; font-weight:600;"><i class="${iconeStatus}"></i> ${textoStatus}</span>
@@ -1350,14 +1362,14 @@ window.entrarPortalAluno = function() {
         document.getElementById('ensino-login-area').style.display = 'none';
         document.getElementById('ensino-dashboard-area').style.display = 'block';
         document.getElementById('nome-aluno-logado').textContent = window.alunoLogado['Nome Completo do Colaborador'];
-        window.renderizarTrilhaAluno(); // Carrega os vídeos do aluno!
+        window.renderizarTrilhaAluno(); 
     } else {
         alert("Nome ou PIN incorretos. Verifique com a Gestão.");
     }
 };
 
 // ==========================================
-// 7. ATRIBUIÇÃO DE EVENTOS GERAIS
+// 7. ATRIBUIÇÃO DE EVENTOS GERAIS E NAVEGAÇÃO
 // ==========================================
 
 window.addEventListener('DOMContentLoaded', () => {
