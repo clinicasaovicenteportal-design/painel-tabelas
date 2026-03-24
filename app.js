@@ -1910,6 +1910,55 @@ window.addEventListener('DOMContentLoaded', () => {
         return String(valor || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ').replace(/\r/g, ' ');
     };
 
+    window.encodeInlinePayload = function(valor) {
+        try {
+            return btoa(unescape(encodeURIComponent(String(valor ?? ''))));
+        } catch(e) {
+            return String(valor ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/'/g, '&#39;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+    };
+
+    window.decodeInlinePayload = function(valor) {
+        const bruto = String(valor ?? '');
+        try {
+            return decodeURIComponent(escape(atob(bruto)));
+        } catch(e) {
+            return bruto
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'")
+                .replace(/&apos;/g, "'")
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&amp;/g, '&');
+        }
+    };
+
+    window.parseTreinamentoJSONSeguro = function(valor, fallback = []) {
+        const bruto = String(valor ?? '').trim();
+        if(!bruto) return fallback;
+        const tentativas = [
+            bruto,
+            bruto.replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#39;/g, "'").replace(/&amp;/g, '&'),
+        ];
+        try {
+            tentativas.push(window.decodeInlinePayload(bruto));
+        } catch(e) {
+            pass
+        }
+        for (const tentativa of tentativas) {
+            try {
+                const parsed = JSON.parse(tentativa);
+                return Array.isArray(parsed) ? parsed : fallback;
+            } catch(e) {}
+        }
+        return fallback;
+    };
+
     window.slugTreinamento = function(valor) {
         return String(valor || '')
             .normalize('NFD')
@@ -1929,14 +1978,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     window.getTreinamentoConfigArray = function(trainingData) {
         const bruto = String(trainingData?.['Configuração da Avaliação'] || '').trim();
-        if(!bruto) return [];
-        try {
-            const jsonTratado = bruto.replace(/&quot;/g, '"').replace(/&apos;/g, "'");
-            const arr = JSON.parse(jsonTratado);
-            return Array.isArray(arr) ? arr : [];
-        } catch(e) {
-            return [];
-        }
+        return window.parseTreinamentoJSONSeguro(bruto, []);
     };
 
     window.treinoTemQuestoes = function(trainingData) {
