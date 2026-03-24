@@ -1691,9 +1691,10 @@ window.entrarPortalAluno = function() {
     }
 };
 
-window.verFeedback = function(nota, feedback) {
+window.verFeedback = function(nota, feedback, payloadCodificado = false) {
+    const fb = payloadCodificado ? window.decodeInlinePayload(feedback) : feedback;
     document.getElementById('feedback-nota').textContent = nota;
-    document.getElementById('feedback-texto').textContent = feedback;
+    document.getElementById('feedback-texto').textContent = fb;
     document.getElementById('modal-feedback-aluno').style.display = 'flex';
 };
 
@@ -2141,14 +2142,14 @@ window.addEventListener('DOMContentLoaded', () => {
                     if(confArray.length === 0 && d['Enunciado ou Perguntas (Provas/Tarefas)']) {
                         confArray = [{ tipo: 'descritiva', p: d['Enunciado ou Perguntas (Provas/Tarefas)'] }];
                     }
-                    const confJSON = window.escapeJsSafe(JSON.stringify(confArray));
-                    btnAcao += `<button onclick="window.abrirModalResposta('${docId}', '${confJSON}')" class="btn-hover color-11" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; background: #3182ce; color:white; border:none;"><i class="ri-pencil-fill"></i> Responder Atividade</button>`;
+                    const confJSON = window.encodeInlinePayload(JSON.stringify(confArray));
+                    btnAcao += `<button onclick="window.abrirModalResposta('${docId}', '${confJSON}', true)" class="btn-hover color-11" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; background: #3182ce; color:white; border:none;"><i class="ri-pencil-fill"></i> Responder Atividade</button>`;
                 } else {
                     btnAcao += `<button onclick="window.concluirTreinamento('${docId}')" class="btn-hover color-11" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; background: #38a169; color:white; border:none;"><i class="ri-check-double-line"></i> Marcar como LIDO</button>`;
                 }
             } else if(status.status === 'corrigido' && status.resposta && String(status.resposta.nota ?? '') !== '') {
-                const feedbackSeguro = window.escapeJsSafe(status.resposta.feedback || 'Sem comentários.');
-                btnAcao += `<button onclick="window.verFeedback('${window.escapeJsSafe(status.resposta.nota)}', '${feedbackSeguro}')" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-top:8px;"><i class="ri-message-3-line"></i> Ver Correção</button>`;
+                const feedbackSeguro = window.encodeInlinePayload(status.resposta.feedback || 'Sem comentários.');
+                btnAcao += `<button onclick="window.verFeedback('${window.escapeJsSafe(status.resposta.nota)}', '${feedbackSeguro}', true)" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-top:8px;"><i class="ri-message-3-line"></i> Ver Correção</button>`;
             }
 
             const subtitulo = d['Colaborador Específico (Opcional)']
@@ -2200,7 +2201,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.abrirModalResposta = function(docId, configJSON) {
+    window.abrirModalResposta = function(docId, configJSON, payloadCodificado = false) {
         const docIdInput = document.getElementById('resposta-docid');
         const area = document.getElementById('area-perguntas-dinamicas');
         if(docIdInput) docIdInput.value = docId;
@@ -2209,7 +2210,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
         let perguntas = [];
         try {
-            perguntas = JSON.parse(String(configJSON || '[]').replace(/&quot;/g, '"').replace(/&apos;/g, "'"));
+            const bruto = payloadCodificado ? window.decodeInlinePayload(configJSON) : String(configJSON || '[]');
+            perguntas = JSON.parse(String(bruto || '[]').replace(/&quot;/g, '"').replace(/&apos;/g, "'"));
         } catch(e) {}
 
         if(!Array.isArray(perguntas) || perguntas.length === 0) {
