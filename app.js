@@ -87,8 +87,8 @@ const paletaGradientes = [
 // 2. LÓGICA DE LOGIN BLINDADA
 // ==========================================
 
-window.tentarLogar = function(e) {
-    if(e) e.preventDefault(); 
+window.efetuarLogin = function(e) {
+    if(e && e.preventDefault) e.preventDefault(); 
     
     const email = document.getElementById('email').value.trim();
     const senha = document.getElementById('senha').value.trim();
@@ -113,18 +113,17 @@ window.tentarLogar = function(e) {
         });
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    const btnLogin = document.getElementById('btn-login');
-    const formLogin = document.getElementById('form-login');
-    const chatFab = document.getElementById('chat-fab');
-    const chatWin = document.getElementById('chat-window');
-    
-    if(chatFab) chatFab.style.display = 'none';
-    if(chatWin) chatWin.style.display = 'none';
-    
-    if(btnLogin) btnLogin.onclick = window.tentarLogar;
-    if(formLogin) formLogin.onsubmit = window.tentarLogar;
-});
+// Esconde a Lúcia na tela de login logo que abre
+const chatFabInit = document.getElementById('chat-fab');
+const chatWinInit = document.getElementById('chat-window');
+if(chatFabInit) chatFabInit.style.display = 'none';
+if(chatWinInit) chatWinInit.style.display = 'none';
+
+// Vincula o botão de login direto na raiz
+const btnLoginInit = document.getElementById('btn-login');
+const formLoginInit = document.getElementById('form-login');
+if(btnLoginInit) btnLoginInit.onclick = window.efetuarLogin;
+if(formLoginInit) formLoginInit.onsubmit = window.efetuarLogin;
 
 const btnLogout = document.getElementById('btn-logout');
 if(btnLogout) btnLogout.addEventListener('click', () => signOut(auth));
@@ -459,8 +458,11 @@ window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
     if(titleEl) titleEl.textContent = data['Título do Informativo'] || data['Título do Documento'] || 'Status';
     
     let publicoAlvoNomes = [];
-    if(colecaoOrigem === 'boletins') publicoAlvoNomes = window.obterPublicoAlvo(data['Para quais Setores?']);
-    else publicoAlvoNomes = [data['Para qual Colaborador?']]; 
+    if(colecaoOrigem === 'boletins') {
+        publicoAlvoNomes = window.obterPublicoAlvo(window.pastaBoletimAtual || data['Para quais Setores?']);
+    } else {
+        publicoAlvoNomes = [data['Para qual Colaborador?']]; 
+    }
 
     const lidosTextos = data.leituras || [];
     const lidosNomes = lidosTextos.map(txt => txt.split(' (')[0]); 
@@ -477,8 +479,8 @@ window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
     const lidosContent = document.getElementById('lista-lidos-content');
     const faltaContent = document.getElementById('lista-falta-content');
     
-    if(lidosContent) lidosContent.innerHTML = htmlLidos || '<p style="color:var(--text-muted);">Ninguém assinou ainda.</p>';
-    if(faltaContent) faltaContent.innerHTML = htmlNaoLidos || '<p style="color:#38a169;">Todos assinaram!</p>';
+    if(lidosContent) lidosContent.innerHTML = htmlLidos || '<p style="color:var(--text-muted);">Ninguém desta pasta assinou ainda.</p>';
+    if(faltaContent) faltaContent.innerHTML = htmlNaoLidos || '<p style="color:#38a169;">Todos desta pasta assinaram!</p>';
     
     const modalEl = document.getElementById('modal-leituras');
     if(modalEl) modalEl.style.display = 'flex';
@@ -627,7 +629,7 @@ window.renderizarPastasBoletins = function() {
         
         let totalLidos = 0; let totalFaltam = 0;
         boletinsDaPasta.forEach(b => {
-            const publicoDaqui = window.obterPublicoAlvo(b.data['Para quais Setores?'] || 'Geral');
+            const publicoDaqui = window.obterPublicoAlvo(pasta);
             const lidosNames = (b.data.leituras || []).map(txt => txt.split(' (')[0]);
             const leram = publicoDaqui.filter(n => lidosNames.includes(n)).length;
             totalLidos += leram; totalFaltam += Math.max(0, publicoDaqui.length - leram);
@@ -668,7 +670,7 @@ window.renderizarListaBoletins = function() {
         const configCor = paletaGradientes.find(p => p.valor === corSalva);
         const gradientClass = (configCor ? configCor.dark : false) ? 'has-gradient' : ''; 
         
-        const publicoAlvoNomes = window.obterPublicoAlvo(data['Para quais Setores?']);
+        const publicoAlvoNomes = window.obterPublicoAlvo(pasta);
         const lidosNomes = (data.leituras || []).map(txt => txt.split(' (')[0]);
         const faltamAssinar = publicoAlvoNomes.filter(n => !lidosNomes.includes(n));
         const qtdLidos = publicoAlvoNomes.filter(n => lidosNomes.includes(n)).length;
@@ -701,7 +703,7 @@ window.renderizarListaBoletins = function() {
         
         if(isAdmin) {
             cardHtml += `<div class="add-leitura-box" style="display: flex; gap: 8px; margin-top: 5px;"><select id="leitor-${docId}" style="flex:1; padding:8px; border-radius:8px; border:none; font-size:12px; background:rgba(255,255,255,0.9); outline:none;">`;
-            if(faltamAssinar.length === 0) cardHtml += `<option value="">Todos já leram!</option>`;
+            if(faltamAssinar.length === 0) cardHtml += `<option value="">Todos da pasta já leram!</option>`;
             else { cardHtml += `<option value="">Selecionar Pendente...</option>`; faltamAssinar.forEach(nome => { cardHtml += `<option value="${nome}">${nome}</option>`; }); }
             cardHtml += `</select><button class="btn-action btn-assinar" data-id="${docId}" data-colecao="boletins" style="background:#38a169; color:white; padding:8px 12px; border-radius:8px; cursor:pointer;"><i class="ri-check-line"></i></button></div>`;
         }
