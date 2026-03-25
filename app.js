@@ -1696,3 +1696,791 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+/* ===== RH & PEOPLE ANALYTICS INTEGRADO ===== */
+/* RH & People Analytics Module - Drop-in addon for Painel Clínico */
+(() => {
+  const RH_TAB_ID = 'rh-analytics';
+  const SURVEYS_COLLECTION = 'rh-pesquisas';
+  const RESPONSES_COLLECTION = 'rh-respostas-pesquisa';
+
+  const state = {
+    surveys: [],
+    responses: [],
+    charts: {},
+    firestore: null,
+    unsubscribeSurveys: null,
+    unsubscribeResponses: null,
+  };
+
+  const q = (sel, root = document) => root.querySelector(sel);
+  const qa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const safeText = (v) => String(v ?? '').replace(/[<>&"]/g, m => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[m]));
+  const slug = (v) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const byNameKey = (name) => slug(name).replace(/\s+/g, ' ');
+  const average = (arr) => arr.length ? (arr.reduce((a,b) => a + b, 0) / arr.length) : 0;
+  const toNumber = (v) => {
+    if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+    if (v == null) return 0;
+    const s = String(v).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const formatDateTime = (iso) => {
+    try { return new Date(iso).toLocaleString('pt-BR'); } catch { return ''; }
+  };
+  const getCollabs = () => window.todosOsDadosDoSistema?.['colaboradores'] || [];
+  const getTrainings = () => window.todosTreinamentosData || window.todosOsDadosDoSistema?.['treinamentos'] || [];
+  const getPublicBulletins = () => window.todosBoletinsData || window.todosOsDadosDoSistema?.['boletins'] || [];
+  const getPrivateBulletins = () => window.todosPrivadosData || window.todosOsDadosDoSistema?.['boletins-privados'] || [];
+
+  async function ensureFirestore() {
+    if (state.firestore) return state.firestore;
+    const mod = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+    state.firestore = mod;
+    return mod;
+  }
+
+  function injectNavButton() {
+    const nav = q('.sidebar-nav');
+    if (!nav || q(`.nav-btn[data-tab="${RH_TAB_ID}"]`)) return;
+    const btn = document.createElement('button');
+    btn.className = 'nav-btn admin-only';
+    btn.dataset.tab = RH_TAB_ID;
+    btn.style.display = 'none';
+    btn.innerHTML = '<i class="ri-team-fill"></i> RH & Analytics';
+    const ensinoBtn = q('.nav-btn[data-tab="ensino"]', nav) || q('.nav-btn[data-tab="escalas"]', nav);
+    if (ensinoBtn && ensinoBtn.parentNode) ensinoBtn.parentNode.insertBefore(btn, ensinoBtn.nextSibling);
+    else nav.appendChild(btn);
+
+    btn.addEventListener('click', () => {
+      qa('.tab-content').forEach(el => el.style.display = 'none');
+      const tab = document.getElementById(`tab-${RH_TAB_ID}`);
+      if (tab) tab.style.display = 'block';
+      qa('.nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderDashboard();
+    });
+  }
+
+  function injectTabContent() {
+    if (document.getElementById(`tab-${RH_TAB_ID}`)) return;
+    const main = q('.main-content') || q('main');
+    if (!main) return;
+
+    const section = document.createElement('section');
+    section.id = `tab-${RH_TAB_ID}`;
+    section.className = 'tab-content';
+    section.style.display = 'none';
+    section.innerHTML = `
+      <div class="rh-shell">
+        <div class="rh-header">
+          <div>
+            <h2><i class="ri-team-fill"></i> RH & People Analytics</h2>
+            <p>Indicadores de desempenho, clima organizacional e talentos usando dados do portal atual.</p>
+          </div>
+          <div class="rh-header-actions">
+            <button id="btn-rh-nova-pesquisa" class="btn-hover color-11 admin-only" style="display:none;">
+              <i class="ri-file-list-3-line"></i> Nova Pesquisa
+            </button>
+            <button id="btn-rh-atualizar" class="btn-hover color-8">
+              <i class="ri-refresh-line"></i> Atualizar
+            </button>
+          </div>
+        </div>
+
+        <div class="rh-filters card">
+          <div class="rh-filter-grid">
+            <input id="rh-filter-search" class="form-input" placeholder="Buscar colaborador">
+            <select id="rh-filter-setor" class="form-input"><option value="">Todos os setores</option></select>
+            <select id="rh-filter-fit" class="form-input">
+              <option value="">Fit cultural</option>
+              <option value="8">Maior que 8</option>
+              <option value="7">Maior que 7</option>
+              <option value="6">Maior que 6</option>
+            </select>
+            <select id="rh-filter-ranking" class="form-input">
+              <option value="">Ranking / nota</option>
+              <option value="top">Top performers</option>
+              <option value="risco">Em atenção</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="rh-overview-grid">
+          <div class="rh-stat-card">
+            <span>Total Colaboradores</span>
+            <strong id="rh-stat-total">0</strong>
+          </div>
+          <div class="rh-stat-card">
+            <span>Média Geral</span>
+            <strong id="rh-stat-media">0,0</strong>
+          </div>
+          <div class="rh-stat-card">
+            <span>Fit Cultural Médio</span>
+            <strong id="rh-stat-fit">0,0</strong>
+          </div>
+          <div class="rh-stat-card">
+            <span>Clima Organizacional</span>
+            <strong id="rh-stat-clima">0,0</strong>
+          </div>
+          <div class="rh-stat-card">
+            <span>Top Performers</span>
+            <strong id="rh-stat-top">0</strong>
+          </div>
+          <div class="rh-stat-card">
+            <span>Em Atenção</span>
+            <strong id="rh-stat-risco">0</strong>
+          </div>
+        </div>
+
+        <div class="rh-panels-grid">
+          <div class="card rh-panel">
+            <div class="rh-panel-title"><i class="ri-bar-chart-2-fill"></i> Top Performers</div>
+            <canvas id="rh-chart-top"></canvas>
+          </div>
+          <div class="card rh-panel">
+            <div class="rh-panel-title"><i class="ri-emotion-happy-fill"></i> Clima & Fit Cultural</div>
+            <canvas id="rh-chart-clima"></canvas>
+          </div>
+        </div>
+
+        <div class="card rh-panel">
+          <div class="rh-panel-title"><i class="ri-survey-line"></i> Pesquisas de Clima / Fit</div>
+          <div id="rh-surveys-list" class="rh-surveys-list"></div>
+        </div>
+
+        <div class="card rh-panel">
+          <div class="rh-panel-title"><i class="ri-user-star-fill"></i> Colaboradores</div>
+          <div id="rh-collabs-grid" class="rh-collabs-grid"></div>
+        </div>
+      </div>
+    `;
+    main.appendChild(section);
+
+    q('#btn-rh-atualizar', section)?.addEventListener('click', renderDashboard);
+    q('#btn-rh-nova-pesquisa', section)?.addEventListener('click', openSurveyBuilder);
+    ['#rh-filter-search', '#rh-filter-setor', '#rh-filter-fit', '#rh-filter-ranking'].forEach(sel => {
+      q(sel, section)?.addEventListener('input', renderDashboard);
+      q(sel, section)?.addEventListener('change', renderDashboard);
+    });
+  }
+
+  function injectModals() {
+    if (document.getElementById('rh-modal-survey-builder')) return;
+    const host = document.body;
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div id="rh-modal-survey-builder" class="modal-overlay" style="display:none;">
+        <div class="modal-box rh-modal-box">
+          <div class="rh-modal-header">
+            <h3><i class="ri-file-list-3-line"></i> Nova Pesquisa RH</h3>
+            <button class="rh-close" data-close-rh="survey-builder">&times;</button>
+          </div>
+          <div class="rh-form-grid">
+            <input id="rh-survey-title" class="form-input" placeholder="Título da pesquisa">
+            <select id="rh-survey-category" class="form-input">
+              <option value="CLIMA">Clima Organizacional</option>
+              <option value="FIT">Fit Cultural</option>
+              <option value="ENGAJAMENTO">Engajamento</option>
+            </select>
+            <select id="rh-survey-target-mode" class="form-input">
+              <option value="GERAL">Toda a empresa</option>
+              <option value="SETOR">Por setor</option>
+              <option value="COLABORADOR">Individual</option>
+            </select>
+            <input id="rh-survey-target-value" class="form-input" placeholder="Nome do setor ou colaborador (se aplicável)">
+          </div>
+          <textarea id="rh-survey-thanks" class="form-input rh-textarea" placeholder="Mensagem de agradecimento"></textarea>
+          <textarea id="rh-survey-questions" class="form-input rh-textarea" placeholder="Perguntas (1 por linha)&#10;Exemplo: Como você avalia sua liderança? | escala&#10;Como está seu ambiente de trabalho? | escala&#10;Comentário livre | texto"></textarea>
+          <div class="rh-actions">
+            <button id="rh-btn-save-survey" class="btn-hover color-11"><i class="ri-save-line"></i> Salvar Pesquisa</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="rh-modal-answer-survey" class="modal-overlay" style="display:none;">
+        <div class="modal-box rh-modal-box">
+          <div class="rh-modal-header">
+            <h3 id="rh-answer-title"><i class="ri-chat-check-fill"></i> Responder Pesquisa</h3>
+            <button class="rh-close" data-close-rh="answer-survey">&times;</button>
+          </div>
+          <div id="rh-answer-body"></div>
+          <div class="rh-actions">
+            <button id="rh-btn-send-answer" class="btn-hover color-11"><i class="ri-send-plane-2-line"></i> Enviar Respostas</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="rh-modal-thanks" class="modal-overlay" style="display:none;">
+        <div class="modal-box rh-modal-box rh-thanks-box">
+          <div class="rh-thanks-icon"><i class="ri-heart-3-fill"></i></div>
+          <h3>Muito obrigado!</h3>
+          <p id="rh-thanks-message">Sua participação foi registrada.</p>
+          <div class="rh-actions">
+            <button class="btn-hover color-11" data-close-rh="thanks">Fechar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    host.appendChild(wrap);
+
+    qa('[data-close-rh]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-close-rh');
+        const id = key === 'survey-builder' ? 'rh-modal-survey-builder'
+          : key === 'answer-survey' ? 'rh-modal-answer-survey'
+          : 'rh-modal-thanks';
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+    });
+
+    q('#rh-btn-save-survey')?.addEventListener('click', saveSurvey);
+    q('#rh-btn-send-answer')?.addEventListener('click', submitSurveyResponse);
+  }
+
+  function ensurePortalWidget() {
+    const dash = document.getElementById('ensino-dashboard-area');
+    if (!dash || document.getElementById('rh-pending-surveys-widget')) return;
+
+    const box = document.createElement('div');
+    box.id = 'rh-pending-surveys-widget';
+    box.className = 'card rh-portal-widget';
+    box.innerHTML = `
+      <div class="rh-panel-title"><i class="ri-survey-line"></i> Pesquisas RH</div>
+      <div id="rh-pending-surveys-list">
+        <p style="color:var(--text-muted); margin:0;">Sem pesquisas pendentes no momento.</p>
+      </div>
+    `;
+    dash.appendChild(box);
+  }
+
+  function getCollaboratorName() {
+    return window.alunoLogado?.['Nome Completo do Colaborador'] || window.alunoLogado?.nome || '';
+  }
+  function getCollaboratorSector() {
+    return window.alunoLogado?.['Setor da Clínica'] || window.alunoLogado?.setor || '';
+  }
+
+  function buildSurveyQuestions(raw) {
+    return String(raw || '')
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map((line, idx) => {
+        const parts = line.split('|').map(v => v.trim());
+        const text = parts[0] || `Pergunta ${idx + 1}`;
+        const type = slug(parts[1] || 'escala').includes('texto') ? 'TEXTO' : 'ESCALA';
+        return {
+          id: `q_${Date.now()}_${idx}`,
+          text,
+          type,
+          options: type === 'ESCALA' ? [1,2,3,4,5,6,7,8,9,10] : []
+        };
+      });
+  }
+
+  async function saveSurvey() {
+    const title = q('#rh-survey-title')?.value.trim();
+    const category = q('#rh-survey-category')?.value;
+    const targetMode = q('#rh-survey-target-mode')?.value;
+    const targetValue = q('#rh-survey-target-value')?.value.trim();
+    const thanks = q('#rh-survey-thanks')?.value.trim() || 'Obrigado por contribuir com o nosso clima organizacional.';
+    const questions = buildSurveyQuestions(q('#rh-survey-questions')?.value || '');
+
+    if (!title) return alert('Informe o título da pesquisa.');
+    if (!questions.length) return alert('Cadastre ao menos uma pergunta.');
+    if ((targetMode === 'SETOR' || targetMode === 'COLABORADOR') && !targetValue) return alert('Informe o alvo da pesquisa.');
+
+    const { collection, addDoc, serverTimestamp } = await ensureFirestore();
+    await addDoc(collection(window.db, SURVEYS_COLLECTION), {
+      titulo: title,
+      categoria: category,
+      targetMode,
+      targetValue: targetValue || '',
+      thanksMessage: thanks,
+      status: 'ATIVA',
+      ativa: true,
+      perguntas: questions,
+      createdAt: new Date().toISOString(),
+      createdAtServer: serverTimestamp ? serverTimestamp() : null
+    });
+
+    q('#rh-modal-survey-builder').style.display = 'none';
+    q('#rh-survey-title').value = '';
+    q('#rh-survey-target-value').value = '';
+    q('#rh-survey-thanks').value = '';
+    q('#rh-survey-questions').value = '';
+    alert('Pesquisa RH criada com sucesso.');
+  }
+
+  function openSurveyBuilder() {
+    q('#rh-modal-survey-builder').style.display = 'flex';
+  }
+
+  function surveyMatchesCurrentUser(survey) {
+    const nome = byNameKey(getCollaboratorName());
+    const setor = byNameKey(getCollaboratorSector());
+    if (!survey?.ativa || survey?.status !== 'ATIVA') return false;
+    if (survey.targetMode === 'GERAL') return true;
+    if (survey.targetMode === 'SETOR') return byNameKey(survey.targetValue) === setor;
+    if (survey.targetMode === 'COLABORADOR') return byNameKey(survey.targetValue) === nome;
+    return false;
+  }
+
+  function hasUserResponded(surveyId) {
+    const nome = byNameKey(getCollaboratorName());
+    return state.responses.some(r => String(r.surveyId) === String(surveyId) && byNameKey(r.colaboradorNome) === nome);
+  }
+
+  function renderPortalSurveys() {
+    ensurePortalWidget();
+    const host = q('#rh-pending-surveys-list');
+    if (!host) return;
+    const nome = getCollaboratorName();
+    if (!nome) {
+      host.innerHTML = '<p style="color:var(--text-muted); margin:0;">Faça login no portal do aluno para visualizar suas pesquisas.</p>';
+      return;
+    }
+    const pending = state.surveys.filter(s => surveyMatchesCurrentUser(s) && !hasUserResponded(s.id));
+    if (!pending.length) {
+      host.innerHTML = '<p style="color:var(--text-muted); margin:0;">Sem pesquisas pendentes no momento.</p>';
+      return;
+    }
+    host.innerHTML = pending.map(s => `
+      <div class="rh-portal-survey-item">
+        <div>
+          <strong>${safeText(s.titulo)}</strong>
+          <span>${safeText(s.categoria || 'Pesquisa')}</span>
+        </div>
+        <button class="btn-hover color-11 rh-btn-answer" data-survey-id="${safeText(s.id)}">
+          <i class="ri-chat-check-line"></i> Responder
+        </button>
+      </div>
+    `).join('');
+
+    qa('.rh-btn-answer', host).forEach(btn => {
+      btn.addEventListener('click', () => openAnswerModal(btn.dataset.surveyId));
+    });
+  }
+
+  function openAnswerModal(surveyId) {
+    const survey = state.surveys.find(s => String(s.id) === String(surveyId));
+    if (!survey) return;
+    q('#rh-answer-title').innerHTML = `<i class="ri-chat-check-fill"></i> ${safeText(survey.titulo)}`;
+    const body = q('#rh-answer-body');
+    body.dataset.surveyId = survey.id;
+    body.innerHTML = (survey.perguntas || []).map((pergunta, idx) => {
+      if (pergunta.type === 'TEXTO') {
+        return `
+          <div class="rh-answer-block">
+            <label>${idx + 1}. ${safeText(pergunta.text)}</label>
+            <textarea class="form-input rh-textarea rh-answer-input" data-question-id="${safeText(pergunta.id)}" data-question-type="TEXTO"></textarea>
+          </div>
+        `;
+      }
+      return `
+        <div class="rh-answer-block">
+          <label>${idx + 1}. ${safeText(pergunta.text)}</label>
+          <div class="rh-scale-row">
+            ${[1,2,3,4,5,6,7,8,9,10].map(n => `
+              <label class="rh-scale-option">
+                <input type="radio" name="q_${safeText(pergunta.id)}" value="${n}" data-question-id="${safeText(pergunta.id)}" data-question-type="ESCALA">
+                <span>${n}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+    q('#rh-modal-answer-survey').style.display = 'flex';
+  }
+
+  async function submitSurveyResponse() {
+    const body = q('#rh-answer-body');
+    const surveyId = body?.dataset?.surveyId;
+    const survey = state.surveys.find(s => String(s.id) === String(surveyId));
+    if (!survey) return alert('Pesquisa não encontrada.');
+
+    const answers = [];
+    const numericValues = [];
+    for (const pergunta of (survey.perguntas || [])) {
+      if (pergunta.type === 'TEXTO') {
+        const el = q(`.rh-answer-input[data-question-id="${pergunta.id}"]`, body);
+        answers.push({ questionId: pergunta.id, text: el?.value?.trim() || '', numeric: null });
+      } else {
+        const checked = q(`input[name="q_${pergunta.id}"]:checked`, body);
+        if (!checked) return alert('Responda todas as perguntas de escala antes de enviar.');
+        const val = Number(checked.value);
+        answers.push({ questionId: pergunta.id, text: '', numeric: val });
+        numericValues.push(val);
+      }
+    }
+
+    const score = average(numericValues);
+    const { collection, addDoc, serverTimestamp } = await ensureFirestore();
+
+    await addDoc(collection(window.db, RESPONSES_COLLECTION), {
+      surveyId: survey.id,
+      surveyTitle: survey.titulo,
+      categoria: survey.categoria,
+      colaboradorNome: getCollaboratorName(),
+      colaboradorSetor: getCollaboratorSector(),
+      answers,
+      score,
+      submittedAt: new Date().toISOString(),
+      submittedAtServer: serverTimestamp ? serverTimestamp() : null
+    });
+
+    q('#rh-modal-answer-survey').style.display = 'none';
+    q('#rh-thanks-message').textContent = survey.thanksMessage || 'Obrigado por participar.';
+    q('#rh-modal-thanks').style.display = 'flex';
+  }
+
+  function extractTrainingGrades() {
+    const gradeMap = new Map();
+    for (const item of getTrainings()) {
+      const data = item.data || item;
+      const respostas = Array.isArray(data.respostas_alunos) ? data.respostas_alunos : [];
+      respostas.forEach(raw => {
+        let obj = null;
+        try { obj = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch {}
+        if (!obj || !obj.nome) return;
+        const nome = byNameKey(obj.nome);
+        if (!gradeMap.has(nome)) gradeMap.set(nome, []);
+        const nota = toNumber(obj.nota);
+        if (nota > 0) gradeMap.get(nome).push({ nota });
+      });
+    }
+    return gradeMap;
+  }
+
+  function extractBulletinWeights() {
+    const publicList = getPublicBulletins().map(i => i.data || i);
+    const privateList = getPrivateBulletins().map(i => i.data || i);
+    return { publicList, privateList };
+  }
+
+  function computeSurveyAggregates() {
+    const climaResponses = state.responses.filter(r => (r.categoria || '').toUpperCase() === 'CLIMA');
+    const fitResponses = state.responses.filter(r => (r.categoria || '').toUpperCase() === 'FIT');
+    return {
+      clima: average(climaResponses.map(r => toNumber(r.score))),
+      fit: average(fitResponses.map(r => toNumber(r.score))),
+    };
+  }
+
+  function buildCollaboratorAnalytics() {
+    const collabs = getCollabs();
+    const gradeMap = extractTrainingGrades();
+    const { publicList, privateList } = extractBulletinWeights();
+    const aggregates = computeSurveyAggregates();
+
+    return collabs.map(entry => {
+      const d = entry.data || entry;
+      const nome = d['Nome Completo do Colaborador'] || d.nome || d['Nome'] || 'Sem nome';
+      const setor = d['Setor da Clínica'] || d.setor || d['Setor'] || 'Não informado';
+      const cargo = d['Cargo'] || d.cargo || d['Função'] || '';
+      const foto = d['Foto'] || d['Foto do Colaborador'] || d.foto || '';
+      const notas = (gradeMap.get(byNameKey(nome)) || []).map(g => g.nota);
+      const mediaTreinamento = average(notas);
+      const fitColab = average(state.responses
+        .filter(r => (r.categoria || '').toUpperCase() === 'FIT' && byNameKey(r.colaboradorNome) === byNameKey(nome))
+        .map(r => toNumber(r.score)));
+      const climaColab = average(state.responses
+        .filter(r => (r.categoria || '').toUpperCase() === 'CLIMA' && byNameKey(r.colaboradorNome) === byNameKey(nome))
+        .map(r => toNumber(r.score)));
+      const privCount = privateList.filter(b => byNameKey(b['Para qual Colaborador?']) === byNameKey(nome)).length;
+      const groupCount = publicList.filter(b => {
+        const setores = String(b['Para quais Setores?'] || 'Geral');
+        return setores.includes('Geral') || setores.split(',').map(v => byNameKey(v)).includes(byNameKey(setor));
+      }).length;
+      const mediaGeral = average([mediaTreinamento || 0, fitColab || aggregates.fit || 0, climaColab || aggregates.clima || 0].filter(v => v > 0));
+      const risco = (mediaGeral && mediaGeral < 6.5) || privCount >= 3;
+      const destaque = mediaTreinamento >= 8.5 && (fitColab || aggregates.fit) >= 8;
+      const crescimento = mediaTreinamento >= 7.5 && groupCount >= 1 && !risco;
+
+      return {
+        nome, setor, cargo, foto, mediaGeral, mediaTreinamento,
+        fit: fitColab || aggregates.fit || 0,
+        clima: climaColab || aggregates.clima || 0,
+        boletinsIndividuais: privCount,
+        boletinsGrupo: groupCount,
+        risco, destaque, crescimento
+      };
+    });
+  }
+
+  function populateSectorFilter(rows) {
+    const select = q('#rh-filter-setor');
+    if (!select) return;
+    const current = select.value;
+    const setores = [...new Set(rows.map(r => r.setor).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'pt-BR'));
+    select.innerHTML = '<option value="">Todos os setores</option>' + setores.map(s => `<option value="${safeText(s)}">${safeText(s)}</option>`).join('');
+    select.value = current;
+  }
+
+  function applyFilters(rows) {
+    const text = slug(q('#rh-filter-search')?.value || '');
+    const setor = q('#rh-filter-setor')?.value || '';
+    const fitMin = Number(q('#rh-filter-fit')?.value || 0);
+    const rankingMode = q('#rh-filter-ranking')?.value || '';
+
+    return rows.filter(r => {
+      if (text && !slug(`${r.nome} ${r.cargo} ${r.setor}`).includes(text)) return false;
+      if (setor && r.setor !== setor) return false;
+      if (fitMin && r.fit < fitMin) return false;
+      if (rankingMode === 'top' && !(r.mediaTreinamento >= 8)) return false;
+      if (rankingMode === 'risco' && !r.risco) return false;
+      return true;
+    });
+  }
+
+  function renderOverview(rows) {
+    const ag = computeSurveyAggregates();
+    const mediaGeral = average(rows.map(r => r.mediaGeral).filter(v => v > 0));
+    const topCount = rows.filter(r => r.destaque).length;
+    const riscoCount = rows.filter(r => r.risco).length;
+
+    q('#rh-stat-total').textContent = String(rows.length);
+    q('#rh-stat-media').textContent = mediaGeral.toFixed(1).replace('.', ',');
+    q('#rh-stat-fit').textContent = (ag.fit || 0).toFixed(1).replace('.', ',');
+    q('#rh-stat-clima').textContent = (ag.clima || 0).toFixed(1).replace('.', ',');
+    q('#rh-stat-top').textContent = String(topCount);
+    q('#rh-stat-risco').textContent = String(riscoCount);
+  }
+
+  function destroyChart(key) {
+    if (state.charts[key]) {
+      state.charts[key].destroy();
+      state.charts[key] = null;
+    }
+  }
+
+  function renderCharts(rows) {
+    if (!window.Chart) return;
+    const topRows = [...rows].sort((a,b) => b.mediaTreinamento - a.mediaTreinamento).slice(0, 8);
+    const clima = computeSurveyAggregates();
+
+    destroyChart('top');
+    destroyChart('clima');
+
+    const ctxTop = q('#rh-chart-top');
+    const ctxClima = q('#rh-chart-clima');
+
+    if (ctxTop) {
+      state.charts.top = new Chart(ctxTop, {
+        type: 'bar',
+        data: {
+          labels: topRows.map(r => r.nome.split(' ').slice(0,2).join(' ')),
+          datasets: [{ label: 'Prova / Treinamento', data: topRows.map(r => Number(r.mediaTreinamento.toFixed(2))) }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    }
+
+    if (ctxClima) {
+      state.charts.clima = new Chart(ctxClima, {
+        type: 'doughnut',
+        data: {
+          labels: ['Clima', 'Fit Cultural'],
+          datasets: [{ data: [Number((clima.clima || 0).toFixed(2)), Number((clima.fit || 0).toFixed(2))] }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+    }
+  }
+
+  function renderCollaborators(rows) {
+    const grid = q('#rh-collabs-grid');
+    if (!grid) return;
+    grid.innerHTML = rows.map(r => {
+      const initials = r.nome.split(' ').map(v => v[0]).slice(0,2).join('').toUpperCase();
+      const photo = r.foto && !String(r.foto).includes('file:///') ? (window.formatarLinkImagem ? window.formatarLinkImagem(r.foto) : r.foto) : '';
+      const riscoClass = r.risco ? 'risco' : r.destaque ? 'destaque' : 'neutro';
+      const insight = r.risco
+        ? 'Em atenção'
+        : r.destaque
+          ? 'Alto potencial'
+          : r.crescimento
+            ? 'Chance de crescimento'
+            : 'Em desenvolvimento';
+
+      return `
+        <div class="rh-collab-card ${riscoClass}">
+          <div class="rh-collab-header">
+            <div class="rh-avatar">
+              ${photo ? `<img src="${safeText(photo)}" alt="${safeText(r.nome)}">` : `<span>${safeText(initials)}</span>`}
+            </div>
+            <div class="rh-collab-meta">
+              <h4>${safeText(r.nome)}</h4>
+              <p>${safeText(r.cargo || 'Colaborador')} • ${safeText(r.setor)}</p>
+            </div>
+            <div class="rh-score-badge">${r.mediaGeral ? r.mediaGeral.toFixed(1).replace('.', ',') : '0,0'}</div>
+          </div>
+          <div class="rh-collab-grid">
+            <div><span>Prova / Treino</span><strong>${r.mediaTreinamento.toFixed(1).replace('.', ',')}</strong></div>
+            <div><span>Fit Cultural</span><strong>${r.fit.toFixed(1).replace('.', ',')}</strong></div>
+            <div><span>Boletim Individual</span><strong>${r.boletinsIndividuais}</strong></div>
+            <div><span>Boletim Grupo</span><strong>${r.boletinsGrupo}</strong></div>
+          </div>
+          <div class="rh-collab-footer">
+            <span class="rh-chip ${riscoClass}">${safeText(insight)}</span>
+          </div>
+        </div>
+      `;
+    }).join('') || '<p style="color:var(--text-muted); margin:0;">Nenhum colaborador encontrado.</p>';
+  }
+
+  function renderSurveysAdmin() {
+    const box = q('#rh-surveys-list');
+    if (!box) return;
+    box.innerHTML = state.surveys.map(s => {
+      const resp = state.responses.filter(r => String(r.surveyId) === String(s.id));
+      const media = average(resp.map(r => toNumber(r.score)));
+      const target = s.targetMode === 'GERAL' ? 'Empresa inteira' : `${s.targetMode}: ${s.targetValue}`;
+      return `
+        <div class="rh-survey-card">
+          <div>
+            <h4>${safeText(s.titulo)}</h4>
+            <p>${safeText(s.categoria)} • ${safeText(target)} • ${resp.length} resposta(s)</p>
+            <small>Atualizado em ${safeText(formatDateTime(s.createdAt))}</small>
+          </div>
+          <div class="rh-survey-stats">
+            <span>Média: <strong>${media ? media.toFixed(1).replace('.', ',') : '0,0'}</strong></span>
+          </div>
+        </div>
+      `;
+    }).join('') || '<p style="color:var(--text-muted); margin:0;">Nenhuma pesquisa RH cadastrada ainda.</p>';
+  }
+
+  function renderDashboard() {
+    const rows = buildCollaboratorAnalytics();
+    populateSectorFilter(rows);
+    const filtered = applyFilters(rows);
+    renderOverview(filtered);
+    renderCharts(filtered);
+    renderCollaborators(filtered);
+    renderSurveysAdmin();
+    renderPortalSurveys();
+  }
+
+  async function watchCollections() {
+    const { collection, onSnapshot } = await ensureFirestore();
+    if (state.unsubscribeSurveys) state.unsubscribeSurveys();
+    if (state.unsubscribeResponses) state.unsubscribeResponses();
+
+    state.unsubscribeSurveys = onSnapshot(collection(window.db, SURVEYS_COLLECTION), snap => {
+      state.surveys = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderDashboard();
+    });
+    state.unsubscribeResponses = onSnapshot(collection(window.db, RESPONSES_COLLECTION), snap => {
+      state.responses = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderDashboard();
+    });
+  }
+
+  function patchPortalLifecycle() {
+    if (window.__rhPatchedPortal) return;
+    window.__rhPatchedPortal = true;
+
+    const oldRender = window.renderizarTrilhaAluno;
+    if (typeof oldRender === 'function') {
+      window.renderizarTrilhaAluno = function(...args) {
+        const out = oldRender.apply(this, args);
+        setTimeout(renderPortalSurveys, 50);
+        return out;
+      };
+    }
+
+    const oldEntrar = window.entrarPortalAluno;
+    if (typeof oldEntrar === 'function') {
+      window.entrarPortalAluno = function(...args) {
+        const out = oldEntrar.apply(this, args);
+        setTimeout(renderPortalSurveys, 150);
+        return out;
+      };
+    }
+
+    const oldSair = window.sairPortalAluno;
+    if (typeof oldSair === 'function') {
+      window.sairPortalAluno = function(...args) {
+        const out = oldSair.apply(this, args);
+        setTimeout(renderPortalSurveys, 50);
+        return out;
+      };
+    }
+  }
+
+  function init() {
+    injectNavButton();
+    injectTabContent();
+    injectModals();
+    ensurePortalWidget();
+    patchPortalLifecycle();
+    watchCollections().catch(err => console.error('RH module Firestore:', err));
+    renderDashboard();
+
+    document.addEventListener('click', (e) => {
+      const navBtn = e.target.closest('.nav-btn[data-tab]');
+      if (navBtn) {
+        setTimeout(() => {
+          if (navBtn.dataset.tab === RH_TAB_ID) renderDashboard();
+          else renderPortalSurveys();
+        }, 50);
+      }
+    });
+
+    const observer = new MutationObserver(() => {
+      ensurePortalWidget();
+      renderPortalSurveys();
+    });
+    const dash = document.getElementById('dashboard-screen');
+    if (dash) observer.observe(dash, { childList: true, subtree: true });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+/* ===== PATCH LEVE DE CARDS + ESTABILIDADE ===== */
+(() => {
+  // Mantém apenas o card clicado aberto/fechado, sem animar os demais
+  window.toggleCardExpand = function(btnEl) {
+    const cardEl = btnEl && btnEl.closest ? btnEl.closest('.card-collapsible') : null;
+    if (!cardEl) return;
+    const expanded = !cardEl.classList.contains('expanded');
+    cardEl.classList.toggle('expanded', expanded);
+    const btn = cardEl.querySelector('.card-toggle');
+    if (btn) {
+      btn.innerHTML = expanded ? '<i class="ri-close-line"></i>' : '<i class="ri-add-line"></i>';
+      btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      btn.title = expanded ? 'Recolher card' : 'Expandir card';
+    }
+  };
+
+  // Reforço para evitar cards "esticando" a linha do grid
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.cards-grid').forEach(grid => {
+      grid.style.alignItems = 'start';
+    });
+  });
+
+  // Cache-bust visual de tema/role quando alterna login
+  const oldIrParaAba = window.irParaAba;
+  if (typeof oldIrParaAba === 'function') {
+    window.irParaAba = function(aba) {
+      const res = oldIrParaAba.apply(this, arguments);
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.cards-grid').forEach(grid => {
+          grid.style.alignItems = 'start';
+        });
+      });
+      return res;
+    };
+  }
+})();
