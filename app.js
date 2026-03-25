@@ -24,22 +24,22 @@ window.desfazerLeitura = async function(docId, nomeColab, colecao) {
 window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
     let data = colecaoOrigem === 'treinamentos' ? window.todosTreinamentosData.find(i=>i.id===docId)?.data : window.dadosBoletins[docId];
     if(!data) return;
-    
+
     document.getElementById('modal-leitura-titulo').textContent = data['Título do Informativo'] || data['Título da Atividade'] || 'Status';
-    
+
     let publicoAlvoNomes = window.obterPublicoAlvo(data['Para quais Setores?'], data['Colaborador Específico (Opcional)']);
     if(colecaoOrigem === 'boletins-privados') publicoAlvoNomes = [data['Para qual Colaborador?']]; 
 
     const precisaResponder = colecaoOrigem === 'treinamentos' && (data['Tipo (Vídeo, PDF, Tarefa, Prova)'].includes('Tarefa') || data['Tipo (Vídeo, PDF, Tarefa, Prova)'].includes('Prova'));
 
     let htmlLidos = ''; let htmlNaoLidos = '';
-    
+
     if(precisaResponder) {
         const respostas = data.respostas_alunos || [];
         publicoAlvoNomes.forEach(nome => {
             let respostaAlunoObj = null;
             respostas.forEach(r => { try{ let obj = JSON.parse(r); if(obj.nome === nome) respostaAlunoObj = obj; }catch(e){} });
-            
+
             if(respostaAlunoObj) {
                 let statusNota = respostaAlunoObj.nota !== "" ? `<b style="color:#38a169;">Nota: ${respostaAlunoObj.nota}</b>` : `<b style="color:#ecc94b;">Aguardando Nota</b>`;
                 let btnCorrigir = isAdmin ? `<button onclick="window.abrirCorrecaoAdmin('${docId}', '${nome}')" style="background:#3182ce; color:white; border:none; padding:4px 8px; border-radius:5px; font-size:11px; cursor:pointer;"><i class="ri-edit-2-fill"></i> Corrigir</button>` : '';
@@ -67,7 +67,7 @@ window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
 window.gerarHTMLCard = function(colecaoNome, docId, data) {
     const config = configuracaoAbas[colecaoNome]; if(!config) return '';
     let campoTitulo = config.campos[0]; if(config.campoAgrupador) campoTitulo = config.campos.find(c => c !== config.campoAgrupador) || config.campos[0];
-    
+
     const tituloDesteCard = data[campoTitulo] || data['Nome/Médico'] || data['Nome'] || 'Detalhes do Cadastro';
     const corSalva = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
     const configCor = paletaGradientes.find(p => p.valor === corSalva);
@@ -76,7 +76,7 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
     let cardHtml = `<div class="card ${cardClass}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border-left: 6px solid var(--primary-color);">`;
     if(config.campoAgrupador) cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--text-main);"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA/MÓDULO: ${data[config.campoAgrupador] || 'Geral'}</div>`;
     cardHtml += `<div style="font-size:18px; font-weight:600; line-height:1.2; margin-bottom:15px;">${tituloDesteCard}</div>`;
-    
+
     config.campos.forEach(chave => {
         const valor = data[chave];
         if (valor && chave !== config.campoAgrupador && chave !== campoTitulo && chave !== 'Configuração da Avaliação' && !String(chave).includes('Link') && chave !== 'PIN de Acesso (Treinamentos)') {
@@ -177,7 +177,6 @@ if (!document.getElementById('modal-feedback-aluno')) {
     document.body.appendChild(fb);
 }
 
-// Lógica de Renderização do Aluno
 window.sairPortalAluno = function() { window.alunoLogado = null; document.getElementById('ensino-dashboard-area').style.display = 'none'; document.getElementById('ensino-login-area').style.display = 'block'; document.getElementById('login-aluno-pin').value = ''; };
 
 window.renderizarTrilhaAluno = function() {
@@ -205,7 +204,7 @@ window.renderizarTrilhaAluno = function() {
         const tipo = d['Tipo (Vídeo, PDF, Tarefa, Prova)'] || 'Vídeo';
         const precisaResponder = tipo.includes('Tarefa') || tipo.includes('Prova');
         const pontosItem = parseInt(d['Pontos Valendo']) || 0;
-        
+
         let jaFez = false; let statusTexto = 'Pendente'; let corStatus = '#e53e3e'; let iconeStatus = 'ri-time-line';
 
         if(precisaResponder) {
@@ -251,7 +250,7 @@ window.concluirTreinamento = async function(docId) {
 window.abrirModalResposta = function(docId, configJSON) {
     document.getElementById('resposta-docid').value = docId;
     const area = document.getElementById('area-perguntas-dinamicas'); area.innerHTML = '';
-    
+
     try {
         const perguntas = JSON.parse(configJSON);
         perguntas.forEach((q, idx) => {
@@ -259,7 +258,7 @@ window.abrirModalResposta = function(docId, configJSON) {
             html += `<div style="font-weight:600; font-size:13px; margin-bottom:10px;">${idx+1}. ${q.p}</div>`;
             html += `<input type="hidden" class="resp-tipo" value="${q.tipo}">`;
             html += `<input type="hidden" class="resp-pergunta-txt" value="${q.p}">`;
-            
+
             if(q.tipo === 'descritiva') {
                 html += `<textarea class="form-input resp-valor" style="height:80px; resize:vertical;" placeholder="Sua resposta..."></textarea>`;
             } else {
@@ -272,7 +271,7 @@ window.abrirModalResposta = function(docId, configJSON) {
             html += `</div>`; area.innerHTML += html;
         });
     } catch(e) { area.innerHTML = '<p>Erro ao carregar perguntas do sistema.</p>'; }
-    
+
     document.getElementById('modal-resposta-aluno').style.display = 'flex';
 };
 
@@ -280,10 +279,10 @@ window.enviarRespostaTreinamento = async function() {
     if(!window.alunoLogado) return;
     const docId = document.getElementById('resposta-docid').value;
     const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'];
-    
+
     const blocos = document.querySelectorAll('.pergunta-aluno-bloco');
     let respostasFinais = [];
-    
+
     blocos.forEach(bloco => {
         const tipo = bloco.querySelector('.resp-tipo').value;
         const p = bloco.querySelector('.resp-pergunta-txt').value;
@@ -316,24 +315,24 @@ window.abrirCorrecaoAdmin = function(docId, nomeAluno) {
     const data = window.todosTreinamentosData.find(i=>i.id===docId)?.data;
     if(!data) return;
     const respostas = data.respostas_alunos || [];
-    let respStr = null; let respObj = null;
-    respostas.forEach(r => { try { let o = JSON.parse(r); if(o.nome === nomeAluno) { respObj = o; respStr = r; } } catch(e){} });
-    
+    let respObj = null;
+    respostas.forEach(r => { try { let o = JSON.parse(r); if(o.nome === nomeAluno) { respObj = o; } } catch(e){} });
+
     if(!respObj) return;
-    
+
     let html = `<b>Aluno:</b> ${nomeAluno} <br><b>Enviado em:</b> ${respObj.data}<br><br>`;
     (respObj.respostas || []).forEach((r, i) => {
         html += `<div style="margin-bottom:10px; border-bottom:1px solid #e2e8f0; padding-bottom:5px;"><b>Q${i+1}:</b> ${r.pergunta}<br><span style="color:#3182ce;">R: ${r.resposta}</span></div>`;
     });
-    
+
     document.getElementById('correcao-respostas-aluno').innerHTML = html;
     document.getElementById('correcao-nota').value = respObj.nota || '';
     document.getElementById('correcao-feedback').value = respObj.feedback || '';
     document.getElementById('correcao-docid').value = docId;
     document.getElementById('correcao-nomealuno').value = nomeAluno;
-    
+
     document.getElementById('modal-correcao-admin').style.display = 'flex';
-    document.getElementById('modal-leituras').style.display = 'none'; // Esconde a lista de alunos temporariamente
+    document.getElementById('modal-leituras').style.display = 'none';
 };
 
 window.salvarCorrecaoAdmin = async function() {
@@ -341,21 +340,21 @@ window.salvarCorrecaoAdmin = async function() {
     const nomeAluno = document.getElementById('correcao-nomealuno').value;
     const nota = document.getElementById('correcao-nota').value;
     const fb = document.getElementById('correcao-feedback').value;
-    
+
     const data = window.todosTreinamentosData.find(i=>i.id===docId)?.data;
     const respostas = data.respostas_alunos || [];
     let respObjAntigo = null; let respStrAntiga = null;
     respostas.forEach(r => { try { let o = JSON.parse(r); if(o.nome === nomeAluno) { respObjAntigo = o; respStrAntiga = r; } } catch(e){} });
-    
+
     if(!respObjAntigo) return;
-    
+
     let respNovaObj = { ...respObjAntigo, nota: nota, feedback: fb };
     let respStrNova = JSON.stringify(respNovaObj);
-    
+
     try {
         const ref = window.doc(window.db, 'treinamentos', docId);
-        await window.updateDoc(ref, { respostas_alunos: window.arrayRemove(respStrAntiga) }); // Remove antiga
-        await window.updateDoc(ref, { respostas_alunos: window.arrayUnion(respStrNova) }); // Salva nova
+        await window.updateDoc(ref, { respostas_alunos: window.arrayRemove(respStrAntiga) });
+        await window.updateDoc(ref, { respostas_alunos: window.arrayUnion(respStrNova) });
         alert("Correção salva com sucesso!");
         document.getElementById('modal-correcao-admin').style.display = 'none';
     } catch(e) { alert("Erro ao salvar: "+e.message); }
@@ -381,7 +380,7 @@ window.entrarPortalAluno = function() {
 // 8. ATRIBUIÇÃO DE EVENTOS DE CLIQUES E INICIALIZAÇÃO
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
-    
+
     const mainContent = document.querySelector('.main-content');
     if(mainContent) {
         mainContent.addEventListener('click', async (e) => {
@@ -397,17 +396,17 @@ window.addEventListener('DOMContentLoaded', () => {
             if (btnSalvar.getAttribute('data-colecao') === 'treinamentos' && document.getElementById('quiz-questions-list')) {
                 window.sincronizarQuizJSON();
             }
-            
+
             const colecao = btnSalvar.getAttribute('data-colecao');
             const docId = document.getElementById('modal-doc-id').value;
             const config = configuracaoAbas[colecao];
             if(!config) return;
-            
+
             const btnOriginal = btnSalvar.innerHTML;
             btnSalvar.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Salvando...';
-            
+
             let dados = { corCard: document.getElementById('card-color') ? document.getElementById('card-color').value : '#ffffff' };
-            
+
             config.campos.forEach(c => {
                 const val = document.getElementById('input-'+c);
                 if((colecao === 'boletins' || colecao === 'treinamentos') && c === 'Para quais Setores?') {
@@ -415,7 +414,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     dados[c] = checks.join(', ');
                 } else if(val) { dados[c] = val.value; }
             });
-            
+
             try {
                 if(docId) { await updateDoc(doc(db, colecao, docId), dados); } else { await addDoc(collection(db, colecao), dados); }
                 window.fecharModal();
@@ -431,11 +430,11 @@ window.addEventListener('DOMContentLoaded', () => {
             const areaRes = document.getElementById('resultados-globais');
             if(!areaRes) return;
             if(texto.length < 2) { areaRes.style.display = 'none'; return; }
-            
+
             areaRes.style.display = 'grid'; 
             areaRes.innerHTML = '<h3 style="grid-column: 1/-1; margin-bottom: 10px; border-bottom: 2px solid var(--border-color); padding-bottom: 5px; color: var(--primary-color);">Resultados da Busca Global:</h3>';
             let encontrou = false;
-            
+
             ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico', 'pacotes', 'remocoes', 'colaboradores'].forEach(colecao => {
                 const itens = window.todosOsDadosDoSistema[colecao] || window.dadosGlobaisAbas[colecao] || [];
                 itens.forEach(item => {
@@ -454,12 +453,12 @@ window.addEventListener('DOMContentLoaded', () => {
             abaAtual = btn.getAttribute('data-tab');
             const tabEl = document.getElementById(`tab-${abaAtual}`);
             if(tabEl) tabEl.style.display = 'block';
-            
+
             const titleEl = document.getElementById('page-title');
             if(titleEl) titleEl.textContent = btn.textContent.trim();
             const inputPesqLocal = document.getElementById('input-pesquisa');
             if(inputPesqLocal) inputPesqLocal.value = ''; 
-            
+
             if(abaAtual === 'boletins') window.fecharPastaBoletim(); 
             if(abaAtual === 'boletins-privados') window.fecharPastaPrivado();
             ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico', 'treinamentos'].forEach(col => { if(abaAtual === col) window.fecharPastaGenerica(col); });
@@ -467,34 +466,9 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-/* CARD RECOLHÍVEL LEVE */
-.cards-grid { align-items: start; }
-.card.card-collapsible { padding: 18px; height: auto !important; min-height: unset !important; align-self: start; }
-.card.card-collapsible:hover { transform: none; box-shadow: 0 6px 18px rgba(0,0,0,0.05); }
-.card-summary { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
-.card-summary-main { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex:1; }
-.card-toggle {
-  background: rgba(255,255,255,0.18);
-  border: 1px solid rgba(255,255,255,0.28);
-  color: currentColor;
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  cursor: pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-shrink:0;
-}
-.card:not(.has-gradient) .card-toggle { background:#f8fafc; border-color: var(--border-color); }
-.card-details { display:none; margin-top: 14px; }
-.card-collapsible.expanded .card-details { display:block; }
-.card-collapsible .card-actions { margin-top: 14px; }
-
 /* ===== PATCH HOME LEVE + SEM RECOLHÍVEL PESADO ===== */
 (() => {
   function simplificarTelaInicial() {
-    // Remove busca global da home
     const buscaGlobal = document.getElementById('input-pesquisa-global');
     if (buscaGlobal) {
       const wrap = buscaGlobal.closest('.search-container');
@@ -519,7 +493,6 @@ window.addEventListener('DOMContentLoaded', () => {
       else if (el.classList && el.classList.contains('home-grid')) el.remove();
     });
 
-    // Se existir algum resquício de card recolhível premium, deixa tudo aberto e leve
     document.querySelectorAll('.card-collapsible').forEach(card => {
       card.classList.remove('expanded');
       const details = card.querySelector('.card-details');
@@ -529,7 +502,6 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // No-op: se alguma versão chamar esse método, não anima nada
   window.toggleCardExpand = function(cardElOrBtn) {
     const card = cardElOrBtn?.closest ? (cardElOrBtn.closest('.card-collapsible') || cardElOrBtn.closest('.card')) : null;
     if (!card) return;
@@ -552,7 +524,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const oldRenderHomeGraph = window.renderizarGraficoHome;
   if (typeof oldRenderHomeGraph === 'function') {
     window.renderizarGraficoHome = function() {
-      // gráfico da home removido para deixar a tela inicial mais leve
       return null;
     };
   }
