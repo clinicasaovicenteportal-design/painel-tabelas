@@ -102,16 +102,22 @@ window.decodeInlinePayload = function(str) {
 
 const paletaGradientes = [
     { valor: "#ffffff", nome: "Branco Padrão", dark: false },
+    { valor: "#f8fafc", nome: "Cinza Soft", dark: false },
     { valor: "#e53e3e", nome: "Vermelho Sólido", dark: true },
     { valor: "#3182ce", nome: "Azul Sólido", dark: true },
     { valor: "#38a169", nome: "Verde Sólido", dark: true },
     { valor: "#ecc94b", nome: "Amarelo Sólido", dark: false },
     { valor: "#805ad5", nome: "Roxo Sólido", dark: true },
-    { valor: "linear-gradient(to right, #fc6076, #ff9a44, #ef9d43, #e75516)", nome: "Laranja", dark: true },
-    { valor: "linear-gradient(to right, #0ba360, #3cba92, #30dd8a, #2bb673)", nome: "Verde Claro", dark: true },
-    { valor: "linear-gradient(to right, #6253e1, #852D91, #A3A1FF, #F24645)", nome: "Roxo/Azul", dark: true },
-    { valor: "linear-gradient(to right, #29323c, #485563, #2b5876, #4e4376)", nome: "Escuro", dark: true },
-    { valor: "linear-gradient(to right, #eb3941, #f15e64, #e14e53, #e2373f)", nome: "Vermelho HD", dark: true }
+    { valor: "linear-gradient(135deg, #fc6076 0%, #ff9a44 100%)", nome: "Sunset", dark: true },
+    { valor: "linear-gradient(135deg, #0ba360 0%, #3cba92 100%)", nome: "Esmeralda", dark: true },
+    { valor: "linear-gradient(135deg, #6253e1 0%, #852D91 55%, #F24645 100%)", nome: "Roxo Fusion", dark: true },
+    { valor: "linear-gradient(135deg, #29323c 0%, #485563 100%)", nome: "Grafite", dark: true },
+    { valor: "linear-gradient(135deg, #eb3941 0%, #f15e64 100%)", nome: "Vermelho HD", dark: true },
+    { valor: "linear-gradient(135deg, #1f4037 0%, #99f2c8 100%)", nome: "Menta Premium", dark: true },
+    { valor: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)", nome: "Ciano Premium", dark: true },
+    { valor: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)", nome: "Rosé Dourado", dark: false },
+    { valor: "linear-gradient(135deg, #654ea3 0%, #eaafc8 100%)", nome: "Lavanda", dark: true },
+    { valor: "linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)", nome: "Midnight", dark: true }
 ];
 
 // ==========================================
@@ -623,6 +629,17 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
         window.carregarPerguntasBuilder();
     }
 
+    if(mainContent) {
+        mainContent.addEventListener('keydown', (e) => {
+            const resumoCard = e.target.closest('.card-summary');
+            if (!resumoCard) return;
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                window.toggleCardExpand(resumoCard.closest('.card'));
+            }
+        });
+    }
+
     const btnSalvar = document.getElementById('btn-salvar-dados');
     if(btnSalvar) {
         btnSalvar.setAttribute('data-colecao', colecao);
@@ -720,21 +737,62 @@ window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
     if(modalEl) modalEl.style.display = 'flex';
 };
 
+window.colecaoUsaCardRecolhivel = function(colecaoNome) {
+    return !['ramais','emails','contatos-gerais','contatos-convenios','senhas'].includes(colecaoNome);
+};
+
+window.toggleCardExpand = function(cardEl) {
+    if(!cardEl || !cardEl.classList.contains('card-collapsible')) return;
+    cardEl.classList.toggle('expanded');
+    const btn = cardEl.querySelector('.card-toggle');
+    if(btn) {
+        const expanded = cardEl.classList.contains('expanded');
+        btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        btn.title = expanded ? 'Recolher card' : 'Expandir card';
+    }
+};
+
+window.gerarLinhaInfoCard = function(colecaoNome, chave, valor) {
+    if(valor === undefined || valor === null || valor === '') return '';
+    if (String(chave).includes('Valor') || chave === 'Link da Logo do Convênio' || chave === 'Exibir Logo do Convenio' || chave === 'Link da Foto do Profissional' || chave === 'Link da Imagem Ilustrativa' || chave === 'Enunciado ou Perguntas (Provas/Tarefas)') return '';
+
+    if (chave === 'Aceita o Servico?') {
+        const badgeClass = valor === 'Não' ? 'status-negado' : 'status-aceito';
+        const iconClass = valor === 'Não' ? 'ri-close-circle-fill' : 'ri-checkbox-circle-fill';
+        const text = valor === 'Não' ? 'Serviço Não Coberto' : 'Serviço Coberto';
+        return `<div class="card-info"><span class="${badgeClass}"><i class="${iconClass}"></i> ${text}</span></div>`;
+    }
+
+    if(chave === 'Local e Link Maps' && String(valor).includes('http')) {
+        const urlMatch = String(valor).match(/https?:\/\/[^\s]+/);
+        const url = urlMatch ? urlMatch[0] : valor;
+        const textoSemUrl = String(valor).replace(url, '').trim();
+        return `<div class="card-info"><strong>${chave}:</strong> <span>${textoSemUrl}</span><br><button data-no-toggle="true" onclick="window.open('${url}', '_blank')" class="btn-hover color-5" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 8px;"><i class="ri-map-pin-user-fill"></i> Ver no Mapa</button></div>`;
+    }
+
+    const estiloTexto = (colecaoNome === 'pacotes' && (chave === 'Descrição' || chave === 'O que está incluso' || chave === 'Observações' || chave === 'Kit' || chave === 'Procedimentos Inclusos (1 por linha)'))
+        ? 'white-space: pre-line; display:block; line-height:1.55;'
+        : '';
+
+    return `<div class="card-info"><strong>${chave}:</strong> <span style="${estiloTexto}">${valor}</span></div>`;
+};
+
 window.gerarHTMLCard = function(colecaoNome, docId, data) {
     const config = configuracaoAbas[colecaoNome];
     if(!config) return '';
     const camposOrdem = config.campos;
-    
+
     let campoTitulo = camposOrdem[0];
     if(config.campoAgrupador) {
         campoTitulo = camposOrdem.find(c => c !== config.campoAgrupador) || camposOrdem[0];
     }
-    
+
     const tituloDesteCard = data[campoTitulo] || data['Nome/Médico'] || data['Nome'] || 'Detalhes do Cadastro';
-    const corSalva = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
+    const corSalva = data.corCard && data.corCard !== 'transparent' ? data.corCard : '#ffffff';
     const configCor = paletaGradientes.find(p => p.valor === corSalva);
     const isDark = configCor ? configCor.dark : false;
-    
+    const cardRecolhivel = window.colecaoUsaCardRecolhivel(colecaoNome);
+
     let badgeValorHtml = '';
     camposOrdem.forEach(chave => {
         const valor = data[chave];
@@ -745,72 +803,59 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
         }
     });
 
-    let cardClass = isDark && colecaoNome !== 'ramais' ? 'has-gradient' : '';
-    let cardHtml = `<div class="card ${cardClass}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border-left: 6px solid var(--primary-color);">`;
-    
+    let detalhesHtml = '';
     if(config.campoAgrupador && (data[config.campoAgrupador] || 'Geral (Sem Categoria)')) {
-        cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--text-main);"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA/MÓDULO: ${data[config.campoAgrupador] || 'Geral (Sem Categoria)'}</div>`;
+        detalhesHtml += `<div class="card-topline"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA/MÓDULO: ${data[config.campoAgrupador] || 'Geral (Sem Categoria)'}</div>`;
     }
 
-    cardHtml += `<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; gap:10px;">
-                    <div class="card-title" style="font-size:18px; font-weight:600; line-height:1.2; flex:1; margin-bottom:0;">${tituloDesteCard}</div>
-                    ${badgeValorHtml}
-                 </div>`;
-    
     let hasFlexLayout = (colecaoNome === 'corpo-clinico' && data['Link da Foto do Profissional']);
     if(hasFlexLayout) {
-        cardHtml += `<div class="medico-wrapper">`;
-        if (colecaoNome === 'corpo-clinico' && data['Link da Foto do Profissional']) {
-            let fotoUrl = window.formatarLinkImagem(data['Link da Foto do Profissional']);
-            if(fotoUrl) cardHtml += `<img src="${fotoUrl}" class="medico-foto" onerror="this.style.display='none'">`;
-        }
-        cardHtml += `<div class="content-info-flex">`;
+        detalhesHtml += `<div class="medico-wrapper">`;
+        let fotoUrl = window.formatarLinkImagem(data['Link da Foto do Profissional']);
+        if(fotoUrl) detalhesHtml += `<img src="${fotoUrl}" class="medico-foto" onerror="this.style.display='none'">`;
+        detalhesHtml += `<div class="content-info-flex">`;
     }
 
+    detalhesHtml += `<div class="card-field-grid">`;
     camposOrdem.forEach(chave => {
         const valor = data[chave];
         if (valor && chave !== config.campoAgrupador && chave !== campoTitulo) {
-            if (String(chave).includes('Valor') || chave === 'Link da Logo do Convênio' || chave === 'Exibir Logo do Convenio' || chave === 'Link da Foto do Profissional' || chave === 'Link da Imagem Ilustrativa' || chave === 'Enunciado ou Perguntas (Provas/Tarefas)') return; 
-            
-            if (chave === 'Aceita o Servico?') {
-                const badgeClass = valor === 'Não' ? 'status-negado' : 'status-aceito';
-                const iconClass = valor === 'Não' ? 'ri-close-circle-fill' : 'ri-checkbox-circle-fill';
-                const text = valor === 'Não' ? 'Serviço Não Coberto' : 'Serviço Coberto';
-                cardHtml += `<div style="margin: 8px 0;"><span class="${badgeClass}"><i class="${iconClass}"></i> ${text}</span></div>`;
-            } else if(chave === 'Local e Link Maps' && String(valor).includes('http')) {
-                const urlMatch = String(valor).match(/https?:\/\/[^\s]+/);
-                const url = urlMatch ? urlMatch[0] : valor;
-                const textoSemUrl = String(valor).replace(url, '').trim();
-                cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4;"><strong>${chave}:</strong> <span>${textoSemUrl}</span><br><button onclick="window.open('${url}', '_blank')" class="btn-hover color-5" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 5px;"><i class="ri-map-pin-user-fill"></i> Ver no Mapa</button></div>`;
-            } else {
-                const estiloTexto = (colecaoNome === 'pacotes' && (chave === 'Descrição' || chave === 'O que está incluso' || chave === 'Observações' || chave === 'Kit')) ? 'white-space: pre-line; display:block; line-height:1.45;' : '';
-                cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="${estiloTexto}">${valor}</span></div>`; 
-            }
+            detalhesHtml += window.gerarLinhaInfoCard(colecaoNome, chave, valor);
         }
     });
 
     if(colecaoNome === 'treinamentos' && data['Enunciado ou Perguntas (Provas/Tarefas)']) {
-        cardHtml += `<div class="card-info" style="font-size:13px; margin-top: 10px; padding:10px; background:rgba(0,0,0,0.03); border-radius:8px;"><strong>Enunciado/Perguntas:</strong><br><span style="white-space: pre-wrap;">${data['Enunciado ou Perguntas (Provas/Tarefas)']}</span></div>`;
+        detalhesHtml += `<div class="card-info card-boxed-info"><strong>Enunciado/Perguntas:</strong><br><span style="white-space: pre-wrap;">${data['Enunciado ou Perguntas (Provas/Tarefas)']}</span></div>`;
     }
-    
-    if(hasFlexLayout) cardHtml += `</div></div>`; 
-    
+
     if(colecaoNome === 'colaboradores' && data['PIN de Acesso (Treinamentos)']) {
-         cardHtml += `<div style="margin-top:10px; background:rgba(0,0,0,0.05); padding:8px; border-radius:6px; font-size:12px; border: 1px dashed var(--border-color);"><strong>🔑 PIN de Acesso:</strong> ${data['PIN de Acesso (Treinamentos)']}</div>`;
+        detalhesHtml += `<div class="card-pin-box"><strong>🔑 PIN de Acesso:</strong> ${data['PIN de Acesso (Treinamentos)']}</div>`;
     }
 
     if(colecaoNome === 'treinamentos' && isAdmin) {
         const concluidosCount = (data.leituras || []).length;
-        cardHtml += `<div style="margin-top:15px; padding-top:15px; border-top: 1px dashed rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
-                        <div style="font-size:12px; color:var(--primary-color);"><b>Conclusões:</b> ${concluidosCount} colaborador(es).</div>
-                        <button onclick="window.abrirListaLeituras('${docId}', 'treinamentos')" style="background: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; cursor:pointer; font-size: 12px; font-weight: 500; color: var(--primary-color);"><i class="ri-team-line"></i> Detalhes</button>
-                     </div>`;
+        detalhesHtml += `<div class="card-admin-row"><div><b>Conclusões:</b> ${concluidosCount} colaborador(es).</div><button data-no-toggle="true" onclick="window.abrirListaLeituras('${docId}', 'treinamentos')" class="btn-hover color-8" style="height:34px; font-size:12px; padding:0 14px;"><i class="ri-team-line"></i> Detalhes</button></div>`;
     }
+
+    detalhesHtml += `</div>`;
+    if(hasFlexLayout) detalhesHtml += `</div></div>`;
 
     if (isAdmin) {
         const payloadEdicao = window.encodeInlinePayload(JSON.stringify(data || {}));
-        cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info-b64="${payloadEdicao}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
+        detalhesHtml += `<div class="card-actions"><button data-no-toggle="true" class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info-b64="${payloadEdicao}" title="Editar"><i class="ri-pencil-line"></i></button><button data-no-toggle="true" class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
     }
+
+    const cardClasses = ['card', 'card-premium'];
+    if(isDark && colecaoNome !== 'ramais') cardClasses.push('has-gradient');
+    if(cardRecolhivel) cardClasses.push('card-collapsible');
+
+    let cardHtml = `<div class="${cardClasses.join(' ')}" data-colecao="${colecaoNome}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border-left: 6px solid var(--primary-color);">`;
+    cardHtml += `<div class="card-premium-glow"></div>`;
+    cardHtml += `<div class="card-summary" ${cardRecolhivel ? 'role="button" tabindex="0"' : ''}>`;
+    cardHtml += `<div class="card-summary-main"><div class="card-title">${tituloDesteCard}</div>${badgeValorHtml || ''}</div>`;
+    if(cardRecolhivel) cardHtml += `<button type="button" class="card-toggle" data-no-toggle="true" aria-expanded="false" title="Expandir card"><i class="ri-add-line"></i></button>`;
+    cardHtml += `</div>`;
+    cardHtml += `<div class="card-details">${detalhesHtml}</div>`;
     cardHtml += `</div>`;
     return cardHtml;
 };
@@ -1772,6 +1817,19 @@ window.addEventListener('DOMContentLoaded', () => {
     const mainContent = document.querySelector('.main-content');
     if(mainContent) {
         mainContent.addEventListener('click', async (e) => {
+            const btnToggle = e.target.closest('.card-toggle');
+            if (btnToggle) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.toggleCardExpand(btnToggle.closest('.card'));
+                return;
+            }
+
+            const resumoCard = e.target.closest('.card-summary');
+            if (resumoCard && !e.target.closest('[data-no-toggle], .btn-action, .btn-hover, a, input, select, textarea, label')) {
+                window.toggleCardExpand(resumoCard.closest('.card'));
+                return;
+            }
             const btnExcluir = e.target.closest('.btn-delete'); const btnEditar = e.target.closest('.btn-edit'); const btnAssinar = e.target.closest('.btn-assinar');
             if (btnExcluir && isAdmin && confirm("Excluir permanentemente?")) await deleteDoc(doc(db, btnExcluir.dataset.colecao, btnExcluir.dataset.id));
             if (btnEditar && isAdmin) {
