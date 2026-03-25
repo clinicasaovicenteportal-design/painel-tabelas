@@ -29,13 +29,12 @@
     </div>
 
     <div id="dashboard-screen" class="screen" style="display: none;">
-        
+
         <aside class="sidebar">
             <div class="sidebar-header">
                 <img src="logo.png" alt="Logo" class="sidebar-logo" onerror="this.style.display='none'">
                 <h2 style="color: var(--primary-color); font-weight: 800; font-size: 24px; margin-top: 10px;">Painel<br>Clínico</h2>
             </div>
-
             <nav class="sidebar-nav">
                 <button class="nav-btn active" data-tab="home"><i class="ri-home-4-line"></i> Início</button>
                 <button class="nav-btn" data-tab="corpo-clinico"><i class="ri-team-line"></i> Corpo Clínico</button>
@@ -47,25 +46,18 @@
                 <button class="nav-btn" data-tab="institutos"><i class="ri-building-line"></i> Tabela Instituto</button>
                 <button class="nav-btn" data-tab="contatos"><i class="ri-contacts-book-line"></i> Contatos Úteis</button>
                 <button class="nav-btn" data-tab="remocoes"><i class="ri-ambulance-line"></i> Remoções</button>
-                
+
                 <button class="nav-btn" data-tab="escalas"><i class="ri-calendar-schedule-line"></i> Escalas de Trabalho</button>
                 <button class="nav-btn" data-tab="ensino"><i class="ri-graduation-cap-line"></i> Ensino e Treinamento</button>
 
                 <button class="nav-btn" data-tab="boletins" style="margin-top: 15px; border-top: 1px solid #eee; border-radius: 0; padding-top: 15px;"><i class="ri-newspaper-line"></i> Boletins Gerais</button>
-                
+
                 <button class="nav-btn admin-only" id="btn-nav-privados" data-tab="boletins-privados" style="display: none;"><i class="ri-user-star-line"></i> Informativos Diretos</button>
                 <button class="nav-btn admin-only" id="btn-nav-treinamentos" data-tab="treinamentos" style="display: none;"><i class="ri-book-read-line"></i> Gerenciar Ensino</button>
                 <button class="nav-btn admin-only" id="btn-nav-colaboradores" data-tab="colaboradores" style="display: none;"><i class="ri-group-line"></i> Gerenciar Equipe</button>
-
-                <!-- NOVA ABA RH -->
-                <button class="nav-btn admin-only" id="btn-nav-rh" data-tab="rh-analytics" style="display: none;"><i class="ri-team-fill"></i> RH & Analytics</button>
-
                 <button class="nav-btn admin-only" id="btn-nav-ajustes" data-tab="ajustes" style="display: none;"><i class="ri-settings-4-line"></i> Ajustes Globais</button>
             </nav>
-
-            <div class="sidebar-footer">
-                <button id="btn-logout" class="nav-btn logout-btn"><i class="ri-logout-box-r-line"></i> Sair do Painel</button>
-            </div>
+            <div class="sidebar-footer"><button id="btn-logout" class="nav-btn logout-btn"><i class="ri-logout-box-r-line"></i> Sair do Painel</button></div>
         </aside>
 
         <main class="main-content">
@@ -138,7 +130,7 @@
                     <h2 style="margin-bottom: 20px; color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Configurações do Sistema</h2>
                     <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px;">Aviso Animado na Tela Inicial (Banner)</label>
                     <textarea id="tab-input-banner" class="form-input" style="height: 80px; resize: vertical;"></textarea>
-                    
+
                     <div style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
                         <h4 style="color: var(--primary-color); margin-bottom: 10px;"><i class="ri-robot-2-fill"></i> Personalização (Chatbot & Pastas)</h4>
                         <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 5px;">Imagem/Avatar (Link)</label>
@@ -174,7 +166,7 @@
                 </div>
                 <div class="cards-grid" id="grid-colaboradores"></div>
             </section>
-            
+
             <section id="tab-pacotes" class="tab-content" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <p style="color: var(--text-muted);">Gestão de Pacotes do Pronto Socorro.</p>
@@ -182,7 +174,7 @@
                 </div>
                 <div class="cards-grid" id="grid-pacotes"></div>
             </section>
-            
+
             <section id="tab-remocoes" class="tab-content" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <p style="color: var(--text-muted);">Contatos e informações de Remoção.</p>
@@ -190,7 +182,7 @@
                 </div>
                 <div class="cards-grid" id="grid-remocoes"></div>
             </section>
-            
+
             <section id="tab-corpo-clinico" class="tab-content" style="display: none;">
                 <div id="corpo-clinico-view-folders">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -210,7 +202,7 @@
                     <div class="cards-grid" id="grid-corpo-clinico-list"></div>
                 </div>
             </section>
-            
+
             <section id="tab-convenios" class="tab-content" style="display: none;">
                 <div id="convenios-view-folders">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -230,7 +222,7 @@
                     <div class="cards-grid" id="grid-convenios-list"></div>
                 </div>
             </section>
-            
+
             <section id="tab-ultrassom" class="tab-content" style="display: none;">
                 <div id="ultrassom-view-folders">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -250,7 +242,7 @@
                     <div class="cards-grid" id="grid-ultrassom-list"></div>
                 </div>
             </section>
-            
+
             <section id="tab-consultas" class="tab-content" style="display: none;">
                 <div id="consultas-view-folders">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -270,7 +262,7 @@
                     <div class="cards-grid" id="grid-consultas-list"></div>
                 </div>
             </section>
-            
+
             <section id="tab-exames-imagem" class="tab-content" style="display: none;">
                 <div id="exames-imagem-view-folders">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -290,7 +282,7 @@
                     <div class="cards-grid" id="grid-exames-imagem-list"></div>
                 </div>
             </section>
-            
+
             <section id="tab-institutos" class="tab-content" style="display: none;">
                 <div id="institutos-view-folders">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -404,19 +396,19 @@
                     <div style="font-size: 40px; color: var(--primary-color); margin-bottom: 10px;"><i class="ri-graduation-cap-fill"></i></div>
                     <h2 style="margin-bottom: 5px; color: var(--primary-color);">Portal do Aluno</h2>
                     <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Acesso exclusivo para equipe.</p>
-                    
+
                     <input type="text" id="login-aluno-nome" class="form-input" placeholder="Seu Nome (Como no Cadastro)" style="margin-bottom: 15px;">
                     <input type="password" id="login-aluno-pin" class="form-input" placeholder="Seu PIN de Acesso" style="margin-bottom: 20px;">
-                    
+
                     <button onclick="window.entrarPortalAluno()" class="btn-hover color-11" style="width: 100%;"><i class="ri-login-box-line"></i> Acessar Jornada</button>
                 </div>
-            
+
                 <div id="ensino-dashboard-area" style="display: none;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h2 style="color: var(--primary-color);">Jornada de Aprendizado<br><span id="nome-aluno-logado" style="font-size:16px; color:var(--text-muted);"></span></h2>
                         <button onclick="window.sairPortalAluno()" class="btn-hover color-8" style="height: 35px; font-size: 12px;"><i class="ri-logout-circle-r-line"></i> Sair</button>
                     </div>
-                    
+
                     <div style="display: flex; gap: 15px; margin-bottom: 25px; flex-wrap:wrap;">
                          <div class="card" style="flex: 1; min-width: 150px; text-align: center; background: linear-gradient(to right, #0ba360, #3cba92); color: white; border:none;">
                              <h3 style="margin:0; font-size:32px;" id="aluno-pontos">0</h3>
@@ -441,7 +433,7 @@
                     <div class="card" onclick="window.abrirSubAba('contatos-convenios')" style="cursor:pointer; text-align:center;"><h3>Contatos Convênios</h3></div>
                     <div class="card" onclick="window.abrirSubAba('senhas')" style="cursor:pointer; text-align:center;"><h3>Senhas e Logins</h3></div>
                 </div>
-                
+
                 <div id="sub-ramais" style="display:none;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
                         <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
@@ -449,7 +441,7 @@
                     </div>
                     <div class="cards-grid" id="grid-ramais"></div>
                 </div>
-                
+
                 <div id="sub-emails" style="display:none;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
                         <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
@@ -457,7 +449,7 @@
                     </div>
                     <div class="cards-grid" id="grid-emails"></div>
                 </div>
-                
+
                 <div id="sub-contatos-gerais" style="display:none;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
                         <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
@@ -465,7 +457,7 @@
                     </div>
                     <div class="cards-grid" id="grid-contatos-gerais"></div>
                 </div>
-                
+
                 <div id="sub-contatos-convenios" style="display:none;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
                         <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
@@ -473,101 +465,13 @@
                     </div>
                     <div class="cards-grid" id="grid-contatos-convenios"></div>
                 </div>
-                
+
                 <div id="sub-senhas" style="display:none;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
                         <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
                         <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('senhas')" style="display:none;"><i class="ri-add-line"></i> Nova Senha</button>
                     </div>
                     <div class="cards-grid" id="grid-senhas"></div>
-                </div>
-            </section>
-
-            <!-- NOVA ABA RH -->
-            <section id="tab-rh-analytics" class="tab-content" style="display: none;">
-                <div class="rh-shell">
-                    <div class="rh-header">
-                        <div>
-                            <h2 style="color: var(--primary-color);"><i class="ri-team-fill"></i> RH & People Analytics</h2>
-                            <p style="color: var(--text-muted);">Indicadores de desempenho, clima organizacional, fit cultural e talentos usando os dados do portal.</p>
-                        </div>
-                        <div class="rh-header-actions">
-                            <button id="btn-rh-nova-pesquisa" class="btn-hover color-11 admin-only" style="display:none;">
-                                <i class="ri-file-list-3-line"></i> Nova Pesquisa
-                            </button>
-                            <button id="btn-rh-atualizar" class="btn-hover color-8">
-                                <i class="ri-refresh-line"></i> Atualizar
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="card rh-filters">
-                        <div class="rh-filter-grid">
-                            <input id="rh-filter-search" class="form-input" placeholder="Buscar colaborador">
-                            <select id="rh-filter-setor" class="form-input">
-                                <option value="">Todos os setores</option>
-                            </select>
-                            <select id="rh-filter-fit" class="form-input">
-                                <option value="">Fit cultural</option>
-                                <option value="8">Maior que 8</option>
-                                <option value="7">Maior que 7</option>
-                                <option value="6">Maior que 6</option>
-                            </select>
-                            <select id="rh-filter-ranking" class="form-input">
-                                <option value="">Ranking / nota</option>
-                                <option value="top">Top performers</option>
-                                <option value="risco">Em atenção</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="rh-overview-grid">
-                        <div class="rh-stat-card">
-                            <span>Total Colaboradores</span>
-                            <strong id="rh-stat-total">0</strong>
-                        </div>
-                        <div class="rh-stat-card">
-                            <span>Média Geral</span>
-                            <strong id="rh-stat-media">0,0</strong>
-                        </div>
-                        <div class="rh-stat-card">
-                            <span>Fit Cultural Médio</span>
-                            <strong id="rh-stat-fit">0,0</strong>
-                        </div>
-                        <div class="rh-stat-card">
-                            <span>Clima Organizacional</span>
-                            <strong id="rh-stat-clima">0,0</strong>
-                        </div>
-                        <div class="rh-stat-card">
-                            <span>Top Performers</span>
-                            <strong id="rh-stat-top">0</strong>
-                        </div>
-                        <div class="rh-stat-card">
-                            <span>Em Atenção</span>
-                            <strong id="rh-stat-risco">0</strong>
-                        </div>
-                    </div>
-
-                    <div class="rh-panels-grid">
-                        <div class="card rh-panel">
-                            <div class="rh-panel-title"><i class="ri-bar-chart-2-fill"></i> Top Performers</div>
-                            <canvas id="rh-chart-top"></canvas>
-                        </div>
-                        <div class="card rh-panel">
-                            <div class="rh-panel-title"><i class="ri-emotion-happy-fill"></i> Clima & Fit Cultural</div>
-                            <canvas id="rh-chart-clima"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="card rh-panel">
-                        <div class="rh-panel-title"><i class="ri-survey-line"></i> Pesquisas de Clima / Fit</div>
-                        <div id="rh-surveys-list" class="rh-surveys-list"></div>
-                    </div>
-
-                    <div class="card rh-panel">
-                        <div class="rh-panel-title"><i class="ri-user-star-fill"></i> Colaboradores</div>
-                        <div id="rh-collabs-grid" class="rh-collabs-grid"></div>
-                    </div>
                 </div>
             </section>
         </main>
@@ -618,65 +522,15 @@
                 <h3 id="sala-aula-titulo" style="color: var(--primary-color);"><i class="ri-edit-2-fill"></i> Sala de Aula</h3>
                 <button class="btn-icon" onclick="document.getElementById('modal-sala-aula').style.display='none';"><i class="ri-close-line"></i></button>
             </header>
-            <div class="modal-body" id="sala-aula-content"></div>
-        </div>
-    </div>
-
-    <!-- MODAIS RH -->
-    <div id="rh-modal-survey-builder" class="modal-overlay" style="display:none;">
-        <div class="modal-box glass-effect" style="width:min(760px, 94vw); max-height:85vh; overflow:auto;">
-            <header class="modal-header">
-                <h3 style="color: var(--primary-color);"><i class="ri-file-list-3-line"></i> Nova Pesquisa RH</h3>
-                <button class="btn-icon" onclick="document.getElementById('rh-modal-survey-builder').style.display='none'"><i class="ri-close-line"></i></button>
-            </header>
-            <div class="modal-body">
-                <div class="rh-form-grid">
-                    <input id="rh-survey-title" class="form-input" placeholder="Título da pesquisa">
-                    <select id="rh-survey-category" class="form-input">
-                        <option value="CLIMA">Clima Organizacional</option>
-                        <option value="FIT">Fit Cultural</option>
-                        <option value="ENGAJAMENTO">Engajamento</option>
-                    </select>
-                    <select id="rh-survey-target-mode" class="form-input">
-                        <option value="GERAL">Toda a empresa</option>
-                        <option value="SETOR">Por setor</option>
-                        <option value="COLABORADOR">Individual</option>
-                    </select>
-                    <input id="rh-survey-target-value" class="form-input" placeholder="Nome do setor ou colaborador (se aplicável)">
-                </div>
-                <textarea id="rh-survey-thanks" class="form-input" style="min-height: 100px; margin-bottom: 12px;" placeholder="Mensagem de agradecimento"></textarea>
-                <textarea id="rh-survey-questions" class="form-input" style="min-height: 160px;" placeholder="Perguntas (1 por linha)&#10;Exemplo: Como você avalia sua liderança? | escala&#10;Como está seu ambiente de trabalho? | escala&#10;Comentário livre | texto"></textarea>
+            <div class="modal-body" id="sala-aula-content">
             </div>
-            <button id="rh-btn-save-survey" class="btn-hover color-11" style="width: 100%; margin-top: 20px;"><i class="ri-save-line"></i> Salvar Pesquisa</button>
-        </div>
-    </div>
-
-    <div id="rh-modal-answer-survey" class="modal-overlay" style="display:none;">
-        <div class="modal-box glass-effect" style="width:min(760px, 94vw); max-height:85vh; overflow:auto;">
-            <header class="modal-header">
-                <h3 id="rh-answer-title" style="color: var(--primary-color);"><i class="ri-chat-check-fill"></i> Responder Pesquisa</h3>
-                <button class="btn-icon" onclick="document.getElementById('rh-modal-answer-survey').style.display='none'"><i class="ri-close-line"></i></button>
-            </header>
-            <div class="modal-body" id="rh-answer-body"></div>
-            <button id="rh-btn-send-answer" class="btn-hover color-11" style="width: 100%; margin-top: 20px;"><i class="ri-send-plane-2-line"></i> Enviar Respostas</button>
-        </div>
-    </div>
-
-    <div id="rh-modal-thanks" class="modal-overlay" style="display:none;">
-        <div class="modal-box glass-effect" style="max-width: 500px; text-align:center;">
-            <div style="width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg,#8B252C,#ef4444); color:#fff; display:flex; align-items:center; justify-content:center; font-size:28px; margin:0 auto 12px;">
-                <i class="ri-heart-3-fill"></i>
-            </div>
-            <h3 style="color: var(--primary-color);">Muito obrigado!</h3>
-            <p id="rh-thanks-message">Sua participação foi registrada.</p>
-            <button class="btn-hover color-11" style="margin-top: 15px;" onclick="document.getElementById('rh-modal-thanks').style.display='none'">Fechar</button>
         </div>
     </div>
 
     <div id="chat-fab" onclick="window.toggleChat()">
         <img id="chat-fab-img" src="https://cdn-icons-png.flaticon.com/512/8943/8943377.png" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
     </div>
-    
+
     <div id="chat-window" style="display:none;">
         <div class="chat-header">
             <div style="display:flex; align-items:center; gap:10px;">
