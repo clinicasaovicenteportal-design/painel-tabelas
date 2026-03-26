@@ -113,7 +113,7 @@ onAuthStateChanged(auth, (user) => {
         }
         Object.keys(configuracaoAbas).forEach(idColecao => window.renderizarCards(idColecao));
         window.carregarConfiguracoes(); window.buscarClimaAraucaria(); 
-        window.escutarRH(); 
+        if(window.escutarRH) window.escutarRH(); 
     } else {
         if(loginScreen) loginScreen.style.display = 'flex'; if(dashboardScreen) dashboardScreen.style.display = 'none';
         if(chatFab) chatFab.style.display = 'none';
@@ -167,15 +167,27 @@ window.verificarUrgentesHome = function() {
     if(totalUrgentesPendentes > 0) area.innerHTML = `<div class="alerta-urgente-home" onclick="window.irParaAba('boletins')"><i class="ri-alarm-warning-fill"></i><div><strong>Atenção! Informativos Urgentes</strong><span>Existem <b>${totalUrgentesPendentes}</b> pendentes.</span></div></div>`;
 };
 
+// 💡 DESTAQUE DE CARD (PISCAR)
+window.destacarCard = function(docId) {
+    setTimeout(() => {
+        const card = document.getElementById(`card-${docId}`);
+        if(card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.classList.add('piscar-destaque');
+            setTimeout(() => { card.classList.remove('piscar-destaque'); }, 6000);
+        }
+    }, 500);
+};
+
 window.irParaAba = function(aba) { const btn = document.querySelector(`.nav-btn[data-tab='${aba}']`); if(btn) btn.click(); };
 window.abrirSubAba = function(subAbaId) { document.getElementById('menu-contatos').style.display = 'none'; document.getElementById('sub-' + subAbaId).style.display = 'block'; };
 window.voltarSubAba = function() { ['ramais', 'emails', 'contatos-gerais', 'contatos-convenios', 'senhas'].forEach(id => { const sub = document.getElementById('sub-' + id); if(sub) sub.style.display = 'none'; }); document.getElementById('menu-contatos').style.display = 'grid'; };
 
-window.abrirPastaGenerica = function(colecao, valorPasta) { window[`pasta_${colecao}_Atual`] = valorPasta; document.getElementById(`${colecao}-view-folders`).style.display = 'none'; document.getElementById(`${colecao}-view-list`).style.display = 'block'; const titleEl = document.getElementById(`titulo-pasta-${colecao}`); if(titleEl && configuracaoAbas[colecao]) titleEl.innerHTML = `<i class="${configuracaoAbas[colecao].icone}"></i> Pasta: ${valorPasta}`; window.renderizarListaGenerica(colecao); };
+window.abrirPastaGenerica = function(colecao, valorPasta, docIdDestino = null) { window[`pasta_${colecao}_Atual`] = valorPasta; document.getElementById(`${colecao}-view-folders`).style.display = 'none'; document.getElementById(`${colecao}-view-list`).style.display = 'block'; const titleEl = document.getElementById(`titulo-pasta-${colecao}`); if(titleEl && configuracaoAbas[colecao]) titleEl.innerHTML = `<i class="${configuracaoAbas[colecao].icone}"></i> Pasta: ${valorPasta}`; window.renderizarListaGenerica(colecao); if(docIdDestino) window.destacarCard(docIdDestino); };
 window.fecharPastaGenerica = function(colecao) { window[`pasta_${colecao}_Atual`] = null; document.getElementById(`${colecao}-view-folders`).style.display = 'block'; document.getElementById(`${colecao}-view-list`).style.display = 'none'; window.renderizarPastasGenericas(colecao); };
-window.abrirPastaBoletim = function(pasta) { window.pastaBoletimAtual = pasta; document.getElementById('boletins-view-folders').style.display = 'none'; document.getElementById('boletins-view-list').style.display = 'block'; document.getElementById('titulo-pasta-boletins').innerHTML = `<i class="ri-folder-open-line"></i> Setor: ${pasta}`; window.renderizarListaBoletins(); };
+window.abrirPastaBoletim = function(pasta, docIdDestino = null) { window.pastaBoletimAtual = pasta; document.getElementById('boletins-view-folders').style.display = 'none'; document.getElementById('boletins-view-list').style.display = 'block'; document.getElementById('titulo-pasta-boletins').innerHTML = `<i class="ri-folder-open-line"></i> Setor: ${pasta}`; window.renderizarListaBoletins(); if(docIdDestino) window.destacarCard(docIdDestino); };
 window.fecharPastaBoletim = function() { window.pastaBoletimAtual = null; document.getElementById('boletins-view-list').style.display = 'none'; document.getElementById('boletins-view-folders').style.display = 'block'; window.renderizarPastasBoletins(); };
-window.abrirPastaPrivado = function(colabNome) { window.pastaPrivadoAtual = colabNome; document.getElementById('privados-view-folders').style.display = 'none'; document.getElementById('privados-view-list').style.display = 'block'; document.getElementById('titulo-pasta-privados').innerHTML = `<i class="ri-folder-user-line"></i> ${colabNome}`; window.renderizarListaPrivados(); };
+window.abrirPastaPrivado = function(colabNome, docIdDestino = null) { window.pastaPrivadoAtual = colabNome; document.getElementById('privados-view-folders').style.display = 'none'; document.getElementById('privados-view-list').style.display = 'block'; document.getElementById('titulo-pasta-privados').innerHTML = `<i class="ri-folder-user-line"></i> ${colabNome}`; window.renderizarListaPrivados(); if(docIdDestino) window.destacarCard(docIdDestino); };
 window.fecharPastaPrivado = function() { window.pastaPrivadoAtual = null; document.getElementById('privados-view-list').style.display = 'none'; document.getElementById('privados-view-folders').style.display = 'block'; window.renderizarPastasPrivados(); };
 
 window.atualizarGrafico = function(canvasId, refInstancia, dados, labelGrafico) {
@@ -264,6 +276,7 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
     }
     document.getElementById('modal-doc-id').value = docId || "";
 
+    // Geração dinâmica dos inputs e listas suspensas (Inclui os exames dinâmicos)
     let htmlCampos = '';
     config.campos.forEach(campo => {
         const valorAntigo = (dadosAntigos && dadosAntigos[campo]) ? dadosAntigos[campo] : '';
@@ -301,6 +314,12 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
         else if(campo === 'Local ou Prédio') { htmlCampos += `<select id="input-${campo}" class="form-input"><option value="">Selecione o Local...</option>`; locaisGlobais.forEach(loc => { const l = loc.trim(); if(l) htmlCampos += `<option value="${l}" ${valorAntigo === l ? 'selected' : ''}>${l}</option>`; }); htmlCampos += `<option value="Outros" ${valorAntigo === 'Outros' ? 'selected' : ''}>Outros</option></select>`; }
         else if (campo.includes('Data')) { htmlCampos += `<input type="date" id="input-${campo}" value="${valorAntigo}" class="form-input">`; } 
         else if (campo.includes('Link') || campo.includes('URL')) { htmlCampos += `<input type="url" id="input-${campo}" placeholder="Link ou URL" value="${valorAntigo}" class="form-input">`; } 
+        
+        // 👇 A MÁGICA DOS EXAMES/MÉDICOS AQUI 👇
+        else if (campo === 'Profissionais que realizam (Opcional)') {
+            htmlCampos += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px; color:var(--text-muted);">Quais médicos realizam isso?</label>`;
+            htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:80px; resize:vertical;" placeholder="Ex: Dr. João, Dra. Maria...">${valorAntigo}</textarea>`;
+        }
         else { htmlCampos += `<input type="text" id="input-${campo}" placeholder="${campo}" value="${valorAntigo}" class="form-input">`; }
     });
     
@@ -308,72 +327,7 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
     document.getElementById('btn-salvar-dados').setAttribute('data-colecao', colecao);
     document.getElementById('modal-cadastro').style.display = 'flex';
 
-    if(colecao === 'treinamentos') { setTimeout(() => { window.carregarPerguntasBuilder(); }, 100); }
-};
-window.abrirMidaFlutuante = function(url) {
-    let u = url;
-    if(u.includes("drive.google.com") && u.includes("/view")) u = u.replace("/view", "/preview");
-    if(u.includes("youtube.com/watch?v=")) u = `https://www.youtube.com/embed/${u.split("v=")[1].split("&")[0]}`;
-    else if (u.includes("youtu.be/")) u = `https://www.youtube.com/embed/${u.split("youtu.be/")[1].split("?")[0]}`;
-    const iframe = document.getElementById('iframe-media');
-    const modalMedia = document.getElementById('modal-media');
-    if(iframe) iframe.src = u; 
-    if(modalMedia) modalMedia.style.display = 'flex';
-};
-
-window.desfazerLeitura = async function(docId, nomeColab, colecao) {
-    if(!isAdmin) return;
-    if(!confirm(`Tem certeza que deseja remover a assinatura/conclusão de ${nomeColab}?`)) return;
-    let docData = colecao === 'treinamentos' ? window.todosTreinamentosData.find(i=>i.id===docId)?.data : window.dadosBoletins[docId];
-    if(!docData || !docData.leituras) return;
-    const str = docData.leituras.find(txt => txt.startsWith(nomeColab));
-    if(str) { await window.updateDoc(window.doc(window.db, colecao, docId), { leituras: window.arrayRemove(str) }); document.getElementById('modal-leituras').style.display = 'none'; }
-};
-
-window.abrirListaLeituras = function(docId, colecaoOrigem = 'boletins') {
-    let data = colecaoOrigem === 'treinamentos' ? window.todosTreinamentosData.find(i=>i.id===docId)?.data : window.dadosBoletins[docId];
-    if(!data) return;
-    
-    document.getElementById('modal-leitura-titulo').textContent = data['Título do Informativo'] || data['Título da Atividade'] || 'Status';
-    
-    let publicoAlvoNomes = window.obterPublicoAlvo(data['Para quais Setores?'], data['Colaborador Específico (Opcional)']);
-    if(colecaoOrigem === 'boletins-privados') publicoAlvoNomes = [data['Para qual Colaborador?']]; 
-
-    const precisaResponder = colecaoOrigem === 'treinamentos' && (data['Tipo (Vídeo, PDF, Tarefa, Prova)'].includes('Tarefa') || data['Tipo (Vídeo, PDF, Tarefa, Prova)'].includes('Prova'));
-
-    let htmlLidos = ''; let htmlNaoLidos = '';
-    
-    if(precisaResponder) {
-        const respostas = data.respostas_alunos || [];
-        publicoAlvoNomes.forEach(nome => {
-            let respostaAlunoObj = null;
-            respostas.forEach(r => { try{ let obj = JSON.parse(r); if(obj.nome === nome) respostaAlunoObj = obj; }catch(e){} });
-            
-            if(respostaAlunoObj) {
-                let statusNota = respostaAlunoObj.nota !== "" ? `<b style="color:#38a169;">Nota: ${respostaAlunoObj.nota}</b>` : `<b style="color:#ecc94b;">Aguardando Nota</b>`;
-                let btnCorrigir = isAdmin ? `<button onclick="window.abrirCorrecaoAdmin('${docId}', '${nome}')" style="background:#3182ce; color:white; border:none; padding:4px 8px; border-radius:5px; font-size:11px; cursor:pointer;"><i class="ri-edit-2-fill"></i> Corrigir</button>` : '';
-                htmlLidos += `<div class="item-lido" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;"><span><i class="ri-user-line"></i> ${nome}<br><span style="font-size:10px;">${statusNota}</span></span> ${btnCorrigir}</div>`;
-            } else {
-                htmlNaoLidos += `<div class="item-falta"><i class="ri-time-line"></i> ${nome}</div>`;
-            }
-        });
-    } else {
-        const lidosTextos = data.leituras || [];
-        publicoAlvoNomes.forEach(nome => {
-            const registroCompleto = lidosTextos.find(txt => txt.startsWith(nome));
-            if (registroCompleto) {
-                let btnDesfazer = isAdmin ? `<button onclick="window.desfazerLeitura('${docId}', '${nome}', '${colecaoOrigem}')" class="btn-desfazer"><i class="ri-arrow-go-back-line"></i></button>` : '';
-                htmlLidos += `<div class="item-lido" style="display:flex; justify-content:space-between; align-items:center;"><span><i class="ri-check-line"></i> ${registroCompleto}</span> ${btnDesfazer}</div>`;
-            } else { htmlNaoLidos += `<div class="item-falta"><i class="ri-time-line"></i> ${nome}</div>`; }
-        });
-    }
-
-    document.getElementById('lista-lidos-content').innerHTML = htmlLidos || '<p style="color:var(--text-muted); font-size:12px;">Nenhum registro.</p>';
-    document.getElementById('lista-falta-content').innerHTML = htmlNaoLidos || '<p style="color:#38a169; font-size:12px;">Todos completaram!</p>';
-    document.getElementById('modal-leituras').style.display = 'flex';
-};
-
-window.gerarHTMLCard = function(colecaoNome, docId, data) {
+   window.gerarHTMLCard = function(colecaoNome, docId, data) {
     const config = configuracaoAbas[colecaoNome]; if(!config) return '';
     let campoTitulo = config.campos[0]; if(config.campoAgrupador) campoTitulo = config.campos.find(c => c !== config.campoAgrupador) || config.campos[0];
     
@@ -382,10 +336,84 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
     const configCor = paletaGradientes.find(p => p.valor === corSalva);
     const cardClass = (configCor && configCor.dark) && colecaoNome !== 'ramais' ? 'has-gradient' : '';
 
-    let cardHtml = `<div class="card ${cardClass}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border-left: 6px solid var(--primary-color);">`;
+    let cardHtml = `<div class="card ${cardClass}" id="card-${docId}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border-left: 6px solid var(--primary-color);">`;
+    
     if(config.campoAgrupador) cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--text-main);"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA/MÓDULO: ${data[config.campoAgrupador] || 'Geral'}</div>`;
     cardHtml += `<div style="font-size:18px; font-weight:600; line-height:1.2; margin-bottom:15px;">${tituloDesteCard}</div>`;
     
+    let hasFlexLayout = (colecaoNome === 'corpo-clinico' && data['Link da Foto do Profissional']);
+    if(hasFlexLayout) {
+        cardHtml += `<div class="medico-wrapper">`;
+        if (colecaoNome === 'corpo-clinico' && data['Link da Foto do Profissional']) {
+            let fotoUrl = window.formatarLinkImagem(data['Link da Foto do Profissional']);
+            if(fotoUrl) cardHtml += `<img src="${fotoUrl}" class="medico-foto" onerror="this.style.display='none'">`;
+        }
+        cardHtml += `<div class="content-info-flex">`;
+    }
+
+    config.campos.forEach(chave => {
+        const valor = data[chave];
+        if (valor && chave !== config.campoAgrupador && chave !== campoTitulo && chave !== 'Configuração da Avaliação' && !String(chave).includes('Link da Foto') && !String(chave).includes('Link da Logo') && chave !== 'PIN de Acesso (Treinamentos)') {
+            
+            if (chave === 'Aceita o Servico?') {
+                const badgeClass = valor === 'Não' ? 'status-negado' : 'status-aceito';
+                const iconClass = valor === 'Não' ? 'ri-close-circle-fill' : 'ri-checkbox-circle-fill';
+                const text = valor === 'Não' ? 'Serviço Não Coberto' : 'Serviço Coberto';
+                cardHtml += `<div style="margin: 8px 0;"><span class="${badgeClass}"><i class="${iconClass}"></i> ${text}</span></div>`;
+            } 
+            // Lógica do Mapa de Remoções e Quebra de Linhas
+            else if(chave === 'Local e Link Maps') {
+                if(String(valor).includes('<iframe')) {
+                    cardHtml += `<div class="card-info" style="font-size:13px; margin-top: 10px;"><strong>${chave}:</strong><div style="margin-top:5px; border-radius:10px; overflow:hidden;">${valor}</div></div>`;
+                } else if(String(valor).includes('http')) {
+                    const urlMatch = String(valor).match(/https?:\/\/[^\s]+/);
+                    const url = urlMatch ? urlMatch[0] : valor;
+                    const textoSemUrl = String(valor).replace(url, '').trim();
+                    cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${textoSemUrl}</span><br><button onclick="window.open('${url}', '_blank')" class="btn-hover color-5" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 5px;"><i class="ri-map-pin-user-fill"></i> Abrir Mapa</button></div>`;
+                } else {
+                    cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${valor}</span></div>`; 
+                }
+            } else {
+                // 👇 AQUI APLICAMOS A QUEBRA DE LINHA GERAL 👇
+                cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${valor}</span></div>`; 
+            }
+        }
+    });
+
+    if(hasFlexLayout) cardHtml += `</div></div>`;
+
+    if(colecaoNome === 'colaboradores' && data['PIN de Acesso (Treinamentos)']) {
+         cardHtml += `<div style="margin-top:10px; background:rgba(0,0,0,0.05); padding:8px; border-radius:6px; font-size:12px; border: 1px dashed var(--border-color);"><strong>🔑 PIN de Acesso:</strong> ${data['PIN de Acesso (Treinamentos)']}</div>`;
+    }
+
+    if(colecaoNome === 'treinamentos' && isAdmin) {
+        const precisaResponder = data['Tipo (Vídeo, PDF, Tarefa, Prova)'] && (data['Tipo (Vídeo, PDF, Tarefa, Prova)'].includes('Tarefa') || data['Tipo (Vídeo, PDF, Tarefa, Prova)'].includes('Prova'));
+        const count = precisaResponder ? (data.respostas_alunos || []).length : (data.leituras || []).length;
+        cardHtml += `<div style="margin-top:15px; padding-top:15px; border-top: 1px dashed rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size:12px; color:var(--primary-color);"><b>Conclusões:</b> ${count} aluno(s).</div>
+                        <button onclick="window.abrirListaLeituras('${docId}', 'treinamentos')" class="btn-hover color-8" style="padding: 6px 12px; font-size: 12px;"><i class="ri-team-line"></i> Respostas</button>
+                     </div>`;
+    }
+
+    if (isAdmin) cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
+    cardHtml += `</div>`; return cardHtml;
+};
+    // 👇 O ID DO CARD AQUI PERMITE O EFEITO "PISCAR" DO CHATBOT 👇
+    let cardHtml = `<div class="card ${cardClass}" id="card-${docId}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border-left: 6px solid var(--primary-color);">`;
+    
+    if(config.campoAgrupador) cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--text-main);"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA/MÓDULO: ${data[config.campoAgrupador] || 'Geral'}</div>`;
+    cardHtml += `<div style="font-size:18px; font-weight:600; line-height:1.2; margin-bottom:15px;">${tituloDesteCard}</div>`;
+    
+    let hasFlexLayout = (colecaoNome === 'corpo-clinico' && data['Link da Foto do Profissional']);
+    if(hasFlexLayout) {
+        cardHtml += `<div class="medico-wrapper">`;
+        if (colecaoNome === 'corpo-clinico' && data['Link da Foto do Profissional']) {
+            let fotoUrl = window.formatarLinkImagem(data['Link da Foto do Profissional']);
+            if(fotoUrl) cardHtml += `<img src="${fotoUrl}" class="medico-foto" onerror="this.style.display='none'">`;
+        }
+        cardHtml += `<div class="content-info-flex">`;
+    }
+
     config.campos.forEach(chave => {
         const valor = data[chave];
         if (valor && chave !== config.campoAgrupador && chave !== campoTitulo && chave !== 'Configuração da Avaliação' && !String(chave).includes('Link') && chave !== 'PIN de Acesso (Treinamentos)') {
@@ -393,12 +421,14 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
         }
     });
 
+    if(hasFlexLayout) cardHtml += `</div></div>`;
+
     if(colecaoNome === 'colaboradores' && data['PIN de Acesso (Treinamentos)']) {
          cardHtml += `<div style="margin-top:10px; background:rgba(0,0,0,0.05); padding:8px; border-radius:6px; font-size:12px; border: 1px dashed var(--border-color);"><strong>🔑 PIN de Acesso:</strong> ${data['PIN de Acesso (Treinamentos)']}</div>`;
     }
 
     if(colecaoNome === 'treinamentos' && isAdmin) {
-        const precisaResponder = data['Tipo (Vídeo, PDF, Tarefa, Prova)'].includes('Tarefa') || data['Tipo (Vídeo, PDF, Tarefa, Prova)'].includes('Prova');
+        const precisaResponder = data['Tipo (Vídeo, PDF, Tarefa, Prova)'] && (data['Tipo (Vídeo, PDF, Tarefa, Prova)'].includes('Tarefa') || data['Tipo (Vídeo, PDF, Tarefa, Prova)'].includes('Prova'));
         const count = precisaResponder ? (data.respostas_alunos || []).length : (data.leituras || []).length;
         cardHtml += `<div style="margin-top:15px; padding-top:15px; border-top: 1px dashed rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
                         <div style="font-size:12px; color:var(--primary-color);"><b>Conclusões:</b> ${count} aluno(s).</div>
@@ -466,7 +496,7 @@ window.renderizarListaBoletins = function() {
         const qtdFaltam = faltamAssinar.length;
         const corStatus = qtdFaltam > 0 ? window.corStatusPendente : window.corStatusConcluido;
         const classeUrgente = (isUrgente && qtdFaltam > 0) ? 'card-urgente' : ''; 
-        let cardHtml = `<div class="card ${classeUrgente} ${gradientClass}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border: 3px solid ${corStatus};"><div class="card-title" style="margin-bottom:15px; font-size:18px; font-weight:600; line-height:1.2;">${titulo}</div>`;
+        let cardHtml = `<div class="card ${classeUrgente} ${gradientClass}" id="card-${docId}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border: 3px solid ${corStatus};"><div class="card-title" style="margin-bottom:15px; font-size:18px; font-weight:600; line-height:1.2;">${titulo}</div>`;
         let botaoLinkHtml = '';
         camposOrdem.forEach(chave => {
             const valor = data[chave];
@@ -529,7 +559,7 @@ window.renderizarListaPrivados = function() {
         const corStatus = jaLeu ? window.corStatusConcluido : window.corStatusPendente;
         const classeUrgente = (isUrgente && !jaLeu) ? 'card-urgente' : ''; 
 
-        let cardHtml = `<div class="card ${classeUrgente} ${gradientClass}" style="display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border: 3px solid ${corStatus};"><div class="card-title" style="margin-bottom:15px; font-size:18px; font-weight:600;">${titulo}</div>`;
+        let cardHtml = `<div class="card ${classeUrgente} ${gradientClass}" id="card-${docId}" style="display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border: 3px solid ${corStatus};"><div class="card-title" style="margin-bottom:15px; font-size:18px; font-weight:600;">${titulo}</div>`;
         let botaoLinkHtml = '';
         camposOrdem.forEach(chave => {
             const valor = data[chave];
@@ -583,13 +613,182 @@ window.renderizarCards = function(colecaoNome) {
     });
 };
 
-window.carregarConfiguracoes = function() { /* ... Código omitido para não estourar texto, a inicialização ocorre sem ele ... */ };
-window.toggleChat = function() { /* ... Chat omitido por espaço ... */ };
-window.sendQuickMsg = function() {}; window.sendChat = function() {}; window.processarLogicaDoBot = function() {};
+window.carregarConfiguracoes = function() {
+    onSnapshot(doc(db, "configuracoes", "gerais"), (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            const area = document.getElementById('banner-content');
+            if(area) { if(data.banner_texto && data.banner_texto.trim() !== '') area.innerHTML = `<h2>${data.banner_texto.replace(/\n/g, '<br>')}</h2>`; else area.innerHTML = `<h2>Bem-vindo ao Painel Clínico</h2>`; }
+            
+            const mapIds = {
+                'tab-input-banner': 'banner_texto', 'tab-input-locais': 'locais', 'tab-input-setores': 'setores',
+                'tab-input-especialidades': 'especialidades', 'tab-input-motivos': 'motivos', 'tab-input-imagem-pastas': 'imagem_padrao_pastas',
+                'tab-input-chat-logo': 'chat_logo', 'tab-color-chat': 'chat_cor', 'tab-color-pendente': 'cor_pendente', 'tab-color-concluido': 'cor_concluido'
+            };
 
+            Object.keys(mapIds).forEach(id => {
+                const el = document.getElementById(id);
+                if(el && data[mapIds[id]] !== undefined) el.value = data[mapIds[id]];
+            });
+
+            const chatLogo = data.chat_logo || "https://cdn-icons-png.flaticon.com/512/8943/8943377.png";
+            const chatCor = data.chat_cor || "#0ba360";
+            document.documentElement.style.setProperty('--chat-primary', chatCor);
+            
+            const fabImg = document.getElementById('chat-fab-img'); const headerImg = document.getElementById('chat-header-img');
+            if(fabImg) fabImg.src = window.formatarLinkImagem(chatLogo) || chatLogo; if(headerImg) headerImg.src = window.formatarLinkImagem(chatLogo) || chatLogo;
+
+            window.corStatusPendente = data.cor_pendente || '#e53e3e'; window.corStatusConcluido = data.cor_concluido || '#38a169';
+            
+            locaisGlobais = data.locais ? data.locais.split('\n').filter(l => l.trim() !== '') : [];
+            setoresGlobais = data.setores ? data.setores.split('\n').filter(s => s.trim() !== '') : [];
+            especialidadesGlobais = data.especialidades ? data.especialidades.split('\n').filter(s => s.trim() !== '') : [];
+            motivosGlobais = data.motivos ? data.motivos.split('\n').filter(m => m.trim() !== '') : [];
+            
+            if(abaAtual === 'boletins' && !window.pastaBoletimAtual) window.renderizarPastasBoletins();
+            if(abaAtual === 'boletins-privados' && !window.pastaPrivadoAtual) window.renderizarPastasPrivados();
+        }
+    });
+};
+
+window.toggleChat = function() {
+    const win = document.getElementById('chat-window'); const fab = document.getElementById('chat-fab'); if(!win || !fab) return;
+    if (win.style.display === 'none' || win.style.display === '') {
+        win.style.display = 'flex'; const tooltip = fab.querySelector('.chatbot-tooltip'); if(tooltip) tooltip.style.display = 'none';
+        const termosPopulares = ['Cardiologia', 'Ultrassom', 'Unimed', 'Raio-X', 'Pediatria', 'Ortopedia', 'Consulta', 'Boletim'];
+        termosPopulares.sort(() => 0.5 - Math.random());
+        const top3 = termosPopulares.slice(0, 3);
+        const quickRepliesDiv = document.querySelector('.chat-quick-replies');
+        if(quickRepliesDiv) { quickRepliesDiv.innerHTML = ''; top3.forEach(termo => { quickRepliesDiv.innerHTML += `<button onclick="window.sendQuickMsg('${termo}')">${termo}</button>`; }); }
+        setTimeout(() => { document.getElementById('chat-input').focus(); }, 100);
+    } else { win.style.display = 'none'; }
+};
+
+window.sendQuickMsg = function(texto) { const input = document.getElementById('chat-input'); if(input) { input.value = texto; window.sendChat(); } };
+window.sendChat = function() {
+    const input = document.getElementById('chat-input'); if(!input) return;
+    const msg = input.value.trim(); if (!msg) return;
+    window.addChatBubble(msg, 'user'); input.value = '';
+    setTimeout(() => { const resposta = window.processarLogicaDoBot(msg); window.addChatBubble(resposta, 'bot'); }, 600);
+};
+
+window.addChatBubble = function(text, sender) { const chatArea = document.getElementById('chat-body'); if(!chatArea) return; const div = document.createElement('div'); div.className = `chat-msg ${sender}`; div.innerHTML = text; chatArea.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight; };
+window.handleChatFollowUp = function(resposta, btnElement) {
+    if(btnElement && btnElement.parentElement) { btnElement.parentElement.innerHTML = `<span style="color: var(--text-muted); font-size: 11px;">Opção selecionada: ${resposta === 'sim' ? 'Sim' : 'Não'}</span>`; }
+    if (resposta === 'sim') { window.addChatBubble("Pode escrever aqui abaixo que estou aqui para te ajudar! 😊", 'bot'); } else {
+        const frasesMotivacionais = ["Ter uma inteligência artificial para ajudar é ótimo, mas lembre-se: conte sempre com o seu colega ao lado. O trabalho em equipe nos leva mais longe! 🚀", "Que você tenha um excelente turno! A tecnologia agiliza, mas é o calor humano da nossa equipe que faz a clínica brilhar. 💙", "Agradeço a consulta! Juntos somos mais fortes. O sucesso é a soma do esforço de toda a equipe. Um abraço virtual! 🤖"];
+        window.addChatBubble(frasesMotivacionais[Math.floor(Math.random() * frasesMotivacionais.length)], 'bot');
+    }
+};
+
+window.processarLogicaDoBot = function(mensagemUser) {
+    const texto = mensagemUser.toLowerCase().trim();
+    if (texto === 'oi' || texto === 'olá' || texto === 'ola' || texto.includes('bom dia') || texto.includes('boa tarde')) return "Olá! Sou a assistente virtual da clínica. Como posso ajudar? Busque por especialidades, médicos ou exames!";
+    let resultadosUnicos = {};
+    ['corpo-clinico', 'ultrassom', 'exames-imagem', 'consultas', 'convenios', 'ramais', 'pacotes', 'institutos', 'boletins'].forEach(colecao => {
+        const itens = window.todosOsDadosDoSistema[colecao] || window.dadosGlobaisAbas[colecao] || [];
+        itens.forEach(item => {
+            let textoItem = ""; Object.entries(item.data).forEach(([key, val]) => { textoItem += `${key} ${val} `; }); textoItem = textoItem.toLowerCase();
+            let matches = false;
+            if (texto === 'unimed' || texto === 'convênio' || texto === 'convenio') {
+                if ((item.data['Unimed'] && item.data['Unimed'].toString().toLowerCase() !== 'não' && item.data['Unimed'].toString().toLowerCase() !== 'nao') || (item.data['Convênios Aceitos'] && String(item.data['Convênios Aceitos']).toLowerCase().includes('unimed')) || (item.data['Convênios'] && String(item.data['Convênios']).toLowerCase().includes('unimed')) || colecao === 'convenios') matches = true;
+            } else if (textoItem.includes(texto)) { matches = true; }
+
+            if(colecao === 'boletins' && (String(item.data['Título do Informativo'] || '').toLowerCase().includes(texto) || String(item.data['Motivo'] || '').toLowerCase().includes(texto) || String(item.data['Para quais Setores?'] || '').toLowerCase().includes(texto))) matches = true;
+
+            if (matches) {
+                const config = configuracaoAbas[colecao];
+                let tituloItem = item.data[config.campos[0]] || 'Detalhes'; let detalhesStr = '';
+                if(colecao === 'boletins') tituloItem = `Boletim: ${item.data['Título do Informativo']}`;
+                
+                // 👇 A MÁGICA: O BOT PROCURA QUEM FAZ O EXAME 👇
+                let profissionais = item.data['Profissionais que realizam (Opcional)'];
+                if(profissionais && profissionais.trim() !== '') {
+                    detalhesStr += `<div style="background:#eefbf4; padding:8px; border-radius:8px; margin-bottom:8px; border-left:3px solid #38a169;"><b>👨‍⚕️ Quem realiza:</b> ${profissionais}</div>`;
+                }
+
+                let cont = 0;
+                Object.entries(item.data).forEach(([k, v]) => { if(v && k !== config.campos[0] && k !== 'corCard' && !String(k).includes('Link') && k !== 'Profissionais que realizam (Opcional)' && cont < 2) { detalhesStr += `<b>${k}:</b> ${v}<br>`; cont++; } });
+
+                let pastaAgrupadora = config.campoAgrupador ? item.data[config.campoAgrupador] : null; let btnAction = '';
+                
+                if (pastaAgrupadora && colecao !== 'colaboradores') { 
+                    btnAction = `<button onclick="window.irParaAba('${colecao}'); setTimeout(() => { window.abrirPastaGenerica('${colecao}', '${pastaAgrupadora.replace(/'/g, "\\'")}', '${item.id}') }, 200); window.toggleChat();" class="btn-hover color-5" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 8px; width: 100%; border-radius: 6px;"><i class="ri-folder-open-line"></i> Ver na Pasta</button>`; 
+                } 
+                else if (colecao === 'boletins') { 
+                    const setorBoletim = item.data['Para quais Setores?'] ? String(item.data['Para quais Setores?']).split(',')[0] : 'Geral'; 
+                    btnAction = `<button onclick="window.irParaAba('${colecao}'); setTimeout(() => { window.abrirPastaBoletim('${setorBoletim.replace(/'/g, "\\'")}', '${item.id}') }, 200); window.toggleChat();" class="btn-hover color-5" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 8px; width: 100%; border-radius: 6px;"><i class="ri-folder-open-line"></i> Abrir Boletim</button>`; 
+                } 
+                else { 
+                    btnAction = `<button onclick="window.irParaAba('${colecao}'); setTimeout(() => { window.destacarCard('${item.id}') }, 300); window.toggleChat();" class="btn-hover color-8" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 8px; width: 100%; border-radius: 6px;"><i class="ri-arrow-right-circle-line"></i> Localizar na Aba</button>`; 
+                }
+
+                resultadosUnicos[item.id] = `<div style="background: white; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);"><div style="font-weight: 700; color: var(--primary-color); margin-bottom: 5px; font-size: 14px; line-height: 1.2;">${tituloItem}</div><div style="font-size: 12px; color: var(--text-main); line-height: 1.4;">${detalhesStr}</div>${btnAction}</div>`;
+            }
+        });
+    });
+
+    let resultadosEncontrados = Object.values(resultadosUnicos);
+    if (resultadosEncontrados.length > 0) {
+        let respostaFormatada = `Encontrei isso no sistema para <b>"${mensagemUser}"</b>:<br><br>`;
+        const limite = resultadosEncontrados.slice(0, 3); respostaFormatada += limite.join('');
+        if (resultadosEncontrados.length > 3) { respostaFormatada += `<div style="text-align:center; font-size:11px; color:var(--text-muted); margin-top:5px;">+${resultadosEncontrados.length - 3} resultados ocultos.</div><br>`; }
+        const dicas = ["Dica: Se o paciente precisar de exames, pesquise o nome do exame que eu te digo qual médico faz! 🩺", "Você também pode pesquisar por Convênios para ver as regras de atendimento!", "Na dúvida? Pesquise pelo setor e eu te mostro os ramais."];
+        respostaFormatada += `<div style="background: #e2e8f0; padding: 10px; border-radius: 8px; font-size: 11px; margin-top: 10px; border-left: 3px solid var(--primary-color);">💡 <b>Dica:</b> ${dicas[Math.floor(Math.random() * dicas.length)]}</div>`;
+        return respostaFormatada;
+    }
+    return "Desculpe, não localizei nenhuma informação no sistema sobre isso. 🤔<br><br>Tente pesquisar por uma palavra-chave mais simples, como o nome de um exame ou especialidade!";
+};
+                // 👇 A MÁGICA DO PISCAR: Passamos o item.id (docIdDestino) para a função abrirPasta...
+                if (pastaAgrupadora && colecao !== 'colaboradores') { 
+                    btnAction = `<button onclick="window.irParaAba('${colecao}'); setTimeout(() => { window.abrirPastaGenerica('${colecao}', '${pastaAgrupadora}', '${item.id}') }, 200); window.toggleChat();" class="btn-hover color-5" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 8px; width: 100%; border-radius: 6px;"><i class="ri-folder-open-line"></i> Abrir Pasta</button>`; 
+                } 
+                else if (colecao === 'boletins') { 
+                    const setorBoletim = item.data['Para quais Setores?'] ? String(item.data['Para quais Setores?']).split(',')[0] : 'Geral'; 
+                    btnAction = `<button onclick="window.irParaAba('${colecao}'); setTimeout(() => { window.abrirPastaBoletim('${setorBoletim}', '${item.id}') }, 200); window.toggleChat();" class="btn-hover color-5" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 8px; width: 100%; border-radius: 6px;"><i class="ri-folder-open-line"></i> Abrir Boletim</button>`; 
+                } 
+                else { 
+                    btnAction = `<button onclick="window.irParaAba('${colecao}'); setTimeout(() => { window.destacarCard('${item.id}') }, 300); window.toggleChat();" class="btn-hover color-8" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 8px; width: 100%; border-radius: 6px;"><i class="ri-arrow-right-circle-line"></i> Ir para Aba</button>`; 
+                }
+
+                resultadosUnicos[item.id] = `<div style="background: white; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);"><div style="font-weight: 700; color: var(--primary-color); margin-bottom: 5px; font-size: 14px; line-height: 1.2;">${tituloItem}</div><div style="font-size: 12px; color: var(--text-main); line-height: 1.4;">${detalhesStr}</div>${btnAction}</div>`;
+            }
+        });
+    });
+
+    let resultadosEncontrados = Object.values(resultadosUnicos);
+    if (resultadosEncontrados.length > 0) {
+        let respostaFormatada = `Encontrei isso no sistema para <b>"${mensagemUser}"</b>:<br><br>`;
+        const limite = resultadosEncontrados.slice(0, 3); respostaFormatada += limite.join('');
+        if (resultadosEncontrados.length > 3) { respostaFormatada += `<div style="text-align:center; font-size:11px; color:var(--text-muted); margin-top:5px;">+${resultadosEncontrados.length - 3} resultados ocultos.</div><br>`; }
+        const dicas = ["Você sabia que pode pesquisar por nomes de médicos específicos ou especialidades (ex: Ortopedia)?", "Dica: Se o paciente precisar de exames, tente pesquisar por 'Ultrassom' ou 'Raio-X'.", "Você também pode pesquisar por Convênios para ver as regras de atendimento!", "Lembre-se: Na aba de 'Boletins Gerais' estão os avisos mais importantes da semana."];
+        respostaFormatada += `<div style="background: #e2e8f0; padding: 10px; border-radius: 8px; font-size: 11px; margin-top: 10px; border-left: 3px solid var(--primary-color);">💡 <b>Dica:</b> ${dicas[Math.floor(Math.random() * dicas.length)]}</div>`;
+        respostaFormatada += `<div style="margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 10px; text-align: center;"><p style="margin-bottom: 8px; font-weight: 600;">Precisa de algo mais?</p><div style="display: flex; gap: 10px; justify-content: center;"><button onclick="window.handleChatFollowUp('sim', this)" style="flex: 1; padding: 8px; border: none; background: #38a169; color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Sim</button><button onclick="window.handleChatFollowUp('nao', this)" style="flex: 1; padding: 8px; border: none; background: #e53e3e; color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Não</button></div></div>`;
+        return respostaFormatada;
+    }
+    return "Desculpe, não localizei nenhuma informação no sistema sobre isso. 🤔<br><br>Tente pesquisar por uma palavra-chave mais simples, como o nome de um exame ou especialidade!";
+};
+    // ==========================================
+// 6. LÓGICA DA JORNADA DE APRENDIZADO E CORREÇÃO ADMIN
 // ==========================================
-// MÓDULOS DE RESPOSTA (ALUNO) E CORREÇÃO (ADMIN)
-// ==========================================
+if (!document.getElementById('modal-resposta-aluno')) {
+    const m = document.createElement('div'); m.id = 'modal-resposta-aluno'; m.className = 'modal-overlay'; m.style.display = 'none'; m.style.zIndex = '10001';
+    m.innerHTML = `<div class="modal-box glass-effect" style="max-width: 600px; max-height: 90vh; display:flex; flex-direction:column;"><header class="modal-header"><h3 id="resposta-titulo">Responder Atividade</h3><button onclick="document.getElementById('modal-resposta-aluno').style.display='none'" class="btn-icon"><i class="ri-close-line"></i></button></header><div class="modal-body" style="overflow-y: auto; flex:1;" id="area-perguntas-dinamicas"></div><input type="hidden" id="resposta-docid"><button onclick="window.enviarRespostaTreinamento()" class="btn-hover color-11" style="width: 100%; margin-top: 15px; background: #3182ce; color:white; border:none;"><i class="ri-send-plane-fill"></i> Enviar Resposta para Correção</button></div>`;
+    document.body.appendChild(m);
+}
+
+if (!document.getElementById('modal-correcao-admin')) {
+    const c = document.createElement('div'); c.id = 'modal-correcao-admin'; c.className = 'modal-overlay'; c.style.display = 'none'; c.style.zIndex = '10005';
+    c.innerHTML = `<div class="modal-box glass-effect" style="max-width: 600px; max-height: 90vh; display:flex; flex-direction:column;"><header class="modal-header"><h3>Corrigir Resposta</h3><button onclick="document.getElementById('modal-correcao-admin').style.display='none'; document.getElementById('modal-leituras').style.display='flex';" class="btn-icon"><i class="ri-close-line"></i></button></header><div class="modal-body" style="overflow-y: auto; flex:1;"><div id="correcao-respostas-aluno" style="margin-bottom:15px; background:rgba(0,0,0,0.03); padding:10px; border-radius:8px; font-size:13px; white-space:pre-wrap;"></div><label style="font-size:12px; font-weight:600;">Nota Atribuída (XP):</label><input type="number" id="correcao-nota" class="form-input" style="margin-bottom:10px;"><label style="font-size:12px; font-weight:600;">Feedback / Observação do Gestor:</label><textarea id="correcao-feedback" class="form-input" style="height:80px; resize:vertical;"></textarea><input type="hidden" id="correcao-docid"><input type="hidden" id="correcao-nomealuno"></div><button onclick="window.salvarCorrecaoAdmin()" class="btn-hover color-11" style="width: 100%; margin-top: 15px; background: #38a169; color:white; border:none;"><i class="ri-check-line"></i> Salvar Correção</button></div>`;
+    document.body.appendChild(c);
+}
+
+if (!document.getElementById('modal-feedback-aluno')) {
+    const fb = document.createElement('div'); fb.id = 'modal-feedback-aluno'; fb.className = 'modal-overlay'; fb.style.display = 'none'; fb.style.zIndex = '10002';
+    fb.innerHTML = `<div class="modal-box glass-effect" style="max-width: 500px;"><header class="modal-header"><h3>Feedback do Supervisor</h3><button onclick="document.getElementById('modal-feedback-aluno').style.display='none'" class="btn-icon"><i class="ri-close-line"></i></button></header><div class="modal-body"><div style="text-align:center; margin-bottom:15px;"><div style="font-size:40px; color:#38a169;"><i class="ri-award-fill"></i></div><h2 style="color:var(--primary-color);">Nota: <span id="feedback-nota"></span></h2></div><div style="background: #f8fafc; padding: 15px; border-radius: 8px; font-size: 14px; color: var(--text-main); border-left: 4px solid var(--primary-color);"><span id="feedback-texto" style="white-space: pre-wrap;"></span></div></div></div>`;
+    document.body.appendChild(fb);
+}
+
 window.sairPortalAluno = function() { window.alunoLogado = null; document.getElementById('ensino-dashboard-area').style.display = 'none'; document.getElementById('ensino-login-area').style.display = 'block'; document.getElementById('login-aluno-pin').value = ''; };
 
 window.renderizarTrilhaAluno = function() {
@@ -1145,7 +1344,10 @@ window.addEventListener('DOMContentLoaded', () => {
             ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico', 'pacotes', 'remocoes', 'colaboradores'].forEach(colecao => {
                 const itens = window.todosOsDadosDoSistema[colecao] || window.dadosGlobaisAbas[colecao] || [];
                 itens.forEach(item => {
-                    if(Object.values(item.data).join(' ').toLowerCase().includes(texto)) { areaRes.innerHTML += window.gerarHTMLCard(colecao, item.id, item.data); encontrou = true; }
+                    if(Object.values(item.data).join(' ').toLowerCase().includes(texto)) { 
+                        areaRes.innerHTML += window.gerarHTMLCard(colecao, item.id, item.data); 
+                        encontrou = true; 
+                    }
                 });
             });
             if(!encontrou) areaRes.innerHTML += '<p style="color:var(--text-muted); font-size:14px; grid-column: 1/-1;">Nenhum resultado encontrado no sistema.</p>';
