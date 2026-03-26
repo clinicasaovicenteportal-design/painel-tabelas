@@ -663,55 +663,248 @@ window.carregarConfiguracoes = function() {
     });
 };
 
+const CHAT_SAUDACAO_HTML = `
+    <div class="chat-msg bot">
+        <strong>Olá! 👋</strong><br>
+        Sou a inteligência virtual da clínica.<br>
+        Posso te ajudar com:
+        <ul style="margin:8px 0 0 18px; padding:0;">
+            <li>especialidades</li>
+            <li>médicos</li>
+            <li>convênios</li>
+            <li>ultrassom, exames e consultas</li>
+            <li>ramais, boletins e contatos</li>
+        </ul>
+    </div>
+`;
+
+window.chatJaInicializado = false;
+
+window.normalizarTextoChat = function(txt = '') {
+    return String(txt)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+};
+
+window.extrairTokensChat = function(txt = '') {
+    return window.normalizarTextoChat(txt)
+        .replace(/[^\w\s-]/g, ' ')
+        .split(/\s+/)
+        .filter(t => t && t.length > 1);
+};
+
+window.abrirSaudacaoChat = function() {
+    const body = document.getElementById('chat-body');
+    if (!body) return;
+    body.innerHTML = CHAT_SAUDACAO_HTML;
+};
+
+window.renderizarSugestoesChat = function() {
+    const quickRepliesDiv = document.querySelector('.chat-quick-replies');
+    if (!quickRepliesDiv) return;
+
+    const termosPopulares = [
+        'Cardiologia',
+        'Ultrassom',
+        'Unimed',
+        'Raio-X',
+        'Pediatria',
+        'Ortopedia',
+        'Consulta',
+        'Boletim'
+    ];
+
+    termosPopulares.sort(() => 0.5 - Math.random());
+    const top4 = termosPopulares.slice(0, 4);
+
+    quickRepliesDiv.innerHTML = top4.map(termo =>
+        `<button onclick="window.sendQuickMsg('${termo.replace(/'/g, "\\'")}')">${termo}</button>`
+    ).join('');
+};
+
 window.toggleChat = function() {
-    const win = document.getElementById('chat-window'); const fab = document.getElementById('chat-fab'); if(!win || !fab) return;
-    if (win.style.display === 'none' || win.style.display === '') {
-        win.style.display = 'flex'; const tooltip = fab.querySelector('.chatbot-tooltip'); if(tooltip) tooltip.style.display = 'none';
-        const termosPopulares = ['Cardiologia', 'Ultrassom', 'Unimed', 'Raio-X', 'Pediatria', 'Ortopedia', 'Consulta', 'Boletim'];
-        termosPopulares.sort(() => 0.5 - Math.random());
-        const top3 = termosPopulares.slice(0, 3);
-        const quickRepliesDiv = document.querySelector('.chat-quick-replies');
-        if(quickRepliesDiv) { quickRepliesDiv.innerHTML = ''; top3.forEach(termo => { quickRepliesDiv.innerHTML += `<button onclick="window.sendQuickMsg('${termo}')">${termo}</button>`; }); }
-        setTimeout(() => { document.getElementById('chat-input').focus(); }, 100);
-    } else { win.style.display = 'none'; }
-};
+    const win = document.getElementById('chat-window');
+    const fab = document.getElementById('chat-fab');
+    const input = document.getElementById('chat-input');
+    if (!win || !fab) return;
 
-window.sendQuickMsg = function(texto) { const input = document.getElementById('chat-input'); if(input) { input.value = texto; window.sendChat(); } };
-window.sendChat = function() {
-    const input = document.getElementById('chat-input'); if(!input) return;
-    const msg = input.value.trim(); if (!msg) return;
-    window.addChatBubble(msg, 'user'); input.value = '';
-    setTimeout(() => { const resposta = window.processarLogicaDoBot(msg); window.addChatBubble(resposta, 'bot'); }, 600);
-};
+    const abrindo = (win.style.display === 'none' || win.style.display === '');
+    if (abrindo) {
+        win.style.display = 'flex';
 
-window.addChatBubble = function(text, sender) { const chatArea = document.getElementById('chat-body'); if(!chatArea) return; const div = document.createElement('div'); div.className = `chat-msg ${sender}`; div.innerHTML = text; chatArea.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight; };
-window.handleChatFollowUp = function(resposta, btnElement) {
-    if(btnElement && btnElement.parentElement) { btnElement.parentElement.innerHTML = `<span style="color: var(--text-muted); font-size: 11px;">Opção selecionada: ${resposta === 'sim' ? 'Sim' : 'Não'}</span>`; }
-    if (resposta === 'sim') { window.addChatBubble("Pode escrever aqui abaixo que estou aqui para te ajudar! 😊", 'bot'); } else {
-        const frasesMotivacionais = ["Ter uma inteligência artificial para ajudar é ótimo, mas lembre-se: conte sempre com o seu colega ao lado. O trabalho em equipe nos leva mais longe! 🚀", "Que você tenha um excelente turno! A tecnologia agiliza, mas é o calor humano da nossa equipe que faz a clínica brilhar. 💙", "Agradeço a consulta! Juntos somos mais fortes. O sucesso é a soma do esforço de toda a equipe. Um abraço virtual! 🤖"];
-        window.addChatBubble(frasesMotivacionais[Math.floor(Math.random() * frasesMotivacionais.length)], 'bot');
+        const tooltip = fab.querySelector('.chatbot-tooltip');
+        if (tooltip) tooltip.style.display = 'none';
+
+        if (!window.chatJaInicializado) {
+            window.abrirSaudacaoChat();
+            window.chatJaInicializado = true;
+        } else {
+            const body = document.getElementById('chat-body');
+            if (body && body.innerHTML.trim() === '') {
+                window.abrirSaudacaoChat();
+            }
+        }
+
+        window.renderizarSugestoesChat();
+        setTimeout(() => input?.focus(), 100);
+    } else {
+        win.style.display = 'none';
     }
 };
 
-window.processarLogicaDoBot = function(mensagemUser) {
-    const texto = mensagemUser.toLowerCase().trim();
-    if (texto === 'oi' || texto === 'olá' || texto === 'ola' || texto.includes('bom dia') || texto.includes('boa tarde')) return "Olá! Sou a assistente virtual da clínica. Como posso ajudar? Busque por especialidades, médicos ou exames!";
-    let resultadosUnicos = {};
-    ['corpo-clinico', 'ultrassom', 'exames-imagem', 'consultas', 'convenios', 'ramais', 'pacotes', 'institutos', 'boletins'].forEach(colecao => {
-        const itens = window.todosOsDadosDoSistema[colecao] || window.dadosGlobaisAbas[colecao] || [];
+window.sendQuickMsg = function(texto) {
+    const input = document.getElementById('chat-input');
+    if (!input) return;
+    input.value = texto;
+    window.sendChat();
+};
+
+window.buscarNoSistemaChat = function(mensagemUser) {
+    const consultaOriginal = String(mensagemUser || '').trim();
+    const consultaNorm = window.normalizarTextoChat(consultaOriginal);
+    const tokens = window.extrairTokensChat(consultaOriginal);
+
+    if (!consultaNorm) {
+        return `
+            <div class="chat-msg bot">
+                Me diga o que deseja pesquisar. Exemplo:
+                <br><br>
+                <b>“cardiologia”</b>, <b>“ultrassom abdome”</b>, <b>“Unimed”</b>, <b>“ramal financeiro”</b>.
+            </div>
+        `;
+    }
+
+    const resultados = [];
+
+    Object.keys(window.todosOsDadosDoSistema || {}).forEach(colecao => {
+        const itens = window.todosOsDadosDoSistema[colecao] || [];
+
         itens.forEach(item => {
-            let textoItem = ""; Object.entries(item.data).forEach(([key, val]) => { textoItem += `${key} ${val} `; }); textoItem = textoItem.toLowerCase();
-            let matches = false;
-            if (texto === 'unimed' || texto === 'convênio' || texto === 'convenio') {
-                if ((item.data['Unimed'] && item.data['Unimed'].toString().toLowerCase() !== 'não' && item.data['Unimed'].toString().toLowerCase() !== 'nao') || (item.data['Convênios Aceitos'] && String(item.data['Convênios Aceitos']).toLowerCase().includes('unimed')) || (item.data['Convênios'] && String(item.data['Convênios']).toLowerCase().includes('unimed')) || colecao === 'convenios') matches = true;
-            } else if (textoItem.includes(texto)) { matches = true; }
+            const data = item.data || {};
+            const valores = Object.values(data)
+                .filter(v => typeof v === 'string' || typeof v === 'number')
+                .map(v => String(v));
 
-            if(colecao === 'boletins' && (String(item.data['Título do Informativo'] || '').toLowerCase().includes(texto) || String(item.data['Motivo'] || '').toLowerCase().includes(texto) || String(item.data['Para quais Setores?'] || '').toLowerCase().includes(texto))) matches = true;
+            const textoCompleto = valores.join(' | ');
+            const textoNorm = window.normalizarTextoChat(textoCompleto);
 
-            if (matches) {
-                const config = configuracaoAbas[colecao];
-                let tituloItem = item.data[config.campos[0]] || 'Detalhes'; let detalhesStr = '';
-                if(colecao === 'boletins') tituloItem = `Boletim: ${item.data['Título do Informativo']}`;
+            let score = 0;
+
+            if (textoNorm.includes(consultaNorm)) score += 12;
+
+            tokens.forEach(token => {
+                if (textoNorm.includes(token)) score += 3;
+            });
+
+            const primeiroCampo = valores[0] || 'Registro';
+            const tituloItem = primeiroCampo;
+            const detalhesStr = valores.slice(1, 5).join(' • ');
+
+            if (score > 0) {
+                let btnAction = `
+                    <button onclick="window.irParaAba('${colecao}'); setTimeout(() => { window.destacarCard('${item.id}') }, 300); window.toggleChat();"
+                        class="btn-hover color-8"
+                        style="height:30px;font-size:11px;padding:0 15px;margin-top:8px;width:100%;border-radius:8px;">
+                        <i class="ri-arrow-right-circle-line"></i> Localizar na Aba
+                    </button>
+                `;
+
+                if (colecao === 'boletins') {
+                    const setorBoletim = item.data['Para quais Setores?']
+                        ? String(item.data['Para quais Setores?']).split(',')[0]
+                        : 'Geral';
+
+                    btnAction = `
+                        <button onclick="window.irParaAba('boletins'); setTimeout(() => { window.abrirPastaBoletim('${setorBoletim.replace(/'/g, "\\'")}', '${item.id}') }, 200); window.toggleChat();"
+                            class="btn-hover color-5"
+                            style="height:30px;font-size:11px;padding:0 15px;margin-top:8px;width:100%;border-radius:8px;">
+                            <i class="ri-folder-open-line"></i> Abrir Boletim
+                        </button>
+                    `;
+                }
+
+                resultados.push({
+                    id: item.id,
+                    score,
+                    html: `
+                        <div style="background:#fff;border:1px solid var(--border-color);padding:12px;border-radius:12px;margin-bottom:10px;box-shadow:0 4px 8px rgba(0,0,0,0.03);">
+                            <div style="font-weight:700;color:var(--primary-color);margin-bottom:5px;font-size:14px;line-height:1.2;">
+                                ${tituloItem}
+                            </div>
+                            <div style="font-size:12px;color:var(--text-main);line-height:1.45;">
+                                ${detalhesStr || 'Sem detalhes adicionais.'}
+                            </div>
+                            ${btnAction}
+                        </div>
+                    `
+                });
+            }
+        });
+    });
+
+    const unicos = [];
+    const vistos = new Set();
+
+    resultados
+        .sort((a, b) => b.score - a.score)
+        .forEach(r => {
+            if (!vistos.has(r.id)) {
+                vistos.add(r.id);
+                unicos.push(r);
+            }
+        });
+
+    if (unicos.length > 0) {
+        const top10 = unicos.slice(0, 10);
+
+        const dicas = [
+            "Se o paciente precisar de exame, pesquise o nome exato do exame.",
+            "Você também pode pesquisar por convênio, especialidade, setor ou médico.",
+            "Para algo muito específico, tente 2 a 4 palavras-chave."
+        ];
+
+        return `
+            Encontrei isso no sistema para <b>"${consultaOriginal}"</b>:<br><br>
+            ${top10.map(r => r.html).join('')}
+            ${unicos.length > 10 ? `<div style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:6px;">+${unicos.length - 10} resultados adicionais encontrados.</div>` : ''}
+            <div style="background:#eef2f7;padding:10px;border-radius:10px;font-size:11px;margin-top:10px;border-left:3px solid var(--primary-color);">
+                💡 <b>Dica:</b> ${dicas[Math.floor(Math.random() * dicas.length)]}
+            </div>
+        `;
+    }
+
+    return `
+        Desculpe, não localizei tudo sobre isso no sistema. 🤔<br><br>
+        Tente pesquisar com um termo mais objetivo, como:
+        <br>• nome do exame
+        <br>• nome da especialidade
+        <br>• nome do convênio
+        <br>• nome do médico
+        <br><br>
+        Exemplo: <b>“ultrassom abdome”</b> ou <b>“cardiologia unimed”</b>.
+    `;
+};
+
+window.sendChat = function() {
+    const input = document.getElementById('chat-input');
+    const body = document.getElementById('chat-body');
+    if (!input || !body) return;
+
+    const mensagemUser = input.value.trim();
+    if (!mensagemUser) return;
+
+    body.innerHTML += `<div class="chat-msg user">${mensagemUser}</div>`;
+    input.value = '';
+
+    const resposta = window.buscarNoSistemaChat(mensagemUser);
+
+    setTimeout(() => {
+        body.innerHTML += `<div class="chat-msg bot">${resposta}</div>`;
+        body.scrollTop = body.scrollHeight;
+    }, 250);
+};
                 
                 // 👇 A MÁGICA: O BOT PROCURA QUEM FAZ O EXAME 👇
                 let profissionais = item.data['Profissionais que realizam (Opcional)'];
