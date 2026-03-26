@@ -55,16 +55,7 @@ const app = initializeApp(firebaseConfig);
 const db = initializeFirestore(app, { localCache: persistentLocalCache() });
 const auth = getAuth(app);
 
-window.db = db;
-window.updateDoc = updateDoc;
-window.doc = doc;
-window.arrayUnion = arrayUnion;
-window.arrayRemove = arrayRemove;
-window.addDoc = addDoc;
-window.collection = collection;
-window.deleteDoc = deleteDoc;
-window.onSnapshot = onSnapshot;
-window.setDoc = setDoc;
+window.db = db; window.updateDoc = updateDoc; window.doc = doc; window.arrayUnion = arrayUnion; window.arrayRemove = arrayRemove; window.addDoc = addDoc; window.collection = collection; window.deleteDoc = deleteDoc; window.onSnapshot = onSnapshot;
 
 let isAdmin = false; let abaAtual = 'home'; const EMAIL_GESTAO = "gestao@clinica.com";
 
@@ -72,11 +63,56 @@ let listaColaboradoresGlobal = []; let locaisGlobais = []; let setoresGlobais = 
 
 window.todosBoletinsData = []; window.todosPrivadosData = []; window.todosTreinamentosData = []; 
 window.todosPesquisasRH = []; window.todosRespostasRH = []; 
+window.todosPerfilAvaliacoes = []; window.todosRespostasPerfil = [];
+window.rhFiltroAtual = { setor: '', colaborador: '' };
+window.rhPerfilRadarChart = null;
 
 window.dadosGlobaisAbas = {}; window.todosOsDadosDoSistema = {}; window.dadosBoletins = {}; 
 window.pastaBoletimAtual = null; window.pastaPrivadoAtual = null; window.alunoLogado = null; 
 
 window.corStatusPendente = "#e53e3e"; window.corStatusConcluido = "#38a169";
+
+window.safeParseJSON = function(raw, fallback = null) { try { return JSON.parse(raw); } catch(e) { return fallback; } };
+window.escapeHTML = function(value = '') { return String(value).replace(/[&<>"']/g, chr => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[chr])); };
+window.extrairNomeRegistro = function(registro = '') { return String(registro).split(' (')[0].trim(); };
+window.getSetoresRHDisponiveis = function() {
+    const setFromConfig = Array.isArray(setoresGlobais) ? setoresGlobais.filter(Boolean) : [];
+    const setFromPeople = listaColaboradoresGlobal.map(c => c.setor).filter(Boolean);
+    return Array.from(new Set([...setFromConfig, ...setFromPeople])).sort((a,b) => a.localeCompare(b));
+};
+window.getColaboradoresFiltradosPorSetor = function(setor = '') {
+    return listaColaboradoresGlobal
+        .filter(c => !setor || c.setor === setor)
+        .sort((a,b) => a.nome.localeCompare(b.nome));
+};
+window.isTreinamentoAvaliativo = function(itemData = {}) {
+    const tipo = String(itemData['Tipo (Vídeo, PDF, Tarefa, Prova)'] || '');
+    return tipo.includes('Tarefa') || tipo.includes('Prova');
+};
+window.obterPublicoPesquisaRH = function(itemData, nomeColaborador = '', setorColaborador = '') {
+    const alvoTipo = itemData.alvoTipo || (String(itemData.alvo || '').startsWith('Setor: ') ? 'Setor' : 'Geral');
+    const alvoValor = itemData.alvoValor || String(itemData.alvo || '').replace('Setor: ', '').trim();
+    if (nomeColaborador) {
+        if (alvoTipo === 'Colaborador') return alvoValor === nomeColaborador;
+        if (alvoTipo === 'Setor') return alvoValor === setorColaborador;
+        return true;
+    }
+    if (alvoTipo === 'Colaborador') return [alvoValor].filter(Boolean);
+    if (alvoTipo === 'Setor') return listaColaboradoresGlobal.filter(c => c.setor === alvoValor).map(c => c.nome);
+    return listaColaboradoresGlobal.map(c => c.nome);
+};
+window.obterAvaliacoesPerfilDisponiveis = function(nomeColaborador = '', setorColaborador = '') {
+    return window.todosPerfilAvaliacoes.filter(item => {
+        const tipo = item.data.alvoTipo || 'Geral';
+        const valor = item.data.alvoValor || '';
+        if (nomeColaborador) {
+            if (tipo === 'Colaborador') return valor === nomeColaborador;
+            if (tipo === 'Setor') return valor === setorColaborador;
+            return true;
+        }
+        return true;
+    });
+};
 
 let chartBoletinsInst = null; let chartPrivadosInst = null; let chartHomeInst = null; let chartPrivadosGeralInst = null;   
 
@@ -736,105 +772,77 @@ if (!document.getElementById('modal-feedback-aluno')) {
     document.body.appendChild(fb);
 }
 
-if (!document.getElementById('modal-leituras')) {
-    const l = document.createElement('div');
-    l.id = 'modal-leituras';
-    l.className = 'modal-overlay';
-    l.style.display = 'none';
-    l.style.zIndex = '10004';
-    l.innerHTML = `<div class="modal-box glass-effect" style="max-width: 760px; max-height: 90vh; display:flex; flex-direction:column;"><header class="modal-header"><h3 id="modal-leituras-titulo">Detalhes</h3><button onclick="document.getElementById('modal-leituras').style.display='none'" class="btn-icon"><i class="ri-close-line"></i></button></header><div class="modal-body" id="modal-leituras-conteudo" style="overflow-y:auto; flex:1;"></div></div>`;
-    document.body.appendChild(l);
-}
 
 window.abrirListaLeituras = function(docId, colecao) {
     const modal = document.getElementById('modal-leituras');
-    const titulo = document.getElementById('modal-leituras-titulo');
-    const conteudo = document.getElementById('modal-leituras-conteudo');
-    if (!modal || !titulo || !conteudo) return;
+    const titulo = document.getElementById('modal-leitura-titulo');
+    const areaOk = document.getElementById('lista-lidos-content');
+    const areaPend = document.getElementById('lista-falta-content');
+    if(!modal || !titulo || !areaOk || !areaPend) return;
 
-    const esc = (v='') => window.escapeHTML ? window.escapeHTML(v) : String(v);
-    const badge = (txt, bg, color) => `<span style="display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; background:${bg}; color:${color}; font-size:11px; font-weight:700;">${txt}</span>`;
+    let data = null;
+    if(colecao === 'treinamentos') data = window.todosTreinamentosData.find(item => item.id === docId)?.data || null;
+    else if(colecao === 'boletins') data = window.todosBoletinsData.find(item => item.id === docId)?.data || null;
+    else if(colecao === 'boletins-privados') data = window.todosPrivadosData.find(item => item.id === docId)?.data || null;
+    if(!data) return alert('Não localizei este registro atualizado.');
 
-    let html = '';
+    const renderEmpty = (texto) => `<div style="padding:12px; border:1px dashed var(--border-color); border-radius:12px; color:var(--text-muted); background:#f8fafc;">${texto}</div>`;
+    const cardBase = (conteudo, cor='#cbd5e1') => `<div style="padding:12px; border-radius:12px; background:#fff; border-left:4px solid ${cor}; margin-bottom:10px; box-shadow:var(--shadow-soft);">${conteudo}</div>`;
 
-    if (colecao === 'treinamentos') {
-        const item = window.todosTreinamentosData.find(t => t.id === docId);
-        if (!item) return alert('Treinamento não encontrado.');
+    areaOk.innerHTML = '';
+    areaPend.innerHTML = '';
 
-        const data = item.data || {};
-        const respostas = Array.isArray(data.respostas_alunos) ? data.respostas_alunos : [];
-        const leituras = Array.isArray(data.leituras) ? data.leituras : [];
+    if(colecao === 'treinamentos') {
+        titulo.textContent = `Respostas da atividade: ${data['Título da Atividade'] || 'Treinamento'}`;
+        const publico = window.obterPublicoAlvo(data['Para quais Setores?'], data['Colaborador Específico (Opcional)']);
+        const respostas = (data.respostas_alunos || []).map(item => window.safeParseJSON(item)).filter(Boolean);
+        const respondidos = new Set();
 
-        titulo.textContent = `Respostas / Leituras - ${data['Título da Atividade'] || 'Treinamento'}`;
+        respostas.forEach(resp => {
+            respondidos.add(resp.nome);
+            const nota = (resp.nota !== '' && resp.nota !== undefined && resp.nota !== null) ? `<span style="background:#dcfce7; color:#166534; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700;">Nota: ${resp.nota}</span>` : `<span style="background:#fef3c7; color:#92400e; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700;">Aguardando correção</span>`;
+            const nomeEscapado = String(resp.nome || '').replace(/'/g, "\\'");
+            const btnCorrigir = isAdmin ? `<button onclick="window.abrirCorrecaoAdmin('${docId}', '${nomeEscapado}')" class="btn-hover color-8" style="height:32px; font-size:11px; padding:0 14px; margin-top:10px;"><i class="ri-edit-2-line"></i> ${resp.nota !== '' ? 'Revisar correção' : 'Corrigir resposta'}</button>` : '';
+            areaOk.innerHTML += cardBase(`
+                <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;">
+                    <div>
+                        <strong style="display:block; color:var(--text-main);">${window.escapeHTML(resp.nome || 'Colaborador')}</strong>
+                        <span style="font-size:12px; color:var(--text-muted);">Enviado em: ${window.escapeHTML(resp.data || '-')}</span>
+                    </div>
+                    ${nota}
+                </div>
+                <div style="margin-top:10px; font-size:12px; color:var(--text-muted);">${(resp.respostas || []).length} resposta(s) enviada(s).</div>
+                ${btnCorrigir}
+            `, '#38a169');
+        });
 
-        if (respostas.length === 0 && leituras.length === 0) {
-            html = `<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:14px; color:var(--text-muted);">Nenhum registro encontrado ainda.</div>`;
-        } else {
-            if (respostas.length > 0) {
-                html += `<div style="font-size:13px; font-weight:800; color:var(--primary-color); margin-bottom:12px;"><i class="ri-file-list-3-line"></i> Respostas enviadas</div>`;
-                respostas.forEach(respStr => {
-                    try {
-                        const r = JSON.parse(respStr);
-                        const corrigido = r.nota !== undefined && r.nota !== null && String(r.nota) !== '';
-                        const nomeEsc = String(r.nome || '').replace(/'/g, "\'");
-                        html += `<div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:12px; box-shadow:0 4px 10px rgba(0,0,0,0.03);">
-                            <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; margin-bottom:8px; flex-wrap:wrap;">
-                                <div>
-                                    <div style="font-size:15px; font-weight:800; color:#1f2937;">${esc(r.nome || 'Aluno')}</div>
-                                    <div style="font-size:12px; color:#64748b;">${esc(r.data || '')}</div>
-                                </div>
-                                <div>${corrigido ? badge(`Corrigido • Nota ${esc(r.nota)}`, '#ecfdf3', '#166534') : badge('Aguardando correção', '#fff7ed', '#9a3412')}</div>
-                            </div>
-                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px; font-size:12px; color:#475569; line-height:1.45; white-space:pre-wrap; margin-bottom:10px;">
-                                ${(r.respostas || []).map((item, idx) => `<div style="margin-bottom:8px;"><b>${idx+1}. ${esc(item.pergunta || '')}</b><br><span style="color:#2563eb;">${esc(item.resposta || '')}</span></div>`).join('') || 'Sem respostas preenchidas.'}
-                            </div>
-                            <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
-                                <button onclick="window.abrirCorrecaoAdmin('${docId}', '${nomeEsc}')" class="btn-hover color-11" style="height:36px; padding:0 14px; border-radius:10px; font-size:12px; background:#3182ce; color:#fff; border:none;"><i class="ri-pencil-ruler-2-line"></i> ${corrigido ? 'Revisar Correção' : 'Corrigir Resposta'}</button>
-                            </div>
-                        </div>`;
-                    } catch (e) {}
-                });
-            }
+        if(!respostas.length) areaOk.innerHTML = renderEmpty('Nenhuma resposta enviada ainda.');
 
-            if (leituras.length > 0) {
-                html += `<div style="font-size:13px; font-weight:800; color:var(--primary-color); margin:${respostas.length > 0 ? '18px' : '0'} 0 12px;"><i class="ri-check-double-line"></i> Conclusões registradas</div>`;
-                html += `<div style="display:grid; gap:10px;">` + leituras.map(l => `<div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; font-size:13px; color:#334155;">${esc(l)}</div>`).join('') + `</div>`;
-            }
-        }
-    } else if (colecao === 'boletins' || colecao === 'boletins-privados') {
-        const base = colecao === 'boletins' ? window.todosBoletinsData : window.todosPrivadosData;
-        const item = base.find(b => b.id === docId);
-        if (!item) return alert('Registro não encontrado.');
-
-        const data = item.data || {};
-        const leituras = Array.isArray(data.leituras) ? data.leituras : [];
-        titulo.textContent = colecao === 'boletins' ? `Detalhes do Boletim - ${data['Título do Informativo'] || 'Informativo'}` : `Detalhes do Informativo - ${data['Título do Documento'] || 'Privado'}`;
-
-        let publico = [];
-        if (colecao === 'boletins') {
-            publico = window.obterPublicoAlvo(data['Para quais Setores?'] || 'Geral') || [];
-        } else {
-            publico = [data['Para qual Colaborador?']].filter(Boolean);
-        }
-
-        const lidosNomes = leituras.map(txt => String(txt).split(' (')[0]);
-        const pendentes = publico.filter(nome => !lidosNomes.includes(nome));
-
-        html += `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px; margin-bottom:16px;">
-            <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:14px;"><div style="font-size:12px; color:#64748b;">Público alvo</div><div style="font-size:28px; font-weight:800; color:#1f2937;">${publico.length}</div></div>
-            <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:14px;"><div style="font-size:12px; color:#64748b;">Lidos</div><div style="font-size:28px; font-weight:800; color:#166534;">${lidosNomes.length}</div></div>
-            <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:14px;"><div style="font-size:12px; color:#64748b;">Pendentes</div><div style="font-size:28px; font-weight:800; color:#b91c1c;">${pendentes.length}</div></div>
-        </div>`;
-
-        html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">`;
-        html += `<div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:14px;"><div style="font-size:13px; font-weight:800; color:var(--primary-color); margin-bottom:10px;"><i class="ri-check-line"></i> Quem já leu</div>${leituras.length ? leituras.map(l => `<div style="padding:9px 10px; border-radius:10px; background:#f8fafc; margin-bottom:8px; font-size:12px; color:#334155;">${esc(l)}</div>`).join('') : `<div style="font-size:12px; color:var(--text-muted);">Nenhuma leitura registrada.</div>`}</div>`;
-        html += `<div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:14px;"><div style="font-size:13px; font-weight:800; color:var(--primary-color); margin-bottom:10px;"><i class="ri-time-line"></i> Quem falta ler</div>${pendentes.length ? pendentes.map(n => `<div style="padding:9px 10px; border-radius:10px; background:#fff5f5; margin-bottom:8px; font-size:12px; color:#991b1b;">${esc(n)}</div>`).join('') : `<div style="font-size:12px; color:#166534;">Todos concluíram.</div>`}</div>`;
-        html += `</div>`;
+        const faltantes = publico.filter(nome => !respondidos.has(nome));
+        areaPend.innerHTML = faltantes.length
+            ? faltantes.map(nome => cardBase(`<strong style="display:block; color:var(--text-main);">${window.escapeHTML(nome)}</strong><span style="font-size:12px; color:var(--text-muted);">Ainda não enviou a atividade.</span>`, '#e53e3e')).join('')
+            : renderEmpty('Todos os colaboradores do público-alvo já responderam.');
     } else {
-        html = `<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:16px; border-radius:14px; color:var(--text-muted);">Sem visualização detalhada para este item.</div>`;
+        const publico = colecao === 'boletins-privados'
+            ? [String(data['Para qual Colaborador?'] || '').trim()].filter(Boolean)
+            : window.obterPublicoAlvo(data['Para quais Setores?']);
+        titulo.textContent = `${colecao === 'boletins-privados' ? 'Leitura do informativo direto' : 'Leitura do boletim'}: ${data['Título do Documento'] || data['Título do Informativo'] || 'Documento'}`;
+        const leituras = (data.leituras || []).filter(Boolean);
+        const lidosMap = new Map();
+        leituras.forEach(registro => lidosMap.set(window.extrairNomeRegistro(registro), registro));
+
+        const lidos = publico.filter(nome => lidosMap.has(nome));
+        const faltantes = publico.filter(nome => !lidosMap.has(nome));
+
+        areaOk.innerHTML = lidos.length
+            ? lidos.map(nome => cardBase(`<strong style="display:block; color:var(--text-main);">${window.escapeHTML(nome)}</strong><span style="font-size:12px; color:var(--text-muted);">${window.escapeHTML(lidosMap.get(nome) || '')}</span>`, '#38a169')).join('')
+            : renderEmpty('Nenhuma leitura registrada até o momento.');
+
+        areaPend.innerHTML = faltantes.length
+            ? faltantes.map(nome => cardBase(`<strong style="display:block; color:var(--text-main);">${window.escapeHTML(nome)}</strong><span style="font-size:12px; color:var(--text-muted);">Leitura pendente.</span>`, '#e53e3e')).join('')
+            : renderEmpty('Nenhuma pendência restante.');
     }
 
-    conteudo.innerHTML = html;
     modal.style.display = 'flex';
 };
 
@@ -1034,86 +1042,237 @@ window.escutarRH = function() {
     window.onSnapshot(window.collection(window.db, 'rh-respostas-pesquisa'), (snap) => {
         window.todosRespostasRH = []; snap.forEach(d => window.todosRespostasRH.push({id: d.id, data: d.data()}));
         if(abaAtual === 'rh') window.renderizarDashboardRH();
+        if(window.alunoLogado) window.renderizarPesquisasAluno();
+    });
+    window.onSnapshot(window.collection(window.db, 'rh-perfil-avaliacoes'), (snap) => {
+        window.todosPerfilAvaliacoes = []; snap.forEach(d => window.todosPerfilAvaliacoes.push({id: d.id, data: d.data()}));
+        if(abaAtual === 'rh') window.renderizarDashboardRH();
+        if(window.alunoLogado) window.renderizarPesquisasAluno();
+    });
+    window.onSnapshot(window.collection(window.db, 'rh-perfil-respostas'), (snap) => {
+        window.todosRespostasPerfil = []; snap.forEach(d => window.todosRespostasPerfil.push({id: d.id, data: d.data()}));
+        if(abaAtual === 'rh') window.renderizarDashboardRH();
     });
 };
 
-window.renderizarDashboardRH = function() {
-    const totColab = listaColaboradoresGlobal.length;
-    document.getElementById('rh-tot-colab').textContent = totColab;
-    
-    let totalXP = 0; let topPerformers = 0;
+window.atualizarOpcoesFiltrosRH = function() {
+    const setorSel = document.getElementById('rh-filter-setor');
+    const colSel = document.getElementById('rh-filter-colaborador');
+    if(setorSel) {
+        const atual = window.rhFiltroAtual.setor || '';
+        const setores = window.getSetoresRHDisponiveis();
+        setorSel.innerHTML = `<option value="">Visão Geral</option>` + setores.map(setor => `<option value="${setor}">${setor}</option>`).join('');
+        setorSel.value = atual;
+    }
+    if(colSel) {
+        const colaboradores = window.getColaboradoresFiltradosPorSetor(window.rhFiltroAtual.setor || '');
+        const atual = window.rhFiltroAtual.colaborador || '';
+        colSel.innerHTML = `<option value="">Todos os colaboradores</option>` + colaboradores.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+        if(atual && !colaboradores.some(c => c.nome === atual)) window.rhFiltroAtual.colaborador = '';
+        colSel.value = window.rhFiltroAtual.colaborador || '';
+    }
+};
+
+window.aplicarFiltrosRH = function() {
+    const setorSel = document.getElementById('rh-filter-setor');
+    const colSel = document.getElementById('rh-filter-colaborador');
+    window.rhFiltroAtual.setor = setorSel ? setorSel.value : '';
+    window.rhFiltroAtual.colaborador = colSel ? colSel.value : '';
+    window.atualizarOpcoesFiltrosRH();
+    window.renderizarDashboardRH();
+};
+
+window.limparFiltrosRH = function() {
+    window.rhFiltroAtual = { setor: '', colaborador: '' };
+    window.atualizarOpcoesFiltrosRH();
+    window.renderizarDashboardRH();
+};
+
+window.selecionarColaboradorRH = function(nome) {
+    window.rhFiltroAtual.colaborador = nome || '';
+    const colSel = document.getElementById('rh-filter-colaborador');
+    if(colSel) colSel.value = window.rhFiltroAtual.colaborador;
+    window.renderizarDashboardRH();
+};
+
+window.calcularEstatisticasRH = function() {
+    const filtroSetor = window.rhFiltroAtual.setor || '';
+    const filtroColaborador = window.rhFiltroAtual.colaborador || '';
+    const colaboradoresBase = listaColaboradoresGlobal.filter(c => (!filtroSetor || c.setor === filtroSetor) && (!filtroColaborador || c.nome === filtroColaborador));
     const colabStats = {};
-    listaColaboradoresGlobal.forEach(c => { colabStats[c.nome] = { xp: 0, treinamentos: 0, setor: c.setor }; });
+    colaboradoresBase.forEach(c => { colabStats[c.nome] = { xp: 0, treinamentos: 0, setor: c.setor, mediaNota: 0, respostas: 0 }; });
 
     window.todosTreinamentosData.forEach(t => {
-        const pts = parseInt(t.data['Pontos Valendo']) || 0;
-        (t.data.leituras || []).forEach(l => {
-            const n = l.split(' (')[0]; if(colabStats[n]) { colabStats[n].xp += pts; totalXP += pts; colabStats[n].treinamentos++; }
-        });
-        (t.data.respostas_alunos || []).forEach(r => {
-            try { let o = JSON.parse(r); if(colabStats[o.nome] && o.nota !== "") { let nota = parseInt(o.nota)||0; colabStats[o.nome].xp += nota; totalXP += nota; colabStats[o.nome].treinamentos++; } } catch(e){}
-        });
+        const data = t.data || {};
+        const avaliativo = window.isTreinamentoAvaliativo(data);
+        const pontosBase = parseInt(data['Pontos Valendo']) || 0;
+        if(avaliativo) {
+            (data.respostas_alunos || []).forEach(raw => {
+                const resp = window.safeParseJSON(raw);
+                if(!resp || !colabStats[resp.nome]) return;
+                const nota = Number(resp.nota);
+                if(String(resp.nota).trim() === '' || !Number.isFinite(nota)) return;
+                colabStats[resp.nome].xp += nota;
+                colabStats[resp.nome].treinamentos += 1;
+                colabStats[resp.nome].respostas += 1;
+            });
+        } else {
+            (data.leituras || []).forEach(raw => {
+                const nome = window.extrairNomeRegistro(raw);
+                if(!colabStats[nome]) return;
+                colabStats[nome].xp += pontosBase;
+                colabStats[nome].treinamentos += 1;
+            });
+        }
     });
 
-    const avgXp = totColab > 0 ? Math.round(totalXP / totColab) : 0;
-    document.getElementById('rh-avg-xp').textContent = avgXp;
+    const nomes = Object.keys(colabStats);
+    const totalXP = nomes.reduce((acc, nome) => acc + (colabStats[nome].xp || 0), 0);
+    const mediaGeral = nomes.length ? Math.round(totalXP / nomes.length) : 0;
+    let altaPerformance = 0;
+    nomes.forEach(nome => {
+        const stat = colabStats[nome];
+        stat.mediaNota = stat.respostas ? Number((stat.xp / stat.respostas).toFixed(1)) : 0;
+        if(stat.xp > 0 && stat.xp >= mediaGeral) altaPerformance += 1;
+    });
+    return { totalColaboradores: nomes.length, mediaGeral, altaPerformance, colabStats };
+};
 
-    const grid = document.getElementById('rh-grid-colaboradores');
-    if(!grid) return; grid.innerHTML = '';
+window.renderizarDashboardRH = function() {
+    window.atualizarOpcoesFiltrosRH();
+    const resumo = window.calcularEstatisticasRH();
     const search = (document.getElementById('rh-search-colab')?.value || '').toLowerCase();
 
-    let htmlCards = '';
-    Object.keys(colabStats).forEach(nome => {
-        const stat = colabStats[nome];
-        if(search && !nome.toLowerCase().includes(search)) return;
-        let statusClass = 'neutro'; let statusText = 'Em Desenvolvimento';
-        if(stat.xp >= avgXp && stat.xp > 0) { statusClass = 'destaque'; statusText = 'Alta Performance'; topPerformers++; }
-        else if(stat.xp === 0) { statusClass = 'risco'; statusText = 'Em Atenção'; }
-        
-        htmlCards += `<div class="rh-collab-card ${statusClass}">
-            <div class="rh-collab-header">
-                <div class="rh-avatar">${nome.substring(0,2).toUpperCase()}</div>
-                <div class="rh-collab-meta"><h4>${nome}</h4><p>${stat.setor}</p></div>
-                <div class="rh-score-badge">${stat.xp} XP</div>
-            </div>
-            <div class="rh-collab-grid">
-                <div><span>Treinamentos Concluídos</span><strong>${stat.treinamentos}</strong></div>
-                <div><span>Status RH</span><span class="rh-chip ${statusClass}" style="margin:0; padding:4px 8px;">${statusText}</span></div>
-            </div>
-        </div>`;
-    });
-    grid.innerHTML = htmlCards || '<p style="padding:20px; color:var(--text-muted);">Nenhum colaborador encontrado.</p>';
-    document.getElementById('rh-tot-high').textContent = topPerformers;
+    const elTot = document.getElementById('rh-tot-colab');
+    const elAvg = document.getElementById('rh-avg-xp');
+    const elHigh = document.getElementById('rh-tot-high');
+    if(elTot) elTot.textContent = resumo.totalColaboradores;
+    if(elAvg) elAvg.textContent = resumo.mediaGeral;
+    if(elHigh) elHigh.textContent = resumo.altaPerformance;
 
-    // Pesquisas Ativas
+    const scope = document.getElementById('rh-scope-label');
+    if(scope) {
+        if(window.rhFiltroAtual.colaborador) scope.textContent = `Visão individual: ${window.rhFiltroAtual.colaborador}`;
+        else if(window.rhFiltroAtual.setor) scope.textContent = `Visão por setor: ${window.rhFiltroAtual.setor}`;
+        else scope.textContent = 'Visão geral da empresa';
+    }
+
+    const grid = document.getElementById('rh-grid-colaboradores');
+    if(grid) {
+        const nomes = Object.keys(resumo.colabStats).filter(nome => !search || nome.toLowerCase().includes(search)).sort((a,b) => a.localeCompare(b));
+        grid.innerHTML = nomes.length ? nomes.map(nome => {
+            const stat = resumo.colabStats[nome];
+            let statusClass = 'neutro';
+            let statusText = 'Em Desenvolvimento';
+            if(stat.xp > 0 && stat.xp >= resumo.mediaGeral) { statusClass = 'destaque'; statusText = 'Alta Performance'; }
+            else if(stat.xp === 0) { statusClass = 'risco'; statusText = 'Em Atenção'; }
+            const ativo = window.rhFiltroAtual.colaborador === nome ? ' box-shadow:0 0 0 3px rgba(139,37,44,.15); transform:translateY(-2px);' : '';
+            const nomeEscapado = String(nome).replace(/'/g, "\'");
+            return `<div class="rh-collab-card ${statusClass}" onclick="window.selecionarColaboradorRH('${nomeEscapado}')" style="cursor:pointer;${ativo}">
+                <div class="rh-collab-header">
+                    <div class="rh-avatar">${nome.substring(0,2).toUpperCase()}</div>
+                    <div class="rh-collab-meta"><h4>${window.escapeHTML(nome)}</h4><p>${window.escapeHTML(stat.setor || 'Geral')}</p></div>
+                    <div class="rh-score-badge">${stat.xp} XP</div>
+                </div>
+                <div class="rh-collab-grid">
+                    <div><span>Treinamentos Concluídos</span><strong>${stat.treinamentos}</strong></div>
+                    <div><span>Status RH</span><span class="rh-chip ${statusClass}" style="margin:0; padding:4px 8px;">${statusText}</span></div>
+                    <div><span>Média Individual</span><strong>${stat.mediaNota || 0}</strong></div>
+                    <div><span>Setor</span><strong>${window.escapeHTML(stat.setor || 'Geral')}</strong></div>
+                </div>
+            </div>`;
+        }).join('') : '<p style="padding:20px; color:var(--text-muted);">Nenhum colaborador encontrado para o filtro selecionado.</p>';
+    }
+
     const gridP = document.getElementById('rh-grid-pesquisas');
     if(gridP) {
         gridP.innerHTML = '';
-        window.todosPesquisasRH.forEach(p => {
+        window.todosPesquisasRH.slice().sort((a,b) => String(b.data.dataCriacao || '').localeCompare(String(a.data.dataCriacao || ''))).forEach(p => {
             const resps = window.todosRespostasRH.filter(r => r.data.pesquisaId === p.id).length;
             gridP.innerHTML += `<div class="rh-survey-card">
-                <div><h4 style="margin:0; color:var(--text-main); font-weight:600;">${p.data.titulo}</h4><p style="margin:0; color:var(--text-muted); font-size:12px;">Categoria: ${p.data.categoria} | Público: ${p.data.alvo}</p></div>
+                <div>
+                    <h4 style="margin:0; color:var(--text-main); font-weight:600;">${window.escapeHTML(p.data.titulo || 'Pesquisa')}</h4>
+                    <p style="margin:0; color:var(--text-muted); font-size:12px;">Categoria: ${window.escapeHTML(p.data.categoria || 'Clima')} | Público: ${window.escapeHTML(p.data.alvoValor || p.data.alvo || 'Geral')}</p>
+                </div>
                 <div class="rh-survey-stats"><b>${resps}</b> Respostas</div>
-                <div style="display:flex; gap:10px;">
+                <div style="display:flex; gap:10px; align-items:center;">
                     <button onclick="window.verResultadosPesquisaRH('${p.id}')" class="btn-hover color-8" style="height:30px; font-size:11px; padding:0 15px;">Resultados</button>
-                    <button onclick="window.excluirPesquisaRH('${p.id}')" style="background:none; border:none; color:#e53e3e; cursor:pointer;"><i class="ri-delete-bin-line"></i></button>
+                    <button onclick="window.abrirModalCriarPesquisa('${p.id}')" class="btn-action btn-edit" title="Editar pesquisa"><i class="ri-pencil-line"></i></button>
+                    <button onclick="window.excluirPesquisaRH('${p.id}')" class="btn-action btn-delete" title="Excluir pesquisa"><i class="ri-delete-bin-line"></i></button>
                 </div>
             </div>`;
         });
         if(window.todosPesquisasRH.length === 0) gridP.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Nenhuma pesquisa ativa.</p>';
     }
+
+    const gridPerfis = document.getElementById('rh-grid-perfis');
+    if(gridPerfis) {
+        gridPerfis.innerHTML = '';
+        window.todosPerfilAvaliacoes.slice().sort((a,b) => String(b.data.dataCriacao || '').localeCompare(String(a.data.dataCriacao || ''))).forEach(item => {
+            const resps = window.todosRespostasPerfil.filter(r => r.data.avaliacaoId === item.id).length;
+            gridPerfis.innerHTML += `<div class="rh-survey-card">
+                <div>
+                    <h4 style="margin:0; color:var(--text-main); font-weight:600;">${window.escapeHTML(item.data.titulo || 'Avaliação de perfil')}</h4>
+                    <p style="margin:0; color:var(--text-muted); font-size:12px;">Alvo: ${window.escapeHTML(item.data.alvoTipo || 'Geral')}${item.data.alvoValor ? ' | ' + window.escapeHTML(item.data.alvoValor) : ''}</p>
+                </div>
+                <div class="rh-survey-stats"><b>${resps}</b> Respostas</div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <button onclick="window.abrirModalPerfilProfissional()" class="btn-hover color-8" style="height:30px; font-size:11px; padding:0 15px;">Radar</button>
+                    <button onclick="window.abrirModalCriarPerfil('${item.id}')" class="btn-action btn-edit" title="Editar avaliação"><i class="ri-pencil-line"></i></button>
+                    <button onclick="window.excluirAvaliacaoPerfil('${item.id}')" class="btn-action btn-delete" title="Excluir avaliação"><i class="ri-delete-bin-line"></i></button>
+                </div>
+            </div>`;
+        });
+        if(window.todosPerfilAvaliacoes.length === 0) gridPerfis.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Nenhuma avaliação de perfil ativa.</p>';
+    }
 };
 
-window.abrirModalCriarPesquisa = function() {
+window.abrirModalCriarPesquisa = function(pesquisaId = '') {
+    const editId = document.getElementById('rh-pesq-edit-id');
+    if(editId) editId.value = pesquisaId || '';
     document.getElementById('rh-pesq-titulo').value = '';
     document.getElementById('rh-pesq-perguntas-list').innerHTML = '';
-    const alvo = document.getElementById('rh-pesq-alvo');
-    alvo.innerHTML = '<option value="Geral">Todos (Geral)</option>';
-    setoresGlobais.forEach(s => alvo.innerHTML += `<option value="${s}">Setor: ${s}</option>`);
+    const alvoTipo = document.getElementById('rh-pesq-alvo-tipo');
+    const alvoValor = document.getElementById('rh-pesq-alvo');
+    if(alvoTipo) alvoTipo.value = 'Geral';
+    if(alvoValor) alvoValor.innerHTML = '<option value="">Todos (Geral)</option>';
+    window.atualizarAlvoPesquisaRHFormulario();
+
+    if(pesquisaId) {
+        const pesquisa = window.todosPesquisasRH.find(item => item.id === pesquisaId);
+        if(pesquisa) {
+            document.getElementById('rh-pesq-titulo').value = pesquisa.data.titulo || '';
+            document.getElementById('rh-pesq-categoria').value = pesquisa.data.categoria || 'Clima';
+            if(alvoTipo) alvoTipo.value = pesquisa.data.alvoTipo || (String(pesquisa.data.alvo || '').startsWith('Setor: ') ? 'Setor' : 'Geral');
+            window.atualizarAlvoPesquisaRHFormulario();
+            if(alvoValor) alvoValor.value = pesquisa.data.alvoValor || String(pesquisa.data.alvo || '').replace('Setor: ', '').trim();
+            (pesquisa.data.perguntas || []).forEach(pergunta => window.adicionarPerguntaRH(pergunta.tipo || 'escala', pergunta));
+        }
+    }
+
+    const tituloModal = document.getElementById('rh-modal-pesquisa-titulo');
+    if(tituloModal) tituloModal.innerHTML = pesquisaId ? '<i class="ri-pencil-line"></i> Editar Pesquisa (RH)' : '<i class="ri-survey-line"></i> Criar Nova Pesquisa (RH)';
     document.getElementById('modal-criar-pesquisa').style.display = 'flex';
 };
 
-window.adicionarPerguntaRH = function(tipo) {
+window.atualizarAlvoPesquisaRHFormulario = function() {
+    const alvoTipo = document.getElementById('rh-pesq-alvo-tipo');
+    const alvoValor = document.getElementById('rh-pesq-alvo');
+    if(!alvoTipo || !alvoValor) return;
+    if(alvoTipo.value === 'Setor') {
+        alvoValor.innerHTML = `<option value="">Selecione o setor</option>` + window.getSetoresRHDisponiveis().map(setor => `<option value="${setor}">${setor}</option>`).join('');
+        alvoValor.disabled = false;
+    } else if(alvoTipo.value === 'Colaborador') {
+        alvoValor.innerHTML = `<option value="">Selecione o colaborador</option>` + listaColaboradoresGlobal.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+        alvoValor.disabled = false;
+    } else {
+        alvoValor.innerHTML = `<option value="">Todos (Geral)</option>`;
+        alvoValor.disabled = true;
+        alvoValor.value = '';
+    }
+};
+
+window.adicionarPerguntaRH = function(tipo, perguntaAntiga = null) {
     const area = document.getElementById('rh-pesq-perguntas-list');
     const div = document.createElement('div');
     div.className = 'rh-pergunta-item';
@@ -1122,34 +1281,42 @@ window.adicionarPerguntaRH = function(tipo) {
         <button onclick="this.parentElement.remove()" style="position:absolute; top:10px; right:10px; color:red; background:none; border:none; cursor:pointer;"><i class="ri-delete-bin-line"></i></button>
         <input type="hidden" class="rh-p-tipo" value="${tipo}">
         <label style="font-size:12px; font-weight:600;">Pergunta (${tipo === 'escala' ? 'Escala 1 a 5' : 'Texto Aberto'}):</label>
-        <input type="text" class="form-input rh-p-texto" style="margin-bottom:0;" placeholder="Digite a pergunta...">
+        <input type="text" class="form-input rh-p-texto" style="margin-bottom:0;" placeholder="Digite a pergunta..." value="${window.escapeHTML(perguntaAntiga?.texto || '')}">
     `;
     area.appendChild(div);
 };
 
 window.salvarPesquisaRH = async function() {
+    const editId = document.getElementById('rh-pesq-edit-id')?.value || '';
     const titulo = document.getElementById('rh-pesq-titulo').value.trim();
     const categoria = document.getElementById('rh-pesq-categoria').value;
-    const alvo = document.getElementById('rh-pesq-alvo').value;
+    const alvoTipo = document.getElementById('rh-pesq-alvo-tipo').value;
+    const alvoValor = document.getElementById('rh-pesq-alvo').value;
     const blocos = document.querySelectorAll('.rh-pergunta-item');
-    
-    if(!titulo || blocos.length === 0) return alert("Preencha o título e adicione pelo menos uma pergunta!");
+    if(!titulo || blocos.length === 0) return alert('Preencha o título e adicione pelo menos uma pergunta!');
+    if(alvoTipo !== 'Geral' && !alvoValor) return alert('Selecione o alvo da pesquisa.');
 
-    let perguntas = [];
-    blocos.forEach(b => {
-        perguntas.push({
-            tipo: b.querySelector('.rh-p-tipo').value,
-            texto: b.querySelector('.rh-p-texto').value.trim()
-        });
-    });
+    const perguntas = Array.from(blocos).map(b => ({ tipo: b.querySelector('.rh-p-tipo').value, texto: b.querySelector('.rh-p-texto').value.trim() })).filter(item => item.texto);
+    if(!perguntas.length) return alert('Adicione pelo menos uma pergunta válida.');
+
+    const payload = {
+        titulo, categoria, perguntas,
+        alvoTipo,
+        alvoValor: alvoTipo === 'Geral' ? '' : alvoValor,
+        alvo: alvoTipo === 'Setor' ? `Setor: ${alvoValor}` : (alvoTipo === 'Colaborador' ? alvoValor : 'Geral'),
+        dataCriacao: new Date().toISOString()
+    };
 
     try {
-        await window.addDoc(window.collection(window.db, 'rh-pesquisas'), {
-            titulo, categoria, alvo, perguntas, dataCriacao: new Date().toISOString()
-        });
-        alert("Pesquisa enviada com sucesso!");
+        if(editId) {
+            await window.updateDoc(window.doc(window.db, 'rh-pesquisas', editId), payload);
+            alert('Pesquisa atualizada com sucesso!');
+        } else {
+            await window.addDoc(window.collection(window.db, 'rh-pesquisas'), payload);
+            alert('Pesquisa enviada com sucesso!');
+        }
         document.getElementById('modal-criar-pesquisa').style.display = 'none';
-    } catch(e) { alert("Erro ao criar pesquisa: " + e.message); }
+    } catch(e) { alert('Erro ao salvar pesquisa: ' + e.message); }
 };
 
 window.excluirPesquisaRH = async function(id) {
@@ -1161,38 +1328,47 @@ window.renderizarPesquisasAluno = function() {
     if(!window.alunoLogado) return;
     const area = document.getElementById('aluno-pesquisas-pendentes');
     const lista = document.getElementById('lista-pesquisas-aluno');
+    const areaPerfil = document.getElementById('aluno-perfil-pendentes');
+    const listaPerfil = document.getElementById('lista-perfis-aluno');
     if(!area || !lista) return;
 
     const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'];
     const setorAluno = window.alunoLogado['Setor da Clínica'] || 'Geral';
 
-    const minhasPesquisas = window.todosPesquisasRH.filter(p => {
-        const alvo = p.data.alvo;
-        return alvo === 'Geral' || alvo === setorAluno;
-    });
-
-    let pendentes = [];
-    minhasPesquisas.forEach(p => {
-        const jaRespondeu = window.todosRespostasRH.some(r => r.data.pesquisaId === p.id && r.data.nome === nomeAluno);
-        if(!jaRespondeu) pendentes.push(p);
-    });
+    const minhasPesquisas = window.todosPesquisasRH.filter(p => window.obterPublicoPesquisaRH(p.data, nomeAluno, setorAluno));
+    const pendentes = minhasPesquisas.filter(p => !window.todosRespostasRH.some(r => r.data.pesquisaId === p.id && r.data.nome === nomeAluno));
 
     if(pendentes.length > 0) {
-        lista.innerHTML = '';
-        pendentes.forEach(p => {
-            lista.innerHTML += `
-                <div style="background: #fff5f5; border-left: 4px solid #e53e3e; padding: 15px; border-radius: 8px; display:flex; justify-content:space-between; align-items:center; box-shadow: var(--shadow-soft);">
-                    <div>
-                        <strong style="color: var(--primary-color); display:block; font-size:15px;">${p.data.titulo}</strong>
-                        <span style="font-size:12px; color:var(--text-muted);"><i class="ri-survey-fill"></i> ${p.data.categoria}</span>
-                    </div>
-                    <button onclick="window.responderPesquisaRH('${p.id}')" class="btn-hover color-11" style="height:35px; font-size:12px; padding:0 15px;">Responder Agora</button>
+        lista.innerHTML = pendentes.map(p => `
+            <div style="background: #fff5f5; border-left: 4px solid #e53e3e; padding: 15px; border-radius: 8px; display:flex; justify-content:space-between; align-items:center; box-shadow: var(--shadow-soft); gap:12px; flex-wrap:wrap;">
+                <div>
+                    <strong style="color: var(--primary-color); display:block; font-size:15px;">${window.escapeHTML(p.data.titulo || 'Pesquisa RH')}</strong>
+                    <span style="font-size:12px; color:var(--text-muted);"><i class="ri-survey-fill"></i> ${window.escapeHTML(p.data.categoria || 'Clima')}</span>
                 </div>
-            `;
-        });
+                <button onclick="window.responderPesquisaRH('${p.id}')" class="btn-hover color-11" style="height:35px; font-size:12px; padding:0 15px;">Responder Agora</button>
+            </div>
+        `).join('');
         area.style.display = 'block';
     } else {
         area.style.display = 'none';
+    }
+
+    if(areaPerfil && listaPerfil) {
+        const perfisPendentes = window.obterAvaliacoesPerfilDisponiveis(nomeAluno, setorAluno).filter(item => !window.todosRespostasPerfil.some(resp => resp.data.avaliacaoId === item.id && resp.data.nome === nomeAluno));
+        if(perfisPendentes.length) {
+            listaPerfil.innerHTML = perfisPendentes.map(item => `
+                <div style="background: #eff6ff; border-left: 4px solid #3182ce; padding: 15px; border-radius: 8px; display:flex; justify-content:space-between; align-items:center; box-shadow: var(--shadow-soft); gap:12px; flex-wrap:wrap;">
+                    <div>
+                        <strong style="color: #1e3a5f; display:block; font-size:15px;">${window.escapeHTML(item.data.titulo || 'Avaliação de Perfil')}</strong>
+                        <span style="font-size:12px; color:var(--text-muted);"><i class="ri-radar-line"></i> Perfil Profissional</span>
+                    </div>
+                    <button onclick="window.responderPerfilRH('${item.id}')" class="btn-hover color-9" style="height:35px; font-size:12px; padding:0 15px;">Responder Agora</button>
+                </div>
+            `).join('');
+            areaPerfil.style.display = 'block';
+        } else {
+            areaPerfil.style.display = 'none';
+        }
     }
 };
 
@@ -1256,9 +1432,14 @@ window.enviarRespostaRH = async function() {
     if(!ok) return alert("Por favor, responda todas as perguntas antes de enviar!");
 
     try {
-        await window.addDoc(window.collection(window.db, 'rh-respostas-pesquisa'), {
-            pesquisaId, nome: nomeAluno, respostas, data: new Date().toISOString()
-        });
+        const antiga = window.todosRespostasRH.find(item => item.data.pesquisaId === pesquisaId && item.data.nome === nomeAluno);
+        if(antiga) {
+            await window.updateDoc(window.doc(window.db, 'rh-respostas-pesquisa', antiga.id), { respostas, data: new Date().toISOString() });
+        } else {
+            await window.addDoc(window.collection(window.db, 'rh-respostas-pesquisa'), {
+                pesquisaId, nome: nomeAluno, respostas, data: new Date().toISOString()
+            });
+        }
         alert("Muito obrigado pelas suas respostas! Isso nos ajuda a crescer juntos.");
         document.getElementById('modal-responder-pesquisa').style.display = 'none';
         window.renderizarPesquisasAluno();
@@ -1301,6 +1482,203 @@ window.verResultadosPesquisaRH = function(pesquisaId) {
 
     document.getElementById('rh-resultados-area').innerHTML = html;
     document.getElementById('modal-ver-respostas-rh').style.display = 'flex';
+};
+
+
+window.abrirModalCriarPerfil = function(avaliacaoId = '') {
+    const editId = document.getElementById('rh-perfil-edit-id');
+    if(editId) editId.value = avaliacaoId || '';
+    const titulo = document.getElementById('rh-perfil-titulo');
+    const tipoSel = document.getElementById('rh-perfil-alvo-tipo');
+    const valorSel = document.getElementById('rh-perfil-alvo-valor');
+    const perguntasArea = document.getElementById('rh-perfil-perguntas-list');
+    if(titulo) titulo.value = '';
+    if(tipoSel) tipoSel.value = 'Geral';
+    if(perguntasArea) perguntasArea.innerHTML = '';
+    window.atualizarAlvoPerfilFormulario();
+
+    if(avaliacaoId) {
+        const avaliacao = window.todosPerfilAvaliacoes.find(item => item.id === avaliacaoId);
+        if(avaliacao) {
+            if(titulo) titulo.value = avaliacao.data.titulo || '';
+            if(tipoSel) tipoSel.value = avaliacao.data.alvoTipo || 'Geral';
+            window.atualizarAlvoPerfilFormulario();
+            if(valorSel) valorSel.value = avaliacao.data.alvoValor || '';
+            (avaliacao.data.perguntas || []).forEach(pergunta => window.adicionarPerguntaPerfil(pergunta));
+        }
+    }
+
+    const titleEl = document.getElementById('rh-modal-perfil-titulo');
+    if(titleEl) titleEl.innerHTML = avaliacaoId ? '<i class="ri-pencil-line"></i> Editar Avaliação de Perfil' : '<i class="ri-radar-line"></i> Nova Avaliação de Perfil';
+    document.getElementById('modal-criar-perfil').style.display = 'flex';
+};
+
+window.atualizarAlvoPerfilFormulario = function() {
+    const tipo = document.getElementById('rh-perfil-alvo-tipo');
+    const valor = document.getElementById('rh-perfil-alvo-valor');
+    if(!tipo || !valor) return;
+    if(tipo.value === 'Setor') {
+        valor.innerHTML = `<option value="">Selecione o setor</option>` + window.getSetoresRHDisponiveis().map(setor => `<option value="${setor}">${setor}</option>`).join('');
+        valor.disabled = false;
+    } else if(tipo.value === 'Colaborador') {
+        valor.innerHTML = `<option value="">Selecione o colaborador</option>` + listaColaboradoresGlobal.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+        valor.disabled = false;
+    } else {
+        valor.innerHTML = `<option value="">Todos (Geral)</option>`;
+        valor.value = '';
+        valor.disabled = true;
+    }
+};
+
+window.adicionarPerguntaPerfil = function(perguntaAntiga = null) {
+    const area = document.getElementById('rh-perfil-perguntas-list');
+    if(!area) return;
+    const div = document.createElement('div');
+    div.className = 'rh-perfil-pergunta-item';
+    div.style = 'background:#f8fafc; padding:15px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:10px; position:relative;';
+    div.innerHTML = `
+        <button onclick="this.parentElement.remove()" style="position:absolute; top:10px; right:10px; color:red; background:none; border:none; cursor:pointer;"><i class="ri-delete-bin-line"></i></button>
+        <div class="rh-form-grid">
+            <div>
+                <label style="font-size:12px; font-weight:600;">Categoria do Radar</label>
+                <select class="form-input rh-perfil-categoria">
+                    <option value="Qualidades" ${perguntaAntiga?.categoria === 'Qualidades' ? 'selected' : ''}>Qualidades</option>
+                    <option value="Pontos Fortes" ${perguntaAntiga?.categoria === 'Pontos Fortes' ? 'selected' : ''}>Pontos Fortes</option>
+                    <option value="Pontos Fracos" ${perguntaAntiga?.categoria === 'Pontos Fracos' ? 'selected' : ''}>Pontos Fracos</option>
+                    <option value="Skills" ${perguntaAntiga?.categoria === 'Skills' ? 'selected' : ''}>Skills</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size:12px; font-weight:600;">Pergunta</label>
+                <input type="text" class="form-input rh-perfil-texto" value="${window.escapeHTML(perguntaAntiga?.texto || '')}" placeholder="Ex: Demonstra iniciativa no dia a dia?">
+            </div>
+        </div>
+    `;
+    area.appendChild(div);
+};
+
+window.salvarAvaliacaoPerfil = async function() {
+    const editId = document.getElementById('rh-perfil-edit-id')?.value || '';
+    const titulo = document.getElementById('rh-perfil-titulo').value.trim();
+    const alvoTipo = document.getElementById('rh-perfil-alvo-tipo').value;
+    const alvoValor = document.getElementById('rh-perfil-alvo-valor').value;
+    const perguntas = Array.from(document.querySelectorAll('.rh-perfil-pergunta-item')).map(item => ({
+        categoria: item.querySelector('.rh-perfil-categoria').value,
+        texto: item.querySelector('.rh-perfil-texto').value.trim(),
+        tipo: 'escala'
+    })).filter(item => item.texto);
+
+    if(!titulo || !perguntas.length) return alert('Preencha o título e adicione pelo menos uma pergunta.');
+    if(alvoTipo !== 'Geral' && !alvoValor) return alert('Selecione o alvo da avaliação.');
+
+    const payload = { titulo, alvoTipo, alvoValor: alvoTipo === 'Geral' ? '' : alvoValor, perguntas, dataCriacao: new Date().toISOString() };
+    try {
+        if(editId) {
+            await window.updateDoc(window.doc(window.db, 'rh-perfil-avaliacoes', editId), payload);
+            alert('Avaliação de perfil atualizada com sucesso!');
+        } else {
+            await window.addDoc(window.collection(window.db, 'rh-perfil-avaliacoes'), payload);
+            alert('Avaliação de perfil enviada com sucesso!');
+        }
+        document.getElementById('modal-criar-perfil').style.display = 'none';
+    } catch(e) { alert('Erro ao salvar avaliação: ' + e.message); }
+};
+
+window.excluirAvaliacaoPerfil = async function(id) {
+    if(!confirm('Excluir esta avaliação de perfil?')) return;
+    try { await window.deleteDoc(window.doc(window.db, 'rh-perfil-avaliacoes', id)); alert('Avaliação excluída!'); } catch(e) { alert('Erro ao excluir: ' + e.message); }
+};
+
+window.responderPerfilRH = function(avaliacaoId) {
+    const avaliacao = window.todosPerfilAvaliacoes.find(item => item.id === avaliacaoId);
+    if(!avaliacao) return;
+    document.getElementById('rh-perfil-resp-id').value = avaliacaoId;
+    document.getElementById('rh-perfil-resp-titulo').textContent = avaliacao.data.titulo || 'Avaliação de Perfil';
+    const area = document.getElementById('rh-perfil-resp-area');
+    if(!area) return;
+    area.innerHTML = (avaliacao.data.perguntas || []).map((pergunta, idx) => `
+        <div class="rh-resp-bloco" style="margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid var(--border-color);">
+            <label style="font-weight:600; font-size:13px; display:block; margin-bottom:10px; color:var(--text-main);">${idx+1}. ${window.escapeHTML(pergunta.texto)} <span style="display:inline-block; margin-left:8px; padding:4px 8px; border-radius:999px; font-size:11px; background:#eef2ff; color:#4338ca;">${window.escapeHTML(pergunta.categoria)}</span></label>
+            <input type="hidden" class="rh-perfil-pergunta-texto" value="${window.escapeHTML(pergunta.texto)}">
+            <input type="hidden" class="rh-perfil-pergunta-categoria" value="${window.escapeHTML(pergunta.categoria)}">
+            <div class="rh-scale-row">${[1,2,3,4,5].map(n => `<label class="rh-scale-option"><input type="radio" name="perfil_${avaliacaoId}_${idx}" value="${n}"><span>${n}</span></label>`).join('')}</div>
+        </div>
+    `).join('');
+    document.getElementById('modal-responder-perfil').style.display = 'flex';
+};
+
+window.enviarRespostaPerfilRH = async function() {
+    if(!window.alunoLogado) return;
+    const avaliacaoId = document.getElementById('rh-perfil-resp-id').value;
+    const nome = window.alunoLogado['Nome Completo do Colaborador'];
+    const setor = window.alunoLogado['Setor da Clínica'] || 'Geral';
+    const blocos = Array.from(document.querySelectorAll('#rh-perfil-resp-area .rh-resp-bloco'));
+    const respostas = [];
+    let incompleto = false;
+    blocos.forEach(bloco => {
+        const texto = bloco.querySelector('.rh-perfil-pergunta-texto').value;
+        const categoria = bloco.querySelector('.rh-perfil-pergunta-categoria').value;
+        const marcado = bloco.querySelector('input[type="radio"]:checked');
+        if(!marcado) incompleto = true;
+        respostas.push({ pergunta: texto, categoria, resposta: marcado ? Number(marcado.value) : null });
+    });
+    if(incompleto) return alert('Responda todas as perguntas para enviar a avaliação.');
+    try {
+        const antiga = window.todosRespostasPerfil.find(item => item.data.avaliacaoId === avaliacaoId && item.data.nome === nome);
+        if(antiga) {
+            await window.updateDoc(window.doc(window.db, 'rh-perfil-respostas', antiga.id), { respostas, data: new Date().toISOString(), setor });
+        } else {
+            await window.addDoc(window.collection(window.db, 'rh-perfil-respostas'), { avaliacaoId, nome, setor, respostas, data: new Date().toISOString() });
+        }
+        alert('Avaliação de perfil enviada com sucesso!');
+        document.getElementById('modal-responder-perfil').style.display = 'none';
+        window.renderizarPesquisasAluno();
+    } catch(e) { alert('Erro ao enviar avaliação: ' + e.message); }
+};
+
+window.abrirModalPerfilProfissional = function() {
+    const modal = document.getElementById('modal-perfil-profissional');
+    const select = document.getElementById('rh-perfil-select-colaborador');
+    if(!modal || !select) return;
+    select.innerHTML = `<option value="">Selecione um colaborador</option>` + listaColaboradoresGlobal.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+    if(window.rhFiltroAtual.colaborador) select.value = window.rhFiltroAtual.colaborador;
+    modal.style.display = 'flex';
+    if(select.value) window.renderizarGraficoPerfilProfissional(select.value);
+};
+
+window.obterResumoPerfilColaborador = function(nome) {
+    const respostas = window.todosRespostasPerfil.filter(item => item.data.nome === nome);
+    const buckets = { 'Qualidades': [], 'Pontos Fortes': [], 'Pontos Fracos': [], 'Skills': [] };
+    respostas.forEach(item => {
+        (item.data.respostas || []).forEach(resp => {
+            if(resp && buckets[resp.categoria] && Number.isFinite(Number(resp.resposta))) buckets[resp.categoria].push(Number(resp.resposta));
+        });
+    });
+    const medias = Object.fromEntries(Object.entries(buckets).map(([categoria, valores]) => [categoria, valores.length ? Number((valores.reduce((a,b) => a+b, 0) / valores.length).toFixed(1)) : 0]));
+    return { medias, totalAvaliacoes: respostas.length, totalRespostas: Object.values(buckets).reduce((acc, arr) => acc + arr.length, 0) };
+};
+
+window.renderizarGraficoPerfilProfissional = function(nome) {
+    const resumo = window.obterResumoPerfilColaborador(nome);
+    const canvas = document.getElementById('rh-perfil-radar-chart');
+    const info = document.getElementById('rh-perfil-radar-info');
+    if(!canvas || !info) return;
+    const colaborador = listaColaboradoresGlobal.find(item => item.nome === nome);
+    const labels = ['Qualidades', 'Pontos Fortes', 'Pontos Fracos', 'Skills'];
+    const data = labels.map(label => resumo.medias[label] || 0);
+    if(window.rhPerfilRadarChart) window.rhPerfilRadarChart.destroy();
+    window.rhPerfilRadarChart = new Chart(canvas, {
+        type: 'radar',
+        data: { labels, datasets: [{ label: nome, data, fill: true, backgroundColor: 'rgba(139, 37, 44, 0.18)', borderColor: '#8B252C', pointBackgroundColor: '#8B252C', pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: '#8B252C' }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { r: { beginAtZero: true, min: 0, max: 5, ticks: { stepSize: 1, backdropColor: 'transparent' }, pointLabels: { font: { size: 13, weight: '600' } }, grid: { color: 'rgba(148,163,184,.35)' }, angleLines: { color: 'rgba(148,163,184,.25)' } } }, plugins: { legend: { display: false } } }
+    });
+    const mediaGeral = data.filter(v => v > 0).length ? (data.reduce((a,b)=>a+b,0) / data.filter(v => v > 0).length).toFixed(1) : '0.0';
+    info.innerHTML = `
+        <div class="rh-profile-summary-card"><span>Colaborador</span><strong>${window.escapeHTML(nome)}</strong><small>${window.escapeHTML(colaborador?.setor || 'Geral')}</small></div>
+        <div class="rh-profile-summary-card"><span>Avaliações Respondidas</span><strong>${resumo.totalAvaliacoes}</strong><small>coletas válidas</small></div>
+        <div class="rh-profile-summary-card"><span>Média Global do Perfil</span><strong>${mediaGeral}</strong><small>escala 0 a 5</small></div>
+        <div class="rh-profile-summary-card"><span>Qualidades / Skills</span><strong>${(resumo.medias['Qualidades'] || 0).toFixed(1)} / ${(resumo.medias['Skills'] || 0).toFixed(1)}</strong><small>forças-chave</small></div>
+    `;
 };
 
 // ==========================================
@@ -1368,27 +1746,12 @@ window.addEventListener('DOMContentLoaded', () => {
             
             btnSalvarAjustes.innerHTML = "Salvando...";
             try {
-                await window.setDoc(
-                    window.doc(window.db, "configuracoes", "gerais"),
-                    {
-                        banner_texto: texto,
-                        locais: locaisTexto,
-                        setores: setoresTexto,
-                        especialidades: especialidadesTexto,
-                        motivos: motivosTexto,
-                        cor_pendente: corPend,
-                        cor_concluido: corConc,
-                        imagem_padrao_pastas: imgPastasTexto,
-                        chat_logo: chatLogoTexto,
-                        chat_cor: chatCorVal
-                    },
-                    { merge: true }
-                );
+                await window.setDoc(window.doc(window.db, "configuracoes", "gerais"), { 
+                    banner_texto: texto, locais: locaisTexto, setores: setoresTexto, especialidades: especialidadesTexto, motivos: motivosTexto, 
+                    cor_pendente: corPend, cor_concluido: corConc, imagem_padrao_pastas: imgPastasTexto, chat_logo: chatLogoTexto, chat_cor: chatCorVal
+                }, { merge: true });
                 alert("Configurações salvas com sucesso!");
-            } catch(e) {
-                console.error("Erro ao salvar configurações:", e);
-                alert("Erro ao salvar configurações: " + (e?.message || 'falha desconhecida'));
-            }
+            } catch(e) { console.error('Erro ao salvar configurações:', e); alert("Erro ao salvar configurações: " + e.message); }
             btnSalvarAjustes.innerHTML = 'Salvar Alterações';
         });
     }
@@ -1417,6 +1780,11 @@ window.addEventListener('DOMContentLoaded', () => {
             if(!encontrou) areaRes.innerHTML += '<p style="color:var(--text-muted); font-size:14px; grid-column: 1/-1;">Nenhum resultado encontrado no sistema.</p>';
         });
     }
+
+    const rhFiltroSetor = document.getElementById('rh-filter-setor');
+    const rhFiltroColab = document.getElementById('rh-filter-colaborador');
+    if(rhFiltroSetor) rhFiltroSetor.addEventListener('change', window.aplicarFiltrosRH);
+    if(rhFiltroColab) rhFiltroColab.addEventListener('change', window.aplicarFiltrosRH);
 
     const inputPesqAba = document.getElementById('input-pesquisa');
     if(inputPesqAba) {
@@ -1448,7 +1816,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if(abaAtual === 'boletins') window.fecharPastaBoletim(); 
             if(abaAtual === 'boletins-privados') window.fecharPastaPrivado();
             ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico', 'treinamentos'].forEach(col => { if(abaAtual === col) window.fecharPastaGenerica(col); });
-            if(abaAtual === 'rh' && isAdmin) window.renderizarDashboardRH();
+            if(abaAtual === 'rh' && isAdmin) { window.atualizarOpcoesFiltrosRH(); window.renderizarDashboardRH(); }
         });
     });
 });
