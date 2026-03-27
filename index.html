@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css?v=20260327-9">
+    <link rel="stylesheet" href="style.css?v=20260327-1">
     <style>
         .sidebar-nav { overflow-y: auto; max-height: 65vh; }
         .sidebar-nav::-webkit-scrollbar { width: 4px; }
@@ -90,11 +90,11 @@
                     <div id="banner-content"><h2>Bem-vindo ao Painel Clínico</h2></div>
                 </div>
 
-                <div class="weather-widget"><img id="weather-cover-image" class="weather-cover-image" style="display:none;" alt="Imagem clima">
+                <div class="weather-widget">
                     <div class="weather-info">
                         <h3 id="weather-city"><i class="ri-map-pin-line"></i> Araucária, PR</h3>
                         <div class="weather-temp"><span id="weather-deg">--</span>°C</div>
-                        <div id="weather-desc">Buscando previsão do tempo...</div><div id="weather-weekly" class="weather-weekly"></div>
+                        <div id="weather-desc">Buscando previsão do tempo...</div>
                     </div>
                     <div class="weather-icon">
                         <i id="weather-icon-class" class="ri-sun-cloudy-line"></i>
@@ -141,8 +141,6 @@
                         <input type="color" id="tab-color-chat" class="form-input" style="height:50px; padding:5px; cursor:pointer;">
                         <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 5px; margin-top: 15px;">Imagem Padrão das Pastas (Link)</label>
                         <input type="text" id="tab-input-imagem-pastas" class="form-input">
-                        <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 5px; margin-top: 15px;">Imagem do Clima/Home (Link)</label>
-                        <input type="text" id="tab-input-weather-image" class="form-input" placeholder="Cole uma imagem da clínica ou da cidade">
                     </div>
 
                     <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Locais/Prédios</label>
@@ -172,11 +170,23 @@
             </section>
 
             <section id="tab-pacotes" class="tab-content" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <p style="color: var(--text-muted);">Gestão de Pacotes do Pronto Socorro.</p>
-                    <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('pacotes')" style="display:none;"><i class="ri-add-line"></i> Adicionar Pacote</button>
+                <div id="pacotes-view-folders">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <p style="color: var(--text-muted);">Selecione a pasta/categoria do Pronto Socorro.</p>
+                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('pacotes')" style="display:none;"><i class="ri-add-line"></i> Adicionar Pacote</button>
+                    </div>
+                    <div class="home-grid" id="grid-pacotes-folders"></div>
                 </div>
-                <div class="cards-grid" id="grid-pacotes"></div>
+                <div id="pacotes-view-list" style="display:none;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button class="btn-hover color-8" onclick="window.fecharPastaGenerica('pacotes')"><i class="ri-arrow-left-line"></i> Voltar</button>
+                            <h2 id="titulo-pasta-pacotes" style="color: var(--primary-color);">Pasta</h2>
+                        </div>
+                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('pacotes')" style="display:none;"><i class="ri-add-line"></i> Adicionar Pacote</button>
+                    </div>
+                    <div class="cards-grid" id="grid-pacotes-list"></div>
+                </div>
             </section>
 
             <section id="tab-remocoes" class="tab-content" style="display: none;">
@@ -426,6 +436,11 @@
                         <div id="lista-pesquisas-aluno" style="display: flex; flex-direction: column; gap: 10px;"></div>
                     </div>
 
+                    <div id="aluno-perfil-pendentes" style="margin-bottom: 25px; display: none;">
+                        <h3 style="margin-bottom: 10px; color: #2563eb;"><i class="ri-radar-line"></i> Avaliações de Perfil Pendentes</h3>
+                        <div id="lista-perfis-aluno" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                    </div>
+
                     <h3 style="margin-bottom: 15px; color: var(--text-main);"><i class="ri-route-line"></i> Minhas Atividades</h3>
                     <div class="cards-grid" id="grid-trilha-aluno"></div>
                 </div>
@@ -436,14 +451,13 @@
                     <div>
                         <h2><i class="ri-pie-chart-2-fill"></i> RH & Analytics</h2>
                         <p>Visão estratégica de desempenho, engajamento e clima.</p>
+                        <small id="rh-scope-label" style="color: var(--text-muted); display:block; margin-top:6px;">Visão geral da empresa</small>
                     </div>
                     <div class="rh-header-actions">
                         <button class="btn-hover color-5" onclick="window.abrirModalCriarPesquisa()"><i class="ri-survey-line"></i> Nova Pesquisa (Clima/Fit)</button>
-                        <button class="btn-hover color-8" onclick="window.renderizarDashboardRH()"><i class="ri-refresh-line"></i> Atualizar RH</button>
+                        <button class="btn-hover color-9" onclick="window.abrirModalCriarPerfil()"><i class="ri-radar-line"></i> Nova Avaliação de Perfil</button>
                     </div>
                 </div>
-
-                <div class="rh-filters card"><div class="rh-filter-grid"><div><label class="rh-filter-label">Setor</label><select id="rh-filter-setor" class="form-input" onchange="window.renderizarDashboardRH()"></select></div><div><label class="rh-filter-label">Colaborador</label><select id="rh-filter-colaborador" class="form-input" onchange="window.renderizarDashboardRH()"></select></div><div style="display:flex; align-items:flex-end;"><button class="btn-hover color-8" style="width:100%;" onclick="window.limparFiltrosRH()"><i class="ri-filter-off-line"></i> Limpar filtros</button></div></div></div>
 
                 <div class="rh-overview-grid">
                     <div class="rh-stat-card">
@@ -458,22 +472,52 @@
                         <span>Alta Performance</span>
                         <strong id="rh-tot-high">0</strong>
                     </div>
+                    <div class="rh-stat-card rh-stat-card-action" onclick="window.abrirModalPerfilProfissional()" style="cursor:pointer;">
+                        <span>Perfil Profissional</span>
+                        <strong><i class="ri-radar-line"></i></strong>
+                        <small style="opacity:.9; font-size:12px;">Abrir gráfico de teia</small>
+                    </div>
                 </div>
 
-                <div class="rh-panels-grid">
+                <div class="rh-panel card rh-filters-card">
+                    <div class="rh-panel-title"><i class="ri-filter-3-line"></i> Filtros Analíticos</div>
+                    <div class="rh-filter-grid">
+                        <div>
+                            <label style="font-size:12px; font-weight:600;">Setor</label>
+                            <select id="rh-filter-setor" class="form-input">
+                                <option value="">Visão Geral</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:12px; font-weight:600;">Colaborador</label>
+                            <select id="rh-filter-colaborador" class="form-input">
+                                <option value="">Todos os colaboradores</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:12px; font-weight:600;">Ação</label>
+                            <button class="btn-hover color-8" onclick="window.limparFiltrosRH()" style="width:100%;"><i class="ri-refresh-line"></i> Limpar filtros</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rh-panels-grid rh-panels-grid-3">
                     <div class="rh-panel card">
                         <div class="rh-panel-title"><i class="ri-bar-chart-grouped-line"></i> Dashboard de Talentos</div>
                         <div class="rh-filters">
                             <input type="text" id="rh-search-colab" class="form-input" placeholder="Buscar colaborador..." onkeyup="window.renderizarDashboardRH()">
                         </div>
-                        <div class="rh-collabs-grid" id="rh-grid-colaboradores" style="margin-top: 15px; max-height: 500px; overflow-y: auto; padding-right: 5px;">
-                            </div>
+                        <div class="rh-collabs-grid" id="rh-grid-colaboradores" style="margin-top: 15px; max-height: 500px; overflow-y: auto; padding-right: 5px;"></div>
                     </div>
                     
                     <div class="rh-panel card">
                         <div class="rh-panel-title"><i class="ri-feedback-line"></i> Pesquisas de Clima/Fit Ativas</div>
-                        <div class="rh-surveys-list" id="rh-grid-pesquisas">
-                            </div>
+                        <div class="rh-surveys-list" id="rh-grid-pesquisas"></div>
+                    </div>
+
+                    <div class="rh-panel card">
+                        <div class="rh-panel-title"><i class="ri-radar-line"></i> Avaliações de Perfil Ativas</div>
+                        <div class="rh-surveys-list" id="rh-grid-perfis"></div>
                     </div>
                 </div>
             </section>
@@ -564,7 +608,7 @@
 
     <div id="modal-media" class="modal-overlay" style="display: none; z-index: 9999;">
         <div class="modal-box glass-effect" style="width: 95vw; height: 90vh; max-width: 1200px; padding: 20px;">
-            <header class="modal-header" style="margin-bottom: 10px;"><h3>Visualização de Material</h3><div style="display:flex; gap:10px; align-items:center;"><a id="btn-abrir-media-nova-guia" href="#" target="_blank" class="btn-hover color-8" style="height:36px; padding:0 14px; font-size:12px; text-decoration:none;">Abrir em nova guia</a><button id="btn-fechar-media" class="btn-icon" onclick="window.fecharMidiaFlutuante()"><i class="ri-close-line"></i></button></div></header>
+            <header class="modal-header" style="margin-bottom: 10px;"><h3>Visualização de Material</h3><button id="btn-fechar-media" class="btn-icon" onclick="window.fecharMidiaFlutuante()"><i class="ri-close-line"></i></button></header>
             <div class="modal-body" style="height: 100%; border-radius: 15px; overflow:hidden;"><iframe id="iframe-media" src="" allowfullscreen style="width: 100%; height: 100%; border: none; background-color: #e2e8f0;"></iframe></div>
         </div>
     </div>
@@ -572,10 +616,11 @@
     <div id="modal-criar-pesquisa" class="modal-overlay" style="display: none; z-index: 10000;">
         <div class="modal-box rh-modal-box glass-effect">
             <div class="rh-modal-header">
-                <h3><i class="ri-survey-line"></i> Criar Nova Pesquisa (RH)</h3>
+                <h3 id="rh-modal-pesquisa-titulo"><i class="ri-survey-line"></i> Criar Nova Pesquisa (RH)</h3>
                 <button class="rh-close" onclick="document.getElementById('modal-criar-pesquisa').style.display='none'">&times;</button>
             </div>
             <div class="modal-body">
+                <input type="hidden" id="rh-pesq-edit-id">
                 <input type="text" id="rh-pesq-titulo" class="form-input" placeholder="Título da Pesquisa (Ex: Avaliação de Fit Cultural)">
                 <div class="rh-form-grid">
                     <div>
@@ -587,10 +632,19 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-size:12px; font-weight:600;">Público Alvo:</label>
-                        <select id="rh-pesq-alvo" class="form-input">
-                            </select>
+                        <label style="font-size:12px; font-weight:600;">Tipo de Público:</label>
+                        <select id="rh-pesq-alvo-tipo" class="form-input" onchange="window.atualizarAlvoPesquisaRHFormulario()">
+                            <option value="Geral">Todos (Geral)</option>
+                            <option value="Setor">Um setor específico</option>
+                            <option value="Colaborador">Um colaborador específico</option>
+                        </select>
                     </div>
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:600;">Público Alvo:</label>
+                    <select id="rh-pesq-alvo" class="form-input" disabled>
+                        <option value="">Todos (Geral)</option>
+                    </select>
                 </div>
                 
                 <h4 style="margin: 15px 0 10px; color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">Perguntas da Pesquisa</h4>
@@ -601,7 +655,7 @@
                     <button onclick="window.adicionarPerguntaRH('texto')" class="btn-hover color-5" style="flex:1; height:35px; font-size:11px;">+ Adicionar Texto Aberto</button>
                 </div>
                 
-                <button onclick="window.salvarPesquisaRH()" class="btn-hover color-11" style="width: 100%; margin-top: 25px;"><i class="ri-send-plane-fill"></i> Disparar Pesquisa</button>
+                <button onclick="window.salvarPesquisaRH()" class="btn-hover color-11" style="width: 100%; margin-top: 25px;"><i class="ri-send-plane-fill"></i> Salvar Pesquisa</button>
             </div>
         </div>
     </div>
@@ -629,6 +683,76 @@
         </div>
     </div>
 
+    <div id="modal-criar-perfil" class="modal-overlay" style="display: none; z-index: 10007;">
+        <div class="modal-box rh-modal-box glass-effect">
+            <div class="rh-modal-header">
+                <h3 id="rh-modal-perfil-titulo"><i class="ri-radar-line"></i> Nova Avaliação de Perfil</h3>
+                <button class="rh-close" onclick="document.getElementById('modal-criar-perfil').style.display='none'">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="rh-perfil-edit-id">
+                <input type="text" id="rh-perfil-titulo" class="form-input" placeholder="Título da Avaliação (Ex: Perfil Profissional - Liderança)">
+                <div class="rh-form-grid">
+                    <div>
+                        <label style="font-size:12px; font-weight:600;">Tipo de Público:</label>
+                        <select id="rh-perfil-alvo-tipo" class="form-input" onchange="window.atualizarAlvoPerfilFormulario()">
+                            <option value="Geral">Todos (Geral)</option>
+                            <option value="Setor">Um setor específico</option>
+                            <option value="Colaborador">Um colaborador específico</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:12px; font-weight:600;">Público Alvo:</label>
+                        <select id="rh-perfil-alvo-valor" class="form-input" disabled>
+                            <option value="">Todos (Geral)</option>
+                        </select>
+                    </div>
+                </div>
+                <h4 style="margin: 15px 0 10px; color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">Perguntas do Perfil</h4>
+                <div id="rh-perfil-perguntas-list" style="margin-bottom: 15px;"></div>
+                <button onclick="window.adicionarPerguntaPerfil()" class="btn-hover color-9" style="width:100%; height:38px; font-size:12px;"><i class="ri-add-line"></i> Adicionar Pergunta ao Radar</button>
+                <button onclick="window.salvarAvaliacaoPerfil()" class="btn-hover color-11" style="width: 100%; margin-top: 20px;"><i class="ri-save-line"></i> Salvar Avaliação de Perfil</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-responder-perfil" class="modal-overlay" style="display:none; z-index:10008;">
+        <div class="modal-box rh-modal-box glass-effect">
+            <div class="rh-modal-header">
+                <h3 id="rh-perfil-resp-titulo">Responder Avaliação de Perfil</h3>
+                <button class="rh-close" onclick="document.getElementById('modal-responder-perfil').style.display='none'">&times;</button>
+            </div>
+            <div class="modal-body" id="rh-perfil-resp-area"></div>
+            <input type="hidden" id="rh-perfil-resp-id">
+            <button onclick="window.enviarRespostaPerfilRH()" class="btn-hover color-5" style="width:100%; margin-top:15px;"><i class="ri-check-double-line"></i> Enviar Avaliação</button>
+        </div>
+    </div>
+
+    <div id="modal-perfil-profissional" class="modal-overlay" style="display:none; z-index:10009;">
+        <div class="modal-box rh-modal-box glass-effect" style="width:min(980px, 96vw);">
+            <div class="rh-modal-header">
+                <h3><i class="ri-radar-line"></i> Perfil Profissional</h3>
+                <button class="rh-close" onclick="document.getElementById('modal-perfil-profissional').style.display='none'">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="rh-form-grid">
+                    <div>
+                        <label style="font-size:12px; font-weight:600;">Selecionar colaborador</label>
+                        <select id="rh-perfil-select-colaborador" class="form-input" onchange="window.renderizarGraficoPerfilProfissional(this.value)">
+                            <option value="">Selecione um colaborador</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="rh-profile-grid">
+                    <div class="rh-profile-chart-wrap">
+                        <canvas id="rh-perfil-radar-chart"></canvas>
+                    </div>
+                    <div class="rh-profile-summary" id="rh-perfil-radar-info"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="chat-fab" onclick="window.toggleChat()" style="display: none;">
         <img id="chat-fab-img" src="https://cdn-icons-png.flaticon.com/512/8943/8943377.png" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
     </div>
@@ -651,6 +775,6 @@
         </div>
     </div>
 
-    <script type="module" src="app.js?v=20260327-9"></script>
+    <script type="module" src="app.js?v=20260327-1"></script>
 </body>
 </html>
