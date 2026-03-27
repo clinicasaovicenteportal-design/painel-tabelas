@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tabelas-app-v9';
+const CACHE_NAME = 'tabelas-app-v3';
 
 // Ficheiros que queremos guardar no dispositivo
 const urlsToCache = [
