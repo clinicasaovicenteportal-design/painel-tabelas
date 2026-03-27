@@ -77,9 +77,35 @@ window.escapeHTML = function(value = '') { return String(value).replace(/[&<>"']
 window.extrairNomeRegistro = function(registro = '') { return String(registro).split(' (')[0].trim(); };
 
 window.abrirMidiaFlutuante = function(url = '') {
-    const link = String(url || '').trim();
+    let link = String(url || '').trim();
     if (!link) { alert('Link do material não informado.'); return; }
-    window.open(link, '_blank', 'noopener,noreferrer');
+
+    if (link.includes('drive.google.com') && link.includes('/view')) {
+        link = link.replace('/view', '/preview');
+    }
+    if (link.includes('youtube.com/watch?v=')) {
+        const videoId = link.split('v=')[1].split('&')[0];
+        link = `https://www.youtube.com/embed/${videoId}`;
+    } else if (link.includes('youtu.be/')) {
+        const videoId = link.split('youtu.be/')[1].split('?')[0];
+        link = `https://www.youtube.com/embed/${videoId}`;
+    }
+
+    const modal = document.getElementById('modal-media');
+    const iframe = document.getElementById('iframe-media');
+    if (!modal || !iframe) {
+        window.open(link, '_blank', 'noopener,noreferrer');
+        return;
+    }
+
+    iframe.src = link;
+    modal.style.display = 'flex';
+};
+window.fecharMidiaFlutuante = function() {
+    const modal = document.getElementById('modal-media');
+    const iframe = document.getElementById('iframe-media');
+    if (iframe) iframe.src = '';
+    if (modal) modal.style.display = 'none';
 };
 window.abrirMidaFlutuante = window.abrirMidiaFlutuante;
 
