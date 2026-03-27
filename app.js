@@ -6,36 +6,36 @@ window.addEventListener('submit', function(e) {
 }, true);
 
 // ==========================================
-// 1. CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
+// 1. CONFIGURAÃ‡Ã•ES E VARIÃVEIS GLOBAIS
 // ==========================================
 const configuracaoAbas = {
-    'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da Clínica', 'PIN de Acesso (Treinamentos)'] },
+    'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da ClÃ­nica', 'PIN de Acesso (Treinamentos)'] },
     
     'treinamentos': { 
         titulo: 'Material de Ensino', 
-        campos: ['Título da Atividade', 'Pasta / Módulo', 'Tipo (Vídeo, PDF, Tarefa, Prova)', 'Link do Material (Se houver)', 'Colaborador Específico (Opcional)', 'Para quais Setores?', 'Pontos Valendo', 'Configuração da Avaliação'], 
-        campoAgrupador: 'Pasta / Módulo', 
+        campos: ['TÃ­tulo da Atividade', 'Pasta / MÃ³dulo', 'Tipo (VÃ­deo, PDF, Tarefa, Prova)', 'Link do Material (Se houver)', 'Colaborador EspecÃ­fico (Opcional)', 'Para quais Setores?', 'Pontos Valendo', 'ConfiguraÃ§Ã£o da AvaliaÃ§Ã£o'], 
+        campoAgrupador: 'Pasta / MÃ³dulo', 
         icone: 'ri-book-read-fill' 
     },
 
-    'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' }, 
-    'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'], campoAgrupador: 'Convênio', icone: 'ri-shield-cross-fill' },
+    'corpo-clinico': { titulo: 'MÃ©dico', campos: ['Nome do MÃ©dico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' }, 
+    'convenios': { titulo: 'ConvÃªnio', campos: ['ConvÃªnio', 'CÃ³digo', 'ServiÃ§o', 'Aceita o Servico?', 'ObservaÃ§Ãµes'], campoAgrupador: 'ConvÃªnio', icone: 'ri-shield-cross-fill' },
     
-    // 👇 NOVOS CAMPOS DE PROFISSIONAIS AQUI 👇
-    'ultrassom': { titulo: 'Exame de Ultrassom', campos: ['Exame', 'Código', 'Profissionais que realizam (Opcional)', 'Restrição de Idade', 'Observação'], campoAgrupador: 'Exame', icone: 'ri-pulse-line' },
-    'consultas': { titulo: 'Consulta / Procedimento', campos: ['Tipo', 'Código', 'Descrição', 'Valor', 'Profissionais que realizam (Opcional)', 'Observações'], campoAgrupador: 'Tipo', icone: 'ri-stethoscope-line' },
-    'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Categoria do Exame', 'Código', 'Descrição', 'Valor', 'Prazo de Laudo', 'Profissionais que realizam (Opcional)', 'Onde encontrar resultado', 'Observações', 'Convênios'], campoAgrupador: 'Categoria do Exame', icone: 'ri-body-scan-line' },
+    // ðŸ‘‡ NOVOS CAMPOS DE PROFISSIONAIS AQUI ðŸ‘‡
+    'ultrassom': { titulo: 'Exame de Ultrassom', campos: ['Exame', 'CÃ³digo', 'Profissionais que realizam (Opcional)', 'RestriÃ§Ã£o de Idade', 'ObservaÃ§Ã£o'], campoAgrupador: 'Exame', icone: 'ri-pulse-line' },
+    'consultas': { titulo: 'Consulta / Procedimento', campos: ['Tipo', 'CÃ³digo', 'DescriÃ§Ã£o', 'Valor', 'Profissionais que realizam (Opcional)', 'ObservaÃ§Ãµes'], campoAgrupador: 'Tipo', icone: 'ri-stethoscope-line' },
+    'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Categoria do Exame', 'CÃ³digo', 'DescriÃ§Ã£o', 'Valor', 'Prazo de Laudo', 'Profissionais que realizam (Opcional)', 'Onde encontrar resultado', 'ObservaÃ§Ãµes', 'ConvÃªnios'], campoAgrupador: 'Categoria do Exame', icone: 'ri-body-scan-line' },
     
-    'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor ou Informacao', 'O que está incluso', 'Observações', 'Pacotes', 'Kit'] },
-    'institutos': { titulo: 'Instituto Tabela', campos: ['Número da Tabela', 'Valor da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'], campoAgrupador: 'Número da Tabela', icone: 'ri-building-line' },
-    'remocoes': { titulo: 'Remoção', campos: ['Nome do Lugar', 'Números (Separe por vírgula)', 'Local e Link Maps', 'Observações Importantes'] },
-    'ramais': { titulo: 'Ramal', campos: ['Local ou Prédio', 'Setor', 'Número do Ramal', 'Observações'] },
-    'emails': { titulo: 'E-mail', campos: ['Descrição do E-mail', 'Setor'] },
-    'contatos-gerais': { titulo: 'Contato Geral', campos: ['Descrição (Lugar ou Pessoa)', 'Número'] },
-    'contatos-convenios': { titulo: 'Contato Convênio', campos: ['Nome do Convênio', 'Número'] },
-    'senhas': { titulo: 'Senha de Acesso', campos: ['Convênio ou Sistema', 'Link de Acesso', 'Senha', 'Local de Acesso Permitido'] },
-    'boletins': { titulo: 'Boletim Informativo', campos: ['Título do Informativo', 'Para quais Setores?', 'Tipo (Urgente, Norma, Regra, etc)', 'Data de Publicação', 'Motivo', 'Links dos Materiais (1 por linha)'] },
-    'boletins-privados': { titulo: 'Informativo Privado', campos: ['Para qual Colaborador?', 'Título do Documento', 'Data de Publicação', 'Tipo (Urgente, Norma, Regra, etc)', 'Motivo', 'Links dos Materiais (1 por linha)'] }
+    'pacotes': { titulo: 'Pacote PS', campos: ['DescriÃ§Ã£o', 'Valor ou Informacao', 'O que estÃ¡ incluso', 'ObservaÃ§Ãµes', 'Pacotes', 'Kit'] },
+    'institutos': { titulo: 'Instituto Tabela', campos: ['NÃºmero da Tabela', 'Valor da Tabela', 'Profissional', 'Especialidade', 'RestriÃ§Ã£o de Idade', 'CRM', 'CBO', 'URA', 'Outros'], campoAgrupador: 'NÃºmero da Tabela', icone: 'ri-building-line' },
+    'remocoes': { titulo: 'RemoÃ§Ã£o', campos: ['Nome do Lugar', 'NÃºmeros (Separe por vÃ­rgula)', 'Local e Link Maps', 'ObservaÃ§Ãµes Importantes'] },
+    'ramais': { titulo: 'Ramal', campos: ['Local ou PrÃ©dio', 'Setor', 'NÃºmero do Ramal', 'ObservaÃ§Ãµes'] },
+    'emails': { titulo: 'E-mail', campos: ['DescriÃ§Ã£o do E-mail', 'Setor'] },
+    'contatos-gerais': { titulo: 'Contato Geral', campos: ['DescriÃ§Ã£o (Lugar ou Pessoa)', 'NÃºmero'] },
+    'contatos-convenios': { titulo: 'Contato ConvÃªnio', campos: ['Nome do ConvÃªnio', 'NÃºmero'] },
+    'senhas': { titulo: 'Senha de Acesso', campos: ['ConvÃªnio ou Sistema', 'Link de Acesso', 'Senha', 'Local de Acesso Permitido'] },
+    'boletins': { titulo: 'Boletim Informativo', campos: ['TÃ­tulo do Informativo', 'Para quais Setores?', 'Tipo (Urgente, Norma, Regra, etc)', 'Data de PublicaÃ§Ã£o', 'Motivo', 'Links dos Materiais (1 por linha)'] },
+    'boletins-privados': { titulo: 'Informativo Privado', campos: ['Para qual Colaborador?', 'TÃ­tulo do Documento', 'Data de PublicaÃ§Ã£o', 'Tipo (Urgente, Norma, Regra, etc)', 'Motivo', 'Links dos Materiais (1 por linha)'] }
 };
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -77,35 +77,9 @@ window.escapeHTML = function(value = '') { return String(value).replace(/[&<>"']
 window.extrairNomeRegistro = function(registro = '') { return String(registro).split(' (')[0].trim(); };
 
 window.abrirMidiaFlutuante = function(url = '') {
-    let link = String(url || '').trim();
-    if (!link) { alert('Link do material não informado.'); return; }
-
-    if (link.includes('drive.google.com') && link.includes('/view')) {
-        link = link.replace('/view', '/preview');
-    }
-    if (link.includes('youtube.com/watch?v=')) {
-        const videoId = link.split('v=')[1].split('&')[0];
-        link = `https://www.youtube.com/embed/${videoId}`;
-    } else if (link.includes('youtu.be/')) {
-        const videoId = link.split('youtu.be/')[1].split('?')[0];
-        link = `https://www.youtube.com/embed/${videoId}`;
-    }
-
-    const modal = document.getElementById('modal-media');
-    const iframe = document.getElementById('iframe-media');
-    if (!modal || !iframe) {
-        window.open(link, '_blank', 'noopener,noreferrer');
-        return;
-    }
-
-    iframe.src = link;
-    modal.style.display = 'flex';
-};
-window.fecharMidiaFlutuante = function() {
-    const modal = document.getElementById('modal-media');
-    const iframe = document.getElementById('iframe-media');
-    if (iframe) iframe.src = '';
-    if (modal) modal.style.display = 'none';
+    const link = String(url || '').trim();
+    if (!link) { alert('Link do material nÃ£o informado.'); return; }
+    window.open(link, '_blank', 'noopener,noreferrer');
 };
 window.abrirMidaFlutuante = window.abrirMidiaFlutuante;
 
@@ -117,11 +91,11 @@ window.confirmarAssinaturaLeitura = async function(docId, colecao) {
 
         const base = colecao === 'boletins' ? (window.todosBoletinsData || []) : (window.todosPrivadosData || []);
         const item = base.find(i => i.id === docId);
-        if (!item) { alert('Documento não encontrado.'); return; }
+        if (!item) { alert('Documento nÃ£o encontrado.'); return; }
 
         const leituras = Array.isArray(item.data?.leituras) ? item.data.leituras : [];
         const jaExiste = leituras.some(reg => window.extrairNomeRegistro(reg) === nomeLeitor);
-        if (jaExiste) { alert('Essa leitura já foi registrada.'); return; }
+        if (jaExiste) { alert('Essa leitura jÃ¡ foi registrada.'); return; }
 
         const registro = `${nomeLeitor} (${new Date().toLocaleString('pt-BR')})`;
         await window.updateDoc(window.doc(window.db, colecao, docId), { leituras: window.arrayUnion(registro) });
@@ -138,7 +112,7 @@ window.confirmarAssinaturaLeitura = async function(docId, colecao) {
 
 window.filtrarPorDataPublicacao = function(lista = [], dtInicio = '', dtFim = '') {
     return (lista || []).filter(item => {
-        const d = String(item?.data?.['Data de Publicação'] || '').trim();
+        const d = String(item?.data?.['Data de PublicaÃ§Ã£o'] || '').trim();
         if (!d) return !dtInicio && !dtFim;
         if (dtInicio && d < dtInicio) return false;
         if (dtFim && d > dtFim) return false;
@@ -156,7 +130,7 @@ window.getColaboradoresFiltradosPorSetor = function(setor = '') {
         .sort((a,b) => a.nome.localeCompare(b.nome));
 };
 window.isTreinamentoAvaliativo = function(itemData = {}) {
-    const tipo = String(itemData['Tipo (Vídeo, PDF, Tarefa, Prova)'] || '');
+    const tipo = String(itemData['Tipo (VÃ­deo, PDF, Tarefa, Prova)'] || '');
     return tipo.includes('Tarefa') || tipo.includes('Prova');
 };
 window.obterPublicoPesquisaRH = function(itemData, nomeColaborador = '', setorColaborador = '') {
@@ -188,13 +162,13 @@ let chartBoletinsInst = null; let chartPrivadosInst = null; let chartHomeInst = 
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW não registrado:', err));
+        navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW nÃ£o registrado:', err));
     });
 }
 
 const paletaGradientes = [
-    { valor: "#ffffff", nome: "Branco Padrão", dark: false }, { valor: "#e53e3e", nome: "Vermelho Sólido", dark: true }, { valor: "#3182ce", nome: "Azul Sólido", dark: true },
-    { valor: "#38a169", nome: "Verde Sólido", dark: true }, { valor: "#ecc94b", nome: "Amarelo Sólido", dark: false }, { valor: "#805ad5", nome: "Roxo Sólido", dark: true },
+    { valor: "#ffffff", nome: "Branco PadrÃ£o", dark: false }, { valor: "#e53e3e", nome: "Vermelho SÃ³lido", dark: true }, { valor: "#3182ce", nome: "Azul SÃ³lido", dark: true },
+    { valor: "#38a169", nome: "Verde SÃ³lido", dark: true }, { valor: "#ecc94b", nome: "Amarelo SÃ³lido", dark: false }, { valor: "#805ad5", nome: "Roxo SÃ³lido", dark: true },
     { valor: "linear-gradient(to right, #fc6076, #ff9a44, #ef9d43, #e75516)", nome: "Laranja", dark: true }, { valor: "linear-gradient(to right, #0ba360, #3cba92, #30dd8a, #2bb673)", nome: "Verde Claro", dark: true },
     { valor: "linear-gradient(to right, #6253e1, #852D91, #A3A1FF, #F24645)", nome: "Roxo/Azul", dark: true }, { valor: "linear-gradient(to right, #29323c, #485563, #2b5876, #4e4376)", nome: "Escuro", dark: true },
     { valor: "linear-gradient(to right, #eb3941, #f15e64, #e14e53, #e2373f)", nome: "Vermelho HD", dark: true }
@@ -226,7 +200,7 @@ onAuthStateChanged(auth, (user) => {
         if(chatFab) chatFab.style.display = 'flex';
         isAdmin = (user.email === EMAIL_GESTAO);
         const badge = document.getElementById('user-role-badge');
-        if(badge) badge.textContent = isAdmin ? "Gestão Administrador" : "Acesso Geral";
+        if(badge) badge.textContent = isAdmin ? "GestÃ£o Administrador" : "Acesso Geral";
         if(isAdmin) {
             if(badge) badge.classList.add('admin'); document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
         } else {
@@ -252,7 +226,7 @@ window.buscarClimaAraucaria = async function() {
     try {
         const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-25.59&longitude=-49.41&current_weather=true'); const data = await response.json(); const clima = data.current_weather;
         const wDeg = document.getElementById('weather-deg'); if(wDeg) wDeg.textContent = Math.round(clima.temperature);
-        let desc = "Céu Limpo"; let icon = "ri-sun-fill";
+        let desc = "CÃ©u Limpo"; let icon = "ri-sun-fill";
         if(clima.weathercode >= 1 && clima.weathercode <= 3) { desc = "Parcialmente Nublado"; icon = "ri-sun-cloudy-fill"; }
         if(clima.weathercode === 45 || clima.weathercode === 48) { desc = "Neblina"; icon = "ri-foggy-fill"; }
         if(clima.weathercode >= 51 && clima.weathercode <= 67) { desc = "Chuva Leve"; icon = "ri-drizzle-fill"; }
@@ -261,7 +235,7 @@ window.buscarClimaAraucaria = async function() {
         if(clima.weathercode >= 95) { desc = "Tempestade"; icon = "ri-thunderstorms-fill"; }
         const wDesc = document.getElementById('weather-desc'); const wIcon = document.getElementById('weather-icon-class');
         if(wDesc) wDesc.textContent = desc; if(wIcon) wIcon.className = icon;
-    } catch(e) { const wDesc = document.getElementById('weather-desc'); if(wDesc) wDesc.textContent = "Clima indisponível"; }
+    } catch(e) { const wDesc = document.getElementById('weather-desc'); if(wDesc) wDesc.textContent = "Clima indisponÃ­vel"; }
 };
 
 window.obterPublicoAlvo = function(setoresAlvoString, colabEsp = '') {
@@ -285,10 +259,10 @@ window.verificarUrgentesHome = function() {
         });
     };
     verificarItens(window.todosBoletinsData, false); if(isAdmin) verificarItens(window.todosPrivadosData, true);
-    if(totalUrgentesPendentes > 0) area.innerHTML = `<div class="alerta-urgente-home" onclick="window.irParaAba('boletins')"><i class="ri-alarm-warning-fill"></i><div><strong>Atenção! Informativos Urgentes</strong><span>Existem <b>${totalUrgentesPendentes}</b> pendentes.</span></div></div>`;
+    if(totalUrgentesPendentes > 0) area.innerHTML = `<div class="alerta-urgente-home" onclick="window.irParaAba('boletins')"><i class="ri-alarm-warning-fill"></i><div><strong>AtenÃ§Ã£o! Informativos Urgentes</strong><span>Existem <b>${totalUrgentesPendentes}</b> pendentes.</span></div></div>`;
 };
 
-// 💡 DESTAQUE DE CARD (PISCAR)
+// ðŸ’¡ DESTAQUE DE CARD (PISCAR)
 window.destacarCard = function(docId) {
     setTimeout(() => {
         const card = document.getElementById(`card-${docId}`);
@@ -322,14 +296,14 @@ window.atualizarGrafico = function(canvasId, refInstancia, dados, labelGrafico) 
 window.renderizarGraficoHome = function() {
     const dtInicio = document.getElementById('home-data-inicio') ? document.getElementById('home-data-inicio').value : ''; const dtFim = document.getElementById('home-data-fim') ? document.getElementById('home-data-fim').value : '';
     let dadosFiltrados = window.todosBoletinsData;
-    if (dtInicio || dtFim) dadosFiltrados = window.todosBoletinsData.filter(item => { const d = item.data['Data de Publicação']; if (!d) return false; if (dtInicio && d < dtInicio) return false; if (dtFim && d > dtFim) return false; return true; });
+    if (dtInicio || dtFim) dadosFiltrados = window.todosBoletinsData.filter(item => { const d = item.data['Data de PublicaÃ§Ã£o']; if (!d) return false; if (dtInicio && d < dtInicio) return false; if (dtFim && d > dtFim) return false; return true; });
     chartHomeInst = window.atualizarGrafico('chart-home', chartHomeInst, dadosFiltrados, 'Motivos Gerais (Empresa)');
 };
 
 window.renderizarGraficoPrivadosGeral = function() {
     const dtInicio = document.getElementById('privado-data-inicio') ? document.getElementById('privado-data-inicio').value : ''; const dtFim = document.getElementById('privado-data-fim') ? document.getElementById('privado-data-fim').value : '';
     let dadosFiltrados = window.todosPrivadosData;
-    if (dtInicio || dtFim) dadosFiltrados = window.todosPrivadosData.filter(item => { const d = item.data['Data de Publicação']; if (!d) return false; if (dtInicio && d < dtInicio) return false; if (dtFim && d > dtFim) return false; return true; });
+    if (dtInicio || dtFim) dadosFiltrados = window.todosPrivadosData.filter(item => { const d = item.data['Data de PublicaÃ§Ã£o']; if (!d) return false; if (dtInicio && d < dtInicio) return false; if (dtFim && d > dtFim) return false; return true; });
     chartPrivadosGeralInst = window.atualizarGrafico('chart-privados-geral', chartPrivadosGeralInst, dadosFiltrados, 'Motivos Diretos (Equipe)');
 };
 
@@ -341,21 +315,21 @@ window.adicionarPerguntaBuilder = function(tipo, objAntigo = null) {
     
     let html = `<button type="button" onclick="this.parentElement.remove(); window.sincronizarQuizJSON();" style="position:absolute; top:10px; right:10px; background:none; border:none; color:red; cursor:pointer;"><i class="ri-delete-bin-line"></i></button>`;
     html += `<input type="hidden" class="quiz-tipo" value="${tipo}">`;
-    html += `<label style="font-size:12px; font-weight:600;">Pergunta / Enunciado (${tipo === 'descritiva' ? 'Resposta em Texto' : 'Múltipla Escolha'}):</label>`;
+    html += `<label style="font-size:12px; font-weight:600;">Pergunta / Enunciado (${tipo === 'descritiva' ? 'Resposta em Texto' : 'MÃºltipla Escolha'}):</label>`;
     html += `<textarea class="form-input quiz-pergunta" style="height:60px; margin-bottom:10px;" onkeyup="window.sincronizarQuizJSON()">${objAntigo ? objAntigo.p : ''}</textarea>`;
 
     if(tipo === 'multipla') {
         const ops = objAntigo ? objAntigo.ops : ['','','','']; const corr = objAntigo ? objAntigo.correta : '0';
-        html += `<label style="font-size:12px; font-weight:600;">Opções de Resposta:</label>`;
+        html += `<label style="font-size:12px; font-weight:600;">OpÃ§Ãµes de Resposta:</label>`;
         ['A', 'B', 'C', 'D'].forEach((letra, idx) => { html += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;"><span style="font-weight:bold; width:20px;">${letra})</span><input type="text" class="form-input quiz-op" style="margin:0;" value="${ops[idx] || ''}" onkeyup="window.sincronizarQuizJSON()"></div>`; });
-        html += `<label style="font-size:12px; font-weight:600; margin-top:10px; display:block;">Qual é a opção CORRETA?</label>`;
-        html += `<select class="form-input quiz-correta" onchange="window.sincronizarQuizJSON()"><option value="0" ${corr==='0'?'selected':''}>Opção A</option><option value="1" ${corr==='1'?'selected':''}>Opção B</option><option value="2" ${corr==='2'?'selected':''}>Opção C</option><option value="3" ${corr==='3'?'selected':''}>Opção D</option></select>`;
+        html += `<label style="font-size:12px; font-weight:600; margin-top:10px; display:block;">Qual Ã© a opÃ§Ã£o CORRETA?</label>`;
+        html += `<select class="form-input quiz-correta" onchange="window.sincronizarQuizJSON()"><option value="0" ${corr==='0'?'selected':''}>OpÃ§Ã£o A</option><option value="1" ${corr==='1'?'selected':''}>OpÃ§Ã£o B</option><option value="2" ${corr==='2'?'selected':''}>OpÃ§Ã£o C</option><option value="3" ${corr==='3'?'selected':''}>OpÃ§Ã£o D</option></select>`;
     }
     div.innerHTML = html; container.appendChild(div);
 };
 
 window.carregarPerguntasBuilder = function() {
-    const inputOculto = document.getElementById('input-Configuração da Avaliação');
+    const inputOculto = document.getElementById('input-ConfiguraÃ§Ã£o da AvaliaÃ§Ã£o');
     if(!inputOculto || !inputOculto.value || inputOculto.value === '') return;
     try {
         const jsonStr = inputOculto.value.replace(/&quot;/g, '"').replace(/&apos;/g, "'");
@@ -378,7 +352,7 @@ window.sincronizarQuizJSON = function() {
             arrayFinal.push({ tipo, p, ops, correta });
         }
     });
-    const inputOculto = document.getElementById('input-Configuração da Avaliação');
+    const inputOculto = document.getElementById('input-ConfiguraÃ§Ã£o da AvaliaÃ§Ã£o');
     if(inputOculto) { inputOculto.value = JSON.stringify(arrayFinal).replace(/"/g, "&quot;").replace(/'/g, "&apos;"); }
 };
 
@@ -397,25 +371,25 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
     }
     document.getElementById('modal-doc-id').value = docId || "";
 
-    // Geração dinâmica dos inputs e listas suspensas (Inclui os exames dinâmicos)
+    // GeraÃ§Ã£o dinÃ¢mica dos inputs e listas suspensas (Inclui os exames dinÃ¢micos)
     let htmlCampos = '';
     config.campos.forEach(campo => {
         const valorAntigo = (dadosAntigos && dadosAntigos[campo]) ? dadosAntigos[campo] : '';
         
-        if(colecao === 'colaboradores' && campo === 'Setor da Clínica') {
-            htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Geral">Setor Padrão (Geral)</option>`; setoresGlobais.forEach(s => { htmlCampos += `<option value="${s}" ${valorAntigo === s ? 'selected' : ''}>${s}</option>`; }); htmlCampos += `</select>`;
+        if(colecao === 'colaboradores' && campo === 'Setor da ClÃ­nica') {
+            htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Geral">Setor PadrÃ£o (Geral)</option>`; setoresGlobais.forEach(s => { htmlCampos += `<option value="${s}" ${valorAntigo === s ? 'selected' : ''}>${s}</option>`; }); htmlCampos += `</select>`;
         }
-        else if(colecao === 'treinamentos' && campo === 'Tipo (Vídeo, PDF, Tarefa, Prova)') {
-            htmlCampos += `<select id="input-${campo}" class="form-input">`; ['Vídeo', 'PDF/Documento', 'Tarefa Prática', 'Prova Múltipla Escolha'].forEach(op => { htmlCampos += `<option value="${op}" ${valorAntigo === op ? 'selected' : ''}>${op}</option>`; }); htmlCampos += `</select>`;
+        else if(colecao === 'treinamentos' && campo === 'Tipo (VÃ­deo, PDF, Tarefa, Prova)') {
+            htmlCampos += `<select id="input-${campo}" class="form-input">`; ['VÃ­deo', 'PDF/Documento', 'Tarefa PrÃ¡tica', 'Prova MÃºltipla Escolha'].forEach(op => { htmlCampos += `<option value="${op}" ${valorAntigo === op ? 'selected' : ''}>${op}</option>`; }); htmlCampos += `</select>`;
         }
-        else if(colecao === 'treinamentos' && campo === 'Colaborador Específico (Opcional)') {
+        else if(colecao === 'treinamentos' && campo === 'Colaborador EspecÃ­fico (Opcional)') {
             htmlCampos += `<select id="input-${campo}" class="form-input"><option value="">Nenhum (Vai para todo o Setor marcado)</option>`; listaColaboradoresGlobal.forEach(c => { htmlCampos += `<option value="${c.nome}" ${valorAntigo === c.nome ? 'selected' : ''}>${c.nome}</option>`; }); htmlCampos += `</select>`;
         }
-        else if(colecao === 'treinamentos' && campo === 'Configuração da Avaliação') {
+        else if(colecao === 'treinamentos' && campo === 'ConfiguraÃ§Ã£o da AvaliaÃ§Ã£o') {
             htmlCampos += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px;">Perguntas da Prova ou Enunciado da Tarefa:</label>`;
             htmlCampos += `<input type="hidden" id="input-${campo}" value="${valorAntigo}">`;
             htmlCampos += `<div id="quiz-questions-list"></div>`;
-            htmlCampos += `<div style="display:flex; gap:10px; margin-bottom: 15px;"><button type="button" onclick="window.adicionarPerguntaBuilder('descritiva')" class="btn-hover color-8" style="flex:1; height:35px; font-size:11px;">+ Adicionar Texto/Tarefa</button><button type="button" onclick="window.adicionarPerguntaBuilder('multipla')" class="btn-hover color-5" style="flex:1; height:35px; font-size:11px;">+ Adicionar Múltipla Escolha</button></div>`;
+            htmlCampos += `<div style="display:flex; gap:10px; margin-bottom: 15px;"><button type="button" onclick="window.adicionarPerguntaBuilder('descritiva')" class="btn-hover color-8" style="flex:1; height:35px; font-size:11px;">+ Adicionar Texto/Tarefa</button><button type="button" onclick="window.adicionarPerguntaBuilder('multipla')" class="btn-hover color-5" style="flex:1; height:35px; font-size:11px;">+ Adicionar MÃºltipla Escolha</button></div>`;
         }
         else if(colecao === 'corpo-clinico' && campo === 'Especialidade') {
             htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Geral (Sem Categoria)">Selecione a Especialidade...</option>`; especialidadesGlobais.forEach(s => { htmlCampos += `<option value="${s}" ${valorAntigo === s ? 'selected' : ''}>${s}</option>`; }); htmlCampos += `</select>`;
@@ -430,16 +404,16 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
         }
         else if(campo === 'Motivo') { htmlCampos += `<select id="input-${campo}" class="form-input"><option value="">Selecione o Motivo...</option>`; motivosGlobais.forEach(m => { htmlCampos += `<option value="${m}" ${valorAntigo === m ? 'selected' : ''}>${m}</option>`; }); htmlCampos += `<option value="Outros" ${valorAntigo === 'Outros' ? 'selected' : ''}>Outros</option></select>`; }
         else if(campo === 'Links dos Materiais (1 por linha)') { htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:80px; resize:vertical;" placeholder="Cole os links">${valorAntigo}</textarea>`; }
-        else if(campo === 'Aceita o Servico?') { htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Sim" ${valorAntigo === 'Sim' ? 'selected' : ''}>Sim</option><option value="Não" ${valorAntigo === 'Não' ? 'selected' : ''}>Não</option></select>`; }
+        else if(campo === 'Aceita o Servico?') { htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Sim" ${valorAntigo === 'Sim' ? 'selected' : ''}>Sim</option><option value="NÃ£o" ${valorAntigo === 'NÃ£o' ? 'selected' : ''}>NÃ£o</option></select>`; }
         else if(colecao === 'consultas' && campo === 'Tipo') { htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Consulta" ${valorAntigo === 'Consulta' ? 'selected' : ''}>Consulta</option><option value="Exame" ${valorAntigo === 'Exame' ? 'selected' : ''}>Exame</option><option value="Pacotes" ${valorAntigo === 'Pacotes' ? 'selected' : ''}>Pacotes</option></select>`; } 
-        else if(campo === 'Local ou Prédio') { htmlCampos += `<select id="input-${campo}" class="form-input"><option value="">Selecione o Local...</option>`; locaisGlobais.forEach(loc => { const l = loc.trim(); if(l) htmlCampos += `<option value="${l}" ${valorAntigo === l ? 'selected' : ''}>${l}</option>`; }); htmlCampos += `<option value="Outros" ${valorAntigo === 'Outros' ? 'selected' : ''}>Outros</option></select>`; }
+        else if(campo === 'Local ou PrÃ©dio') { htmlCampos += `<select id="input-${campo}" class="form-input"><option value="">Selecione o Local...</option>`; locaisGlobais.forEach(loc => { const l = loc.trim(); if(l) htmlCampos += `<option value="${l}" ${valorAntigo === l ? 'selected' : ''}>${l}</option>`; }); htmlCampos += `<option value="Outros" ${valorAntigo === 'Outros' ? 'selected' : ''}>Outros</option></select>`; }
         else if (campo.includes('Data')) { htmlCampos += `<input type="date" id="input-${campo}" value="${valorAntigo}" class="form-input">`; } 
         else if (campo.includes('Link') || campo.includes('URL')) { htmlCampos += `<input type="url" id="input-${campo}" placeholder="Link ou URL" value="${valorAntigo}" class="form-input">`; } 
         
-        // 👇 A MÁGICA DOS EXAMES/MÉDICOS AQUI 👇
+        // ðŸ‘‡ A MÃGICA DOS EXAMES/MÃ‰DICOS AQUI ðŸ‘‡
         else if (campo === 'Profissionais que realizam (Opcional)') {
-            htmlCampos += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px; color:var(--text-muted);">Quais médicos realizam isso?</label>`;
-            htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:80px; resize:vertical;" placeholder="Ex: Dr. João, Dra. Maria...">${valorAntigo}</textarea>`;
+            htmlCampos += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px; color:var(--text-muted);">Quais mÃ©dicos realizam isso?</label>`;
+            htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:80px; resize:vertical;" placeholder="Ex: Dr. JoÃ£o, Dra. Maria...">${valorAntigo}</textarea>`;
         }
         else { htmlCampos += `<input type="text" id="input-${campo}" placeholder="${campo}" value="${valorAntigo}" class="form-input">`; }
     });
@@ -453,14 +427,14 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
     const config = configuracaoAbas[colecaoNome]; if(!config) return '';
     let campoTitulo = config.campos[0]; if(config.campoAgrupador) campoTitulo = config.campos.find(c => c !== config.campoAgrupador) || config.campos[0];
     
-    const tituloDesteCard = data[campoTitulo] || data['Nome/Médico'] || data['Nome'] || 'Detalhes do Cadastro';
+    const tituloDesteCard = data[campoTitulo] || data['Nome/MÃ©dico'] || data['Nome'] || 'Detalhes do Cadastro';
     const corSalva = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
     const configCor = paletaGradientes.find(p => p.valor === corSalva);
     const cardClass = (configCor && configCor.dark) && colecaoNome !== 'ramais' ? 'has-gradient' : '';
 
     let cardHtml = `<div class="card ${cardClass}" id="card-${docId}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border-left: 6px solid var(--primary-color);">`;
     
-    if(config.campoAgrupador) cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--text-main);"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA/MÓDULO: ${data[config.campoAgrupador] || 'Geral'}</div>`;
+    if(config.campoAgrupador) cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--text-main);"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA/MÃ“DULO: ${data[config.campoAgrupador] || 'Geral'}</div>`;
     cardHtml += `<div style="font-size:18px; font-weight:600; line-height:1.2; margin-bottom:15px;">${tituloDesteCard}</div>`;
     
     let hasFlexLayout = (colecaoNome === 'corpo-clinico' && data['Link da Foto do Profissional']);
@@ -475,15 +449,15 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
 
     config.campos.forEach(chave => {
         const valor = data[chave];
-        if (valor && chave !== config.campoAgrupador && chave !== campoTitulo && chave !== 'Configuração da Avaliação' && !String(chave).includes('Link da Foto') && !String(chave).includes('Link da Logo') && chave !== 'PIN de Acesso (Treinamentos)') {
+        if (valor && chave !== config.campoAgrupador && chave !== campoTitulo && chave !== 'ConfiguraÃ§Ã£o da AvaliaÃ§Ã£o' && !String(chave).includes('Link da Foto') && !String(chave).includes('Link da Logo') && chave !== 'PIN de Acesso (Treinamentos)') {
             
             if (chave === 'Aceita o Servico?') {
-                const badgeClass = valor === 'Não' ? 'status-negado' : 'status-aceito';
-                const iconClass = valor === 'Não' ? 'ri-close-circle-fill' : 'ri-checkbox-circle-fill';
-                const text = valor === 'Não' ? 'Serviço Não Coberto' : 'Serviço Coberto';
+                const badgeClass = valor === 'NÃ£o' ? 'status-negado' : 'status-aceito';
+                const iconClass = valor === 'NÃ£o' ? 'ri-close-circle-fill' : 'ri-checkbox-circle-fill';
+                const text = valor === 'NÃ£o' ? 'ServiÃ§o NÃ£o Coberto' : 'ServiÃ§o Coberto';
                 cardHtml += `<div style="margin: 8px 0;"><span class="${badgeClass}"><i class="${iconClass}"></i> ${text}</span></div>`;
             } 
-            // Lógica do Mapa de Remoções e Quebra de Linhas
+            // LÃ³gica do Mapa de RemoÃ§Ãµes e Quebra de Linhas
             else if(chave === 'Local e Link Maps') {
                 if(String(valor).includes('<iframe')) {
                     cardHtml += `<div class="card-info" style="font-size:13px; margin-top: 10px;"><strong>${chave}:</strong><div style="margin-top:5px; border-radius:10px; overflow:hidden;">${valor}</div></div>`;
@@ -496,7 +470,7 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
                     cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${valor}</span></div>`; 
                 }
             } else {
-                // 👇 AQUI APLICAMOS A QUEBRA DE LINHA GERAL 👇
+                // ðŸ‘‡ AQUI APLICAMOS A QUEBRA DE LINHA GERAL ðŸ‘‡
                 cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${valor}</span></div>`; 
             }
         }
@@ -505,14 +479,14 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
     if(hasFlexLayout) cardHtml += `</div></div>`;
 
     if(colecaoNome === 'colaboradores' && data['PIN de Acesso (Treinamentos)']) {
-         cardHtml += `<div style="margin-top:10px; background:rgba(0,0,0,0.05); padding:8px; border-radius:6px; font-size:12px; border: 1px dashed var(--border-color);"><strong>🔑 PIN de Acesso:</strong> ${data['PIN de Acesso (Treinamentos)']}</div>`;
+         cardHtml += `<div style="margin-top:10px; background:rgba(0,0,0,0.05); padding:8px; border-radius:6px; font-size:12px; border: 1px dashed var(--border-color);"><strong>ðŸ”‘ PIN de Acesso:</strong> ${data['PIN de Acesso (Treinamentos)']}</div>`;
     }
 
     if(colecaoNome === 'treinamentos' && isAdmin) {
-        const precisaResponder = data['Tipo (Vídeo, PDF, Tarefa, Prova)'] && (data['Tipo (Vídeo, PDF, Tarefa, Prova)'].includes('Tarefa') || data['Tipo (Vídeo, PDF, Tarefa, Prova)'].includes('Prova'));
+        const precisaResponder = data['Tipo (VÃ­deo, PDF, Tarefa, Prova)'] && (data['Tipo (VÃ­deo, PDF, Tarefa, Prova)'].includes('Tarefa') || data['Tipo (VÃ­deo, PDF, Tarefa, Prova)'].includes('Prova'));
         const count = precisaResponder ? (data.respostas_alunos || []).length : (data.leituras || []).length;
         cardHtml += `<div style="margin-top:15px; padding-top:15px; border-top: 1px dashed rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
-                        <div style="font-size:12px; color:var(--primary-color);"><b>Conclusões:</b> ${count} aluno(s).</div>
+                        <div style="font-size:12px; color:var(--primary-color);"><b>ConclusÃµes:</b> ${count} aluno(s).</div>
                         <button onclick="window.abrirListaLeituras('${docId}', 'treinamentos')" class="btn-hover color-8" style="padding: 6px 12px; font-size: 12px;"><i class="ri-team-line"></i> Respostas</button>
                      </div>`;
     }
@@ -526,7 +500,7 @@ window.renderizarListaGenerica = function(colecao) { const grid = document.getEl
 window.renderizarPastasGenericas = function(colecao) {
     const grid = document.getElementById(`grid-${colecao}-folders`); if(!grid) return; grid.innerHTML = '';
     const config = configuracaoAbas[colecao]; const dadosAtuais = window.dadosGlobaisAbas[colecao] || [];
-    if (dadosAtuais.length === 0) { grid.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">Nenhuma pasta/módulo encontrado. Clique em "Novo" para criar.</p>'; return; }
+    if (dadosAtuais.length === 0) { grid.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">Nenhuma pasta/mÃ³dulo encontrado. Clique em "Novo" para criar.</p>'; return; }
     const pastasUnicas = [...new Set(dadosAtuais.map(i => i.data[config.campoAgrupador] || 'Geral'))].sort();
     pastasUnicas.forEach(nomePasta => {
         const itensPasta = dadosAtuais.filter(i => (i.data[config.campoAgrupador] || 'Geral') === nomePasta);
@@ -538,7 +512,7 @@ window.renderizarPastasGenericas = function(colecao) {
 };
 window.renderizarPastasBoletins = function() {
     const gridFolders = document.getElementById('grid-boletins-folders'); if(!gridFolders) return; gridFolders.innerHTML = '';
-    if (window.todosBoletinsData.length === 0) { gridFolders.innerHTML = '<div style="grid-column: 1/-1; background: #fff5f5; color: #c53030; padding: 15px; border-radius: 8px; border-left: 4px solid #e53e3e; font-size:14px; text-align:center;">Nenhum Boletim cadastrado ou regras de segurança bloqueando o acesso.</div>'; return; }
+    if (window.todosBoletinsData.length === 0) { gridFolders.innerHTML = '<div style="grid-column: 1/-1; background: #fff5f5; color: #c53030; padding: 15px; border-radius: 8px; border-left: 4px solid #e53e3e; font-size:14px; text-align:center;">Nenhum Boletim cadastrado ou regras de seguranÃ§a bloqueando o acesso.</div>'; return; }
     let todosOsSetores = new Set(['Geral', ...setoresGlobais]);
     window.todosBoletinsData.forEach(b => { let setoresDoBoletim = b.data['Para quais Setores?']; if(setoresDoBoletim) { String(setoresDoBoletim).split(',').forEach(s => todosOsSetores.add(s.trim())); } });
     let desenhouAlgum = false;
@@ -555,7 +529,7 @@ window.renderizarPastasBoletins = function() {
         const icone = pasta === 'Geral' ? 'ri-global-line' : 'ri-folder-user-line';
         const corStatusPasta = totalFaltam > 0 ? window.corStatusPendente : window.corStatusConcluido;
         const pastaSegura = pasta.replace(/'/g, "\\'"); 
-        gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaBoletim('${pastaSegura}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; border-left: 6px solid ${corStatusPasta};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: var(--bg-color); padding: 15px; border-radius: 12px; color: var(--primary-color); font-size: 24px; flex-shrink:0;"><i class="${icone}"></i></div><div style="font-size: 16px; font-weight: 600; line-height:1.2; word-wrap:break-word;">${pasta}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Boletins Ativos: <b style="color: var(--text-main);">${boletinsDaPasta.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos Acumulados: <b>${totalLidos}</b></div><div style="color: #e53e3e;">Pendências: <b>${totalFaltam}</b></div></div></div>`;
+        gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaBoletim('${pastaSegura}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; border-left: 6px solid ${corStatusPasta};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: var(--bg-color); padding: 15px; border-radius: 12px; color: var(--primary-color); font-size: 24px; flex-shrink:0;"><i class="${icone}"></i></div><div style="font-size: 16px; font-weight: 600; line-height:1.2; word-wrap:break-word;">${pasta}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Boletins Ativos: <b style="color: var(--text-main);">${boletinsDaPasta.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos Acumulados: <b>${totalLidos}</b></div><div style="color: #e53e3e;">PendÃªncias: <b>${totalFaltam}</b></div></div></div>`;
     });
     if (!desenhouAlgum) gridFolders.innerHTML = '<div style="grid-column: 1/-1; padding: 15px; color: var(--text-muted); text-align:center;">Nenhuma pasta com boletins encontrada.</div>';
 };
@@ -597,7 +571,7 @@ window.renderizarListaBoletins = function() {
         cardHtml += `<div class="leituras-lista" style="margin-top: auto; padding-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); font-size: 13px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(255,255,255,0.7); padding: 8px 10px; border-radius: 8px;"><div style="font-size: 11px;">Lidos: <b style="color:#38a169; font-size:13px;">${qtdLidos}</b> | Faltam: <b style="color:#e53e3e; font-size:13px;">${qtdFaltam}</b></div><button onclick="window.abrirListaLeituras('${docId}', 'boletins')" style="background: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; cursor:pointer; font-size: 12px; font-weight: 500; color: var(--primary-color);"><i class="ri-team-line"></i> Detalhes</button></div>`;
         if(isAdmin) {
             cardHtml += `<div class="add-leitura-box" style="display: flex; gap: 8px; margin-top: 5px;"><select id="leitor-${docId}" style="flex:1; padding:8px; border-radius:8px; border:none; font-size:12px; background:rgba(255,255,255,0.9); outline:none;">`;
-            if(faltamAssinar.length === 0) cardHtml += `<option value="">Todos da pasta já leram!</option>`; else { cardHtml += `<option value="">Selecionar Pendente...</option>`; faltamAssinar.forEach(nome => { cardHtml += `<option value="${nome}">${nome}</option>`; }); }
+            if(faltamAssinar.length === 0) cardHtml += `<option value="">Todos da pasta jÃ¡ leram!</option>`; else { cardHtml += `<option value="">Selecionar Pendente...</option>`; faltamAssinar.forEach(nome => { cardHtml += `<option value="${nome}">${nome}</option>`; }); }
             cardHtml += `</select><button class="btn-action btn-assinar" data-id="${docId}" data-colecao="boletins" style="background:#38a169; color:white; padding:8px 12px; border-radius:8px; cursor:pointer;"><i class="ri-check-line"></i></button></div>`;
         }
         cardHtml += `</div>`;
@@ -633,14 +607,14 @@ window.renderizarListaPrivados = function() {
     const boletinsExibir = window.filtrarPorDataPublicacao(boletinsBase, dtInicio, dtFim);
     if(typeof window.atualizarGrafico === 'function') chartPrivadosInst = window.atualizarGrafico('chart-privados', chartPrivadosInst, boletinsExibir, `Motivos de ${colabAtual}`);
     if (boletinsExibir.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1; background:#fff; padding:18px; border-radius:14px; color:var(--text-muted); border:1px solid var(--border-color);">Nenhum informativo encontrado para esse colaborador no período selecionado.</div>';
+        grid.innerHTML = '<div style="grid-column:1/-1; background:#fff; padding:18px; border-radius:14px; color:var(--text-muted); border:1px solid var(--border-color);">Nenhum informativo encontrado para esse colaborador no perÃ­odo selecionado.</div>';
         return;
     }
 
     const camposOrdem = configuracaoAbas['boletins-privados'].campos;
     boletinsExibir.forEach(item => {
         const data = item.data; const docId = item.id; window.dadosBoletins[docId] = data;
-        const titulo = data['Título do Documento'] || 'Documento Privado';
+        const titulo = data['TÃ­tulo do Documento'] || 'Documento Privado';
         const isUrgente = data['Tipo (Urgente, Norma, Regra, etc)'] && String(data['Tipo (Urgente, Norma, Regra, etc)']).toLowerCase().includes('urgente');
         const corSalva = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
         const configCor = paletaGradientes.find(p => p.valor === corSalva); const gradientClass = (configCor ? configCor.dark : false) ? 'has-gradient' : ''; 
@@ -652,7 +626,7 @@ window.renderizarListaPrivados = function() {
         let botaoLinkHtml = '';
         camposOrdem.forEach(chave => {
             const valor = data[chave];
-            if (valor && chave !== 'Título do Documento' && chave !== 'Para qual Colaborador?') {
+            if (valor && chave !== 'TÃ­tulo do Documento' && chave !== 'Para qual Colaborador?') {
                 if(chave === 'Links dos Materiais (1 por linha)') {
                     const links = String(valor).split('\n').filter(l => l.trim() !== '');
                     if(links.length > 0) {
@@ -689,7 +663,7 @@ window.renderizarCards = function(colecaoNome) {
         }
         let itens = []; snapshot.forEach(doc => itens.push({ id: doc.id, data: doc.data() })); window.todosOsDadosDoSistema[colecaoNome] = itens;
         if(colecaoNome === 'colaboradores') { 
-            listaColaboradoresGlobal = itens.map(item => { return { nome: item.data['Nome Completo do Colaborador'], setor: item.data['Setor da Clínica'] || 'Geral' }; }).filter(c => c.nome).sort((a,b) => a.nome.localeCompare(b.nome)); 
+            listaColaboradoresGlobal = itens.map(item => { return { nome: item.data['Nome Completo do Colaborador'], setor: item.data['Setor da ClÃ­nica'] || 'Geral' }; }).filter(c => c.nome).sort((a,b) => a.nome.localeCompare(b.nome)); 
             if(abaAtual === 'colaboradores') window.renderizarListaGenerica(colecaoNome); 
             if(isAdmin && abaAtual === 'rh') window.renderizarDashboardRH(); 
         }
@@ -707,7 +681,7 @@ window.carregarConfiguracoes = function() {
         if (docSnap.exists()) {
             const data = docSnap.data();
             const area = document.getElementById('banner-content');
-            if(area) { if(data.banner_texto && data.banner_texto.trim() !== '') area.innerHTML = `<h2>${data.banner_texto.replace(/\n/g, '<br>')}</h2>`; else area.innerHTML = `<h2>Bem-vindo ao Painel Clínico</h2>`; }
+            if(area) { if(data.banner_texto && data.banner_texto.trim() !== '') area.innerHTML = `<h2>${data.banner_texto.replace(/\n/g, '<br>')}</h2>`; else area.innerHTML = `<h2>Bem-vindo ao Painel ClÃ­nico</h2>`; }
             
             const mapIds = {
                 'tab-input-banner': 'banner_texto', 'tab-input-locais': 'locais', 'tab-input-setores': 'setores',
@@ -763,37 +737,37 @@ window.sendChat = function() {
 
 window.addChatBubble = function(text, sender) { const chatArea = document.getElementById('chat-body'); if(!chatArea) return; const div = document.createElement('div'); div.className = `chat-msg ${sender}`; div.innerHTML = text; chatArea.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight; };
 window.handleChatFollowUp = function(resposta, btnElement) {
-    if(btnElement && btnElement.parentElement) { btnElement.parentElement.innerHTML = `<span style="color: var(--text-muted); font-size: 11px;">Opção selecionada: ${resposta === 'sim' ? 'Sim' : 'Não'}</span>`; }
-    if (resposta === 'sim') { window.addChatBubble("Pode escrever aqui abaixo que estou aqui para te ajudar! 😊", 'bot'); } else {
-        const frasesMotivacionais = ["Ter uma inteligência artificial para ajudar é ótimo, mas lembre-se: conte sempre com o seu colega ao lado. O trabalho em equipe nos leva mais longe! 🚀", "Que você tenha um excelente turno! A tecnologia agiliza, mas é o calor humano da nossa equipe que faz a clínica brilhar. 💙", "Agradeço a consulta! Juntos somos mais fortes. O sucesso é a soma do esforço de toda a equipe. Um abraço virtual! 🤖"];
+    if(btnElement && btnElement.parentElement) { btnElement.parentElement.innerHTML = `<span style="color: var(--text-muted); font-size: 11px;">OpÃ§Ã£o selecionada: ${resposta === 'sim' ? 'Sim' : 'NÃ£o'}</span>`; }
+    if (resposta === 'sim') { window.addChatBubble("Pode escrever aqui abaixo que estou aqui para te ajudar! ðŸ˜Š", 'bot'); } else {
+        const frasesMotivacionais = ["Ter uma inteligÃªncia artificial para ajudar Ã© Ã³timo, mas lembre-se: conte sempre com o seu colega ao lado. O trabalho em equipe nos leva mais longe! ðŸš€", "Que vocÃª tenha um excelente turno! A tecnologia agiliza, mas Ã© o calor humano da nossa equipe que faz a clÃ­nica brilhar. ðŸ’™", "AgradeÃ§o a consulta! Juntos somos mais fortes. O sucesso Ã© a soma do esforÃ§o de toda a equipe. Um abraÃ§o virtual! ðŸ¤–"];
         window.addChatBubble(frasesMotivacionais[Math.floor(Math.random() * frasesMotivacionais.length)], 'bot');
     }
 };
 
 window.processarLogicaDoBot = function(mensagemUser) {
     const texto = mensagemUser.toLowerCase().trim();
-    if (texto === 'oi' || texto === 'olá' || texto === 'ola' || texto.includes('bom dia') || texto.includes('boa tarde')) return "Olá! Sou a assistente virtual da clínica. Como posso ajudar? Busque por especialidades, médicos ou exames!";
+    if (texto === 'oi' || texto === 'olÃ¡' || texto === 'ola' || texto.includes('bom dia') || texto.includes('boa tarde')) return "OlÃ¡! Sou a assistente virtual da clÃ­nica. Como posso ajudar? Busque por especialidades, mÃ©dicos ou exames!";
     let resultadosUnicos = {};
     ['corpo-clinico', 'ultrassom', 'exames-imagem', 'consultas', 'convenios', 'ramais', 'pacotes', 'institutos', 'boletins'].forEach(colecao => {
         const itens = window.todosOsDadosDoSistema[colecao] || window.dadosGlobaisAbas[colecao] || [];
         itens.forEach(item => {
             let textoItem = ""; Object.entries(item.data).forEach(([key, val]) => { textoItem += `${key} ${val} `; }); textoItem = textoItem.toLowerCase();
             let matches = false;
-            if (texto === 'unimed' || texto === 'convênio' || texto === 'convenio') {
-                if ((item.data['Unimed'] && item.data['Unimed'].toString().toLowerCase() !== 'não' && item.data['Unimed'].toString().toLowerCase() !== 'nao') || (item.data['Convênios Aceitos'] && String(item.data['Convênios Aceitos']).toLowerCase().includes('unimed')) || (item.data['Convênios'] && String(item.data['Convênios']).toLowerCase().includes('unimed')) || colecao === 'convenios') matches = true;
+            if (texto === 'unimed' || texto === 'convÃªnio' || texto === 'convenio') {
+                if ((item.data['Unimed'] && item.data['Unimed'].toString().toLowerCase() !== 'nÃ£o' && item.data['Unimed'].toString().toLowerCase() !== 'nao') || (item.data['ConvÃªnios Aceitos'] && String(item.data['ConvÃªnios Aceitos']).toLowerCase().includes('unimed')) || (item.data['ConvÃªnios'] && String(item.data['ConvÃªnios']).toLowerCase().includes('unimed')) || colecao === 'convenios') matches = true;
             } else if (textoItem.includes(texto)) { matches = true; }
 
-            if(colecao === 'boletins' && (String(item.data['Título do Informativo'] || '').toLowerCase().includes(texto) || String(item.data['Motivo'] || '').toLowerCase().includes(texto) || String(item.data['Para quais Setores?'] || '').toLowerCase().includes(texto))) matches = true;
+            if(colecao === 'boletins' && (String(item.data['TÃ­tulo do Informativo'] || '').toLowerCase().includes(texto) || String(item.data['Motivo'] || '').toLowerCase().includes(texto) || String(item.data['Para quais Setores?'] || '').toLowerCase().includes(texto))) matches = true;
 
             if (matches) {
                 const config = configuracaoAbas[colecao];
                 let tituloItem = item.data[config.campos[0]] || 'Detalhes'; let detalhesStr = '';
-                if(colecao === 'boletins') tituloItem = `Boletim: ${item.data['Título do Informativo']}`;
+                if(colecao === 'boletins') tituloItem = `Boletim: ${item.data['TÃ­tulo do Informativo']}`;
                 
-                // 👇 A MÁGICA: O BOT PROCURA QUEM FAZ O EXAME 👇
+                // ðŸ‘‡ A MÃGICA: O BOT PROCURA QUEM FAZ O EXAME ðŸ‘‡
                 let profissionais = item.data['Profissionais que realizam (Opcional)'];
                 if(profissionais && profissionais.trim() !== '') {
-                    detalhesStr += `<div style="background:#eefbf4; padding:8px; border-radius:8px; margin-bottom:8px; border-left:3px solid #38a169;"><b>👨‍⚕️ Quem realiza:</b> ${profissionais}</div>`;
+                    detalhesStr += `<div style="background:#eefbf4; padding:8px; border-radius:8px; margin-bottom:8px; border-left:3px solid #38a169;"><b>ðŸ‘¨â€âš•ï¸ Quem realiza:</b> ${profissionais}</div>`;
                 }
 
                 let cont = 0;
@@ -822,24 +796,24 @@ window.processarLogicaDoBot = function(mensagemUser) {
         let respostaFormatada = `Encontrei isso no sistema para <b>"${mensagemUser}"</b>:<br><br>`;
         const limite = resultadosEncontrados.slice(0, 3); respostaFormatada += limite.join('');
         if (resultadosEncontrados.length > 3) { respostaFormatada += `<div style="text-align:center; font-size:11px; color:var(--text-muted); margin-top:5px;">+${resultadosEncontrados.length - 3} resultados ocultos.</div><br>`; }
-        const dicas = ["Dica: Se o paciente precisar de exames, pesquise o nome do exame que eu te digo qual médico faz! 🩺", "Você também pode pesquisar por Convênios para ver as regras de atendimento!", "Na dúvida? Pesquise pelo setor e eu te mostro os ramais."];
-        respostaFormatada += `<div style="background: #e2e8f0; padding: 10px; border-radius: 8px; font-size: 11px; margin-top: 10px; border-left: 3px solid var(--primary-color);">💡 <b>Dica:</b> ${dicas[Math.floor(Math.random() * dicas.length)]}</div>`;
+        const dicas = ["Dica: Se o paciente precisar de exames, pesquise o nome do exame que eu te digo qual mÃ©dico faz! ðŸ©º", "VocÃª tambÃ©m pode pesquisar por ConvÃªnios para ver as regras de atendimento!", "Na dÃºvida? Pesquise pelo setor e eu te mostro os ramais."];
+        respostaFormatada += `<div style="background: #e2e8f0; padding: 10px; border-radius: 8px; font-size: 11px; margin-top: 10px; border-left: 3px solid var(--primary-color);">ðŸ’¡ <b>Dica:</b> ${dicas[Math.floor(Math.random() * dicas.length)]}</div>`;
         return respostaFormatada;
     }
-    return "Desculpe, não localizei nenhuma informação no sistema sobre isso. 🤔<br><br>Tente pesquisar por uma palavra-chave mais simples, como o nome de um exame ou especialidade!";
+    return "Desculpe, nÃ£o localizei nenhuma informaÃ§Ã£o no sistema sobre isso. ðŸ¤”<br><br>Tente pesquisar por uma palavra-chave mais simples, como o nome de um exame ou especialidade!";
 };
     // ==========================================
-// 6. LÓGICA DA JORNADA DE APRENDIZADO E CORREÇÃO ADMIN
+// 6. LÃ“GICA DA JORNADA DE APRENDIZADO E CORREÃ‡ÃƒO ADMIN
 // ==========================================
 if (!document.getElementById('modal-resposta-aluno')) {
     const m = document.createElement('div'); m.id = 'modal-resposta-aluno'; m.className = 'modal-overlay'; m.style.display = 'none'; m.style.zIndex = '10001';
-    m.innerHTML = `<div class="modal-box glass-effect" style="max-width: 600px; max-height: 90vh; display:flex; flex-direction:column;"><header class="modal-header"><h3 id="resposta-titulo">Responder Atividade</h3><button onclick="document.getElementById('modal-resposta-aluno').style.display='none'" class="btn-icon"><i class="ri-close-line"></i></button></header><div class="modal-body" style="overflow-y: auto; flex:1;" id="area-perguntas-dinamicas"></div><input type="hidden" id="resposta-docid"><button onclick="window.enviarRespostaTreinamento()" class="btn-hover color-11" style="width: 100%; margin-top: 15px; background: #3182ce; color:white; border:none;"><i class="ri-send-plane-fill"></i> Enviar Resposta para Correção</button></div>`;
+    m.innerHTML = `<div class="modal-box glass-effect" style="max-width: 600px; max-height: 90vh; display:flex; flex-direction:column;"><header class="modal-header"><h3 id="resposta-titulo">Responder Atividade</h3><button onclick="document.getElementById('modal-resposta-aluno').style.display='none'" class="btn-icon"><i class="ri-close-line"></i></button></header><div class="modal-body" style="overflow-y: auto; flex:1;" id="area-perguntas-dinamicas"></div><input type="hidden" id="resposta-docid"><button onclick="window.enviarRespostaTreinamento()" class="btn-hover color-11" style="width: 100%; margin-top: 15px; background: #3182ce; color:white; border:none;"><i class="ri-send-plane-fill"></i> Enviar Resposta para CorreÃ§Ã£o</button></div>`;
     document.body.appendChild(m);
 }
 
 if (!document.getElementById('modal-correcao-admin')) {
     const c = document.createElement('div'); c.id = 'modal-correcao-admin'; c.className = 'modal-overlay'; c.style.display = 'none'; c.style.zIndex = '10005';
-    c.innerHTML = `<div class="modal-box glass-effect" style="max-width: 600px; max-height: 90vh; display:flex; flex-direction:column;"><header class="modal-header"><h3>Corrigir Resposta</h3><button onclick="document.getElementById('modal-correcao-admin').style.display='none'; document.getElementById('modal-leituras').style.display='flex';" class="btn-icon"><i class="ri-close-line"></i></button></header><div class="modal-body" style="overflow-y: auto; flex:1;"><div id="correcao-respostas-aluno" style="margin-bottom:15px; background:rgba(0,0,0,0.03); padding:10px; border-radius:8px; font-size:13px; white-space:pre-wrap;"></div><label style="font-size:12px; font-weight:600;">Nota Atribuída (XP):</label><input type="number" id="correcao-nota" class="form-input" style="margin-bottom:10px;"><label style="font-size:12px; font-weight:600;">Feedback / Observação do Gestor:</label><textarea id="correcao-feedback" class="form-input" style="height:80px; resize:vertical;"></textarea><input type="hidden" id="correcao-docid"><input type="hidden" id="correcao-nomealuno"></div><button onclick="window.salvarCorrecaoAdmin()" class="btn-hover color-11" style="width: 100%; margin-top: 15px; background: #38a169; color:white; border:none;"><i class="ri-check-line"></i> Salvar Correção</button></div>`;
+    c.innerHTML = `<div class="modal-box glass-effect" style="max-width: 600px; max-height: 90vh; display:flex; flex-direction:column;"><header class="modal-header"><h3>Corrigir Resposta</h3><button onclick="document.getElementById('modal-correcao-admin').style.display='none'; document.getElementById('modal-leituras').style.display='flex';" class="btn-icon"><i class="ri-close-line"></i></button></header><div class="modal-body" style="overflow-y: auto; flex:1;"><div id="correcao-respostas-aluno" style="margin-bottom:15px; background:rgba(0,0,0,0.03); padding:10px; border-radius:8px; font-size:13px; white-space:pre-wrap;"></div><label style="font-size:12px; font-weight:600;">Nota AtribuÃ­da (XP):</label><input type="number" id="correcao-nota" class="form-input" style="margin-bottom:10px;"><label style="font-size:12px; font-weight:600;">Feedback / ObservaÃ§Ã£o do Gestor:</label><textarea id="correcao-feedback" class="form-input" style="height:80px; resize:vertical;"></textarea><input type="hidden" id="correcao-docid"><input type="hidden" id="correcao-nomealuno"></div><button onclick="window.salvarCorrecaoAdmin()" class="btn-hover color-11" style="width: 100%; margin-top: 15px; background: #38a169; color:white; border:none;"><i class="ri-check-line"></i> Salvar CorreÃ§Ã£o</button></div>`;
     document.body.appendChild(c);
 }
 
@@ -861,7 +835,7 @@ window.abrirListaLeituras = function(docId, colecao) {
     if(colecao === 'treinamentos') data = window.todosTreinamentosData.find(item => item.id === docId)?.data || null;
     else if(colecao === 'boletins') data = window.todosBoletinsData.find(item => item.id === docId)?.data || null;
     else if(colecao === 'boletins-privados') data = window.todosPrivadosData.find(item => item.id === docId)?.data || null;
-    if(!data) return alert('Não localizei este registro atualizado.');
+    if(!data) return alert('NÃ£o localizei este registro atualizado.');
 
     const renderEmpty = (texto) => `<div style="padding:12px; border:1px dashed var(--border-color); border-radius:12px; color:var(--text-muted); background:#f8fafc;">${texto}</div>`;
     const cardBase = (conteudo, cor='#cbd5e1') => `<div style="padding:12px; border-radius:12px; background:#fff; border-left:4px solid ${cor}; margin-bottom:10px; box-shadow:var(--shadow-soft);">${conteudo}</div>`;
@@ -870,16 +844,16 @@ window.abrirListaLeituras = function(docId, colecao) {
     areaPend.innerHTML = '';
 
     if(colecao === 'treinamentos') {
-        titulo.textContent = `Respostas da atividade: ${data['Título da Atividade'] || 'Treinamento'}`;
-        const publico = window.obterPublicoAlvo(data['Para quais Setores?'], data['Colaborador Específico (Opcional)']);
+        titulo.textContent = `Respostas da atividade: ${data['TÃ­tulo da Atividade'] || 'Treinamento'}`;
+        const publico = window.obterPublicoAlvo(data['Para quais Setores?'], data['Colaborador EspecÃ­fico (Opcional)']);
         const respostas = (data.respostas_alunos || []).map(item => window.safeParseJSON(item)).filter(Boolean);
         const respondidos = new Set();
 
         respostas.forEach(resp => {
             respondidos.add(resp.nome);
-            const nota = (resp.nota !== '' && resp.nota !== undefined && resp.nota !== null) ? `<span style="background:#dcfce7; color:#166534; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700;">Nota: ${resp.nota}</span>` : `<span style="background:#fef3c7; color:#92400e; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700;">Aguardando correção</span>`;
+            const nota = (resp.nota !== '' && resp.nota !== undefined && resp.nota !== null) ? `<span style="background:#dcfce7; color:#166534; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700;">Nota: ${resp.nota}</span>` : `<span style="background:#fef3c7; color:#92400e; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700;">Aguardando correÃ§Ã£o</span>`;
             const nomeEscapado = String(resp.nome || '').replace(/'/g, "\\'");
-            const btnCorrigir = isAdmin ? `<button onclick="window.abrirCorrecaoAdmin('${docId}', '${nomeEscapado}')" class="btn-hover color-8" style="height:32px; font-size:11px; padding:0 14px; margin-top:10px;"><i class="ri-edit-2-line"></i> ${resp.nota !== '' ? 'Revisar correção' : 'Corrigir resposta'}</button>` : '';
+            const btnCorrigir = isAdmin ? `<button onclick="window.abrirCorrecaoAdmin('${docId}', '${nomeEscapado}')" class="btn-hover color-8" style="height:32px; font-size:11px; padding:0 14px; margin-top:10px;"><i class="ri-edit-2-line"></i> ${resp.nota !== '' ? 'Revisar correÃ§Ã£o' : 'Corrigir resposta'}</button>` : '';
             areaOk.innerHTML += cardBase(`
                 <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;">
                     <div>
@@ -897,13 +871,13 @@ window.abrirListaLeituras = function(docId, colecao) {
 
         const faltantes = publico.filter(nome => !respondidos.has(nome));
         areaPend.innerHTML = faltantes.length
-            ? faltantes.map(nome => cardBase(`<strong style="display:block; color:var(--text-main);">${window.escapeHTML(nome)}</strong><span style="font-size:12px; color:var(--text-muted);">Ainda não enviou a atividade.</span>`, '#e53e3e')).join('')
-            : renderEmpty('Todos os colaboradores do público-alvo já responderam.');
+            ? faltantes.map(nome => cardBase(`<strong style="display:block; color:var(--text-main);">${window.escapeHTML(nome)}</strong><span style="font-size:12px; color:var(--text-muted);">Ainda nÃ£o enviou a atividade.</span>`, '#e53e3e')).join('')
+            : renderEmpty('Todos os colaboradores do pÃºblico-alvo jÃ¡ responderam.');
     } else {
         const publico = colecao === 'boletins-privados'
             ? [String(data['Para qual Colaborador?'] || '').trim()].filter(Boolean)
             : window.obterPublicoAlvo(data['Para quais Setores?']);
-        titulo.textContent = `${colecao === 'boletins-privados' ? 'Leitura do informativo direto' : 'Leitura do boletim'}: ${data['Título do Documento'] || data['Título do Informativo'] || 'Documento'}`;
+        titulo.textContent = `${colecao === 'boletins-privados' ? 'Leitura do informativo direto' : 'Leitura do boletim'}: ${data['TÃ­tulo do Documento'] || data['TÃ­tulo do Informativo'] || 'Documento'}`;
         const leituras = (data.leituras || []).filter(Boolean);
         const lidosMap = new Map();
         leituras.forEach(registro => lidosMap.set(window.extrairNomeRegistro(registro), registro));
@@ -913,11 +887,11 @@ window.abrirListaLeituras = function(docId, colecao) {
 
         areaOk.innerHTML = lidos.length
             ? lidos.map(nome => cardBase(`<strong style="display:block; color:var(--text-main);">${window.escapeHTML(nome)}</strong><span style="font-size:12px; color:var(--text-muted);">${window.escapeHTML(lidosMap.get(nome) || '')}</span>`, '#38a169')).join('')
-            : renderEmpty('Nenhuma leitura registrada até o momento.');
+            : renderEmpty('Nenhuma leitura registrada atÃ© o momento.');
 
         areaPend.innerHTML = faltantes.length
             ? faltantes.map(nome => cardBase(`<strong style="display:block; color:var(--text-main);">${window.escapeHTML(nome)}</strong><span style="font-size:12px; color:var(--text-muted);">Leitura pendente.</span>`, '#e53e3e')).join('')
-            : renderEmpty('Nenhuma pendência restante.');
+            : renderEmpty('Nenhuma pendÃªncia restante.');
     }
 
     modal.style.display = 'flex';
@@ -929,17 +903,17 @@ window.renderizarTrilhaAluno = function() {
     if(!window.alunoLogado) return;
     const grid = document.getElementById('grid-trilha-aluno'); if(!grid) return; grid.innerHTML = '';
     const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'];
-    const setorAluno = window.alunoLogado['Setor da Clínica'] || 'Geral';
+    const setorAluno = window.alunoLogado['Setor da ClÃ­nica'] || 'Geral';
 
     let pontos = 0; let pendentes = 0;
     const treinamentosAluno = window.todosTreinamentosData.filter(item => {
         const setorAlvo = String(item.data['Para quais Setores?'] || 'Geral');
-        const colabAlvo = String(item.data['Colaborador Específico (Opcional)'] || '');
+        const colabAlvo = String(item.data['Colaborador EspecÃ­fico (Opcional)'] || '');
         if (colabAlvo && colabAlvo !== '' && !colabAlvo.includes('Nenhum')) return colabAlvo === nomeAluno;
         return setorAlvo.includes('Geral') || setorAlvo.includes(setorAluno);
     });
 
-    if(treinamentosAluno.length === 0) { grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:var(--text-muted); background: white; padding: 20px; border-radius: 10px;">Sem treinamentos pendentes. Parabéns! 🎉</p>'; }
+    if(treinamentosAluno.length === 0) { grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:var(--text-muted); background: white; padding: 20px; border-radius: 10px;">Sem treinamentos pendentes. ParabÃ©ns! ðŸŽ‰</p>'; }
 
     treinamentosAluno.forEach(item => {
         const d = item.data; const docId = item.id;
@@ -947,7 +921,7 @@ window.renderizarTrilhaAluno = function() {
         let minhaResposta = null; respostas.forEach(r => { try { let obj = JSON.parse(r); if(obj.nome === nomeAluno) minhaResposta = obj; } catch(e){} });
 
         const concluidos = d.leituras || []; const jaLeu = concluidos.some(txt => txt.startsWith(nomeAluno));
-        const tipo = d['Tipo (Vídeo, PDF, Tarefa, Prova)'] || 'Vídeo';
+        const tipo = d['Tipo (VÃ­deo, PDF, Tarefa, Prova)'] || 'VÃ­deo';
         const precisaResponder = tipo && (tipo.includes('Tarefa') || tipo.includes('Prova'));
         const pontosItem = parseInt(d['Pontos Valendo']) || 0;
         
@@ -957,10 +931,10 @@ window.renderizarTrilhaAluno = function() {
             if(minhaResposta) {
                 jaFez = true;
                 if(minhaResposta.nota && minhaResposta.nota !== "") { statusTexto = `Corrigido (Nota: ${minhaResposta.nota})`; corStatus = '#38a169'; iconeStatus = 'ri-award-fill'; pontos += parseInt(minhaResposta.nota) || 0; } 
-                else { statusTexto = 'Aguardando Correção'; corStatus = '#ecc94b'; iconeStatus = 'ri-hourglass-line'; }
+                else { statusTexto = 'Aguardando CorreÃ§Ã£o'; corStatus = '#ecc94b'; iconeStatus = 'ri-hourglass-line'; }
             } else { pendentes++; }
         } else {
-            if(jaLeu) { jaFez = true; statusTexto = 'Concluído'; corStatus = '#38a169'; iconeStatus = 'ri-check-double-line'; pontos += pontosItem; } 
+            if(jaLeu) { jaFez = true; statusTexto = 'ConcluÃ­do'; corStatus = '#38a169'; iconeStatus = 'ri-check-double-line'; pontos += pontosItem; } 
             else { pendentes++; }
         }
 
@@ -969,16 +943,16 @@ window.renderizarTrilhaAluno = function() {
 
         if(!jaFez) {
             if(precisaResponder) {
-                const confJSON = (d['Configuração da Avaliação'] || '[]').replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                const confJSON = (d['ConfiguraÃ§Ã£o da AvaliaÃ§Ã£o'] || '[]').replace(/'/g, "&apos;").replace(/"/g, "&quot;");
                 btnAcao += `<button onclick="window.abrirModalResposta('${docId}', '${confJSON}')" class="btn-hover color-11" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; background: #3182ce; color:white; border:none;"><i class="ri-pencil-fill"></i> Responder Atividade</button>`;
             } else {
                 btnAcao += `<button onclick="window.concluirTreinamento('${docId}')" class="btn-hover color-11" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; background: #38a169; color:white; border:none;"><i class="ri-check-double-line"></i> Marcar como LIDO</button>`;
             }
         } else if (precisaResponder && minhaResposta && minhaResposta.nota !== "") {
-            btnAcao += `<button onclick="window.verFeedback('${minhaResposta.nota}', \`${(minhaResposta.feedback || 'Sem comentários.').replace(/'/g, "&apos;")}\`)" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-top:8px;"><i class="ri-message-3-line"></i> Ver Correção</button>`;
+            btnAcao += `<button onclick="window.verFeedback('${minhaResposta.nota}', \`${(minhaResposta.feedback || 'Sem comentÃ¡rios.').replace(/'/g, "&apos;")}\`)" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-top:8px;"><i class="ri-message-3-line"></i> Ver CorreÃ§Ã£o</button>`;
         }
 
-        grid.innerHTML += `<div class="card" style="border: 2px solid ${corStatus}; display:flex; flex-direction:column; background: white; border-radius: 10px; padding: 15px;"><div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--primary-color);"><i class="ri-book-open-line"></i> MÓDULO: ${d['Pasta / Módulo']} | TIPO: ${tipo}</div><div style="font-size:16px; font-weight:600; margin-bottom:10px; line-height: 1.2;">${d['Título da Atividade']}</div><div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; flex:1;"><b>Pontos Base:</b> <span style="color:#e75516; font-weight:700;">+${pontosItem} XP</span><br><b>Status:</b> <span style="color:${corStatus}; font-weight:600;"><i class="${iconeStatus}"></i> ${statusTexto}</span></div>${btnAcao}</div>`;
+        grid.innerHTML += `<div class="card" style="border: 2px solid ${corStatus}; display:flex; flex-direction:column; background: white; border-radius: 10px; padding: 15px;"><div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--primary-color);"><i class="ri-book-open-line"></i> MÃ“DULO: ${d['Pasta / MÃ³dulo']} | TIPO: ${tipo}</div><div style="font-size:16px; font-weight:600; margin-bottom:10px; line-height: 1.2;">${d['TÃ­tulo da Atividade']}</div><div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; flex:1;"><b>Pontos Base:</b> <span style="color:#e75516; font-weight:700;">+${pontosItem} XP</span><br><b>Status:</b> <span style="color:${corStatus}; font-weight:600;"><i class="${iconeStatus}"></i> ${statusTexto}</span></div>${btnAcao}</div>`;
     });
 
     const ptsEl = document.getElementById('aluno-pontos'); const pendEl = document.getElementById('aluno-tarefas-pendentes');
@@ -990,9 +964,9 @@ window.renderizarTrilhaAluno = function() {
 window.concluirTreinamento = async function(docId) {
     if(!window.alunoLogado) return;
     const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'];
-    if(!confirm(`Você realmente assistiu/leu este material, ${nomeAluno}?\nAo confirmar, os pontos serão computados na sua jornada.`)) return;
-    const registro = `${nomeAluno} (Concluído em: ${new Date().toLocaleString('pt-BR')})`;
-    try { await window.updateDoc(window.doc(window.db, 'treinamentos', docId), { leituras: window.arrayUnion(registro) }); alert("Concluído com sucesso! +XP 🎉"); } catch(e) { alert("Erro ao salvar: " + e.message); }
+    if(!confirm(`VocÃª realmente assistiu/leu este material, ${nomeAluno}?\nAo confirmar, os pontos serÃ£o computados na sua jornada.`)) return;
+    const registro = `${nomeAluno} (ConcluÃ­do em: ${new Date().toLocaleString('pt-BR')})`;
+    try { await window.updateDoc(window.doc(window.db, 'treinamentos', docId), { leituras: window.arrayUnion(registro) }); alert("ConcluÃ­do com sucesso! +XP ðŸŽ‰"); } catch(e) { alert("Erro ao salvar: " + e.message); }
 };
 
 window.abrirModalResposta = function(docId, configJSON) {
@@ -1030,13 +1004,13 @@ window.enviarRespostaTreinamento = async function() {
         const p = bloco.querySelector('.resp-pergunta-txt').value;
         let r = '';
         if(tipo === 'descritiva') { r = bloco.querySelector('.resp-valor').value.trim(); } 
-        else { const checked = bloco.querySelector('.resp-radio:checked'); r = checked ? checked.value : 'Nenhuma opção selecionada'; }
+        else { const checked = bloco.querySelector('.resp-radio:checked'); r = checked ? checked.value : 'Nenhuma opÃ§Ã£o selecionada'; }
         respostasFinais.push({ pergunta: p, resposta: r });
     });
     const respostaObj = { nome: nomeAluno, data: new Date().toLocaleString('pt-BR'), respostas: respostasFinais, nota: "", feedback: "" };
     try {
         await window.updateDoc(window.doc(window.db, 'treinamentos', docId), { respostas_alunos: window.arrayUnion(JSON.stringify(respostaObj)) });
-        alert("Sua resposta foi enviada para correção do supervisor! 🚀");
+        alert("Sua resposta foi enviada para correÃ§Ã£o do supervisor! ðŸš€");
         document.getElementById('modal-resposta-aluno').style.display = 'none';
         window.renderizarTrilhaAluno(); 
     } catch(e) { alert("Erro ao enviar resposta: " + e.message); }
@@ -1086,7 +1060,7 @@ window.salvarCorrecaoAdmin = async function() {
         const ref = window.doc(window.db, 'treinamentos', docId);
         await window.updateDoc(ref, { respostas_alunos: window.arrayRemove(respStrAntiga) });
         await window.updateDoc(ref, { respostas_alunos: window.arrayUnion(respStrNova) });
-        alert("Correção salva com sucesso!");
+        alert("CorreÃ§Ã£o salva com sucesso!");
         document.getElementById('modal-correcao-admin').style.display = 'none';
         document.getElementById('modal-leituras').style.display = 'flex'; // Volta pra lista
     } catch(e) { alert("Erro ao salvar: "+e.message); }
@@ -1103,11 +1077,11 @@ window.entrarPortalAluno = function() {
         document.getElementById('ensino-login-area').style.display = 'none'; document.getElementById('ensino-dashboard-area').style.display = 'block';
         document.getElementById('nome-aluno-logado').textContent = window.alunoLogado['Nome Completo do Colaborador'];
         window.renderizarTrilhaAluno(); 
-    } else { alert("Nome ou PIN incorretos. Verifique com a Gestão."); }
+    } else { alert("Nome ou PIN incorretos. Verifique com a GestÃ£o."); }
 };
 
 // ==========================================
-// MÓDULO: RH & PEOPLE ANALYTICS
+// MÃ“DULO: RH & PEOPLE ANALYTICS
 // ==========================================
 window.escutarRH = function() {
     if(!isAdmin) return;
@@ -1138,7 +1112,7 @@ window.atualizarOpcoesFiltrosRH = function() {
     if(setorSel) {
         const atual = window.rhFiltroAtual.setor || '';
         const setores = window.getSetoresRHDisponiveis();
-        setorSel.innerHTML = `<option value="">Visão Geral</option>` + setores.map(setor => `<option value="${setor}">${setor}</option>`).join('');
+        setorSel.innerHTML = `<option value="">VisÃ£o Geral</option>` + setores.map(setor => `<option value="${setor}">${setor}</option>`).join('');
         setorSel.value = atual;
     }
     if(colSel) {
@@ -1229,9 +1203,9 @@ window.renderizarDashboardRH = function() {
 
     const scope = document.getElementById('rh-scope-label');
     if(scope) {
-        if(window.rhFiltroAtual.colaborador) scope.textContent = `Visão individual: ${window.rhFiltroAtual.colaborador}`;
-        else if(window.rhFiltroAtual.setor) scope.textContent = `Visão por setor: ${window.rhFiltroAtual.setor}`;
-        else scope.textContent = 'Visão geral da empresa';
+        if(window.rhFiltroAtual.colaborador) scope.textContent = `VisÃ£o individual: ${window.rhFiltroAtual.colaborador}`;
+        else if(window.rhFiltroAtual.setor) scope.textContent = `VisÃ£o por setor: ${window.rhFiltroAtual.setor}`;
+        else scope.textContent = 'VisÃ£o geral da empresa';
     }
 
     const grid = document.getElementById('rh-grid-colaboradores');
@@ -1242,7 +1216,7 @@ window.renderizarDashboardRH = function() {
             let statusClass = 'neutro';
             let statusText = 'Em Desenvolvimento';
             if(stat.xp > 0 && stat.xp >= resumo.mediaGeral) { statusClass = 'destaque'; statusText = 'Alta Performance'; }
-            else if(stat.xp === 0) { statusClass = 'risco'; statusText = 'Em Atenção'; }
+            else if(stat.xp === 0) { statusClass = 'risco'; statusText = 'Em AtenÃ§Ã£o'; }
             const ativo = window.rhFiltroAtual.colaborador === nome ? ' box-shadow:0 0 0 3px rgba(139,37,44,.15); transform:translateY(-2px);' : '';
             const nomeEscapado = String(nome).replace(/'/g, "\'");
             return `<div class="rh-collab-card ${statusClass}" onclick="window.selecionarColaboradorRH('${nomeEscapado}')" style="cursor:pointer;${ativo}">
@@ -1252,9 +1226,9 @@ window.renderizarDashboardRH = function() {
                     <div class="rh-score-badge">${stat.xp} XP</div>
                 </div>
                 <div class="rh-collab-grid">
-                    <div><span>Treinamentos Concluídos</span><strong>${stat.treinamentos}</strong></div>
+                    <div><span>Treinamentos ConcluÃ­dos</span><strong>${stat.treinamentos}</strong></div>
                     <div><span>Status RH</span><span class="rh-chip ${statusClass}" style="margin:0; padding:4px 8px;">${statusText}</span></div>
-                    <div><span>Média Individual</span><strong>${stat.mediaNota || 0}</strong></div>
+                    <div><span>MÃ©dia Individual</span><strong>${stat.mediaNota || 0}</strong></div>
                     <div><span>Setor</span><strong>${window.escapeHTML(stat.setor || 'Geral')}</strong></div>
                 </div>
             </div>`;
@@ -1269,7 +1243,7 @@ window.renderizarDashboardRH = function() {
             gridP.innerHTML += `<div class="rh-survey-card">
                 <div>
                     <h4 style="margin:0; color:var(--text-main); font-weight:600;">${window.escapeHTML(p.data.titulo || 'Pesquisa')}</h4>
-                    <p style="margin:0; color:var(--text-muted); font-size:12px;">Categoria: ${window.escapeHTML(p.data.categoria || 'Clima')} | Público: ${window.escapeHTML(p.data.alvoValor || p.data.alvo || 'Geral')}</p>
+                    <p style="margin:0; color:var(--text-muted); font-size:12px;">Categoria: ${window.escapeHTML(p.data.categoria || 'Clima')} | PÃºblico: ${window.escapeHTML(p.data.alvoValor || p.data.alvo || 'Geral')}</p>
                 </div>
                 <div class="rh-survey-stats"><b>${resps}</b> Respostas</div>
                 <div style="display:flex; gap:10px; align-items:center;">
@@ -1289,18 +1263,18 @@ window.renderizarDashboardRH = function() {
             const resps = window.todosRespostasPerfil.filter(r => r.data.avaliacaoId === item.id).length;
             gridPerfis.innerHTML += `<div class="rh-survey-card">
                 <div>
-                    <h4 style="margin:0; color:var(--text-main); font-weight:600;">${window.escapeHTML(item.data.titulo || 'Avaliação de perfil')}</h4>
+                    <h4 style="margin:0; color:var(--text-main); font-weight:600;">${window.escapeHTML(item.data.titulo || 'AvaliaÃ§Ã£o de perfil')}</h4>
                     <p style="margin:0; color:var(--text-muted); font-size:12px;">Alvo: ${window.escapeHTML(item.data.alvoTipo || 'Geral')}${item.data.alvoValor ? ' | ' + window.escapeHTML(item.data.alvoValor) : ''}</p>
                 </div>
                 <div class="rh-survey-stats"><b>${resps}</b> Respostas</div>
                 <div style="display:flex; gap:10px; align-items:center;">
                     <button onclick="window.abrirModalPerfilProfissional()" class="btn-hover color-8" style="height:30px; font-size:11px; padding:0 15px;">Radar</button>
-                    <button onclick="window.abrirModalCriarPerfil('${item.id}')" class="btn-action btn-edit" title="Editar avaliação"><i class="ri-pencil-line"></i></button>
-                    <button onclick="window.excluirAvaliacaoPerfil('${item.id}')" class="btn-action btn-delete" title="Excluir avaliação"><i class="ri-delete-bin-line"></i></button>
+                    <button onclick="window.abrirModalCriarPerfil('${item.id}')" class="btn-action btn-edit" title="Editar avaliaÃ§Ã£o"><i class="ri-pencil-line"></i></button>
+                    <button onclick="window.excluirAvaliacaoPerfil('${item.id}')" class="btn-action btn-delete" title="Excluir avaliaÃ§Ã£o"><i class="ri-delete-bin-line"></i></button>
                 </div>
             </div>`;
         });
-        if(window.todosPerfilAvaliacoes.length === 0) gridPerfis.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Nenhuma avaliação de perfil ativa.</p>';
+        if(window.todosPerfilAvaliacoes.length === 0) gridPerfis.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Nenhuma avaliaÃ§Ã£o de perfil ativa.</p>';
     }
 };
 
@@ -1370,11 +1344,11 @@ window.salvarPesquisaRH = async function() {
     const alvoTipo = document.getElementById('rh-pesq-alvo-tipo').value;
     const alvoValor = document.getElementById('rh-pesq-alvo').value;
     const blocos = document.querySelectorAll('.rh-pergunta-item');
-    if(!titulo || blocos.length === 0) return alert('Preencha o título e adicione pelo menos uma pergunta!');
+    if(!titulo || blocos.length === 0) return alert('Preencha o tÃ­tulo e adicione pelo menos uma pergunta!');
     if(alvoTipo !== 'Geral' && !alvoValor) return alert('Selecione o alvo da pesquisa.');
 
     const perguntas = Array.from(blocos).map(b => ({ tipo: b.querySelector('.rh-p-tipo').value, texto: b.querySelector('.rh-p-texto').value.trim() })).filter(item => item.texto);
-    if(!perguntas.length) return alert('Adicione pelo menos uma pergunta válida.');
+    if(!perguntas.length) return alert('Adicione pelo menos uma pergunta vÃ¡lida.');
 
     const payload = {
         titulo, categoria, perguntas,
@@ -1398,7 +1372,7 @@ window.salvarPesquisaRH = async function() {
 
 window.excluirPesquisaRH = async function(id) {
     if(!confirm("Excluir esta pesquisa e todas as respostas?")) return;
-    try { await window.deleteDoc(window.doc(window.db, 'rh-pesquisas', id)); alert("Excluída!"); } catch(e) {}
+    try { await window.deleteDoc(window.doc(window.db, 'rh-pesquisas', id)); alert("ExcluÃ­da!"); } catch(e) {}
 };
 
 window.renderizarPesquisasAluno = function() {
@@ -1410,7 +1384,7 @@ window.renderizarPesquisasAluno = function() {
     if(!area || !lista) return;
 
     const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'];
-    const setorAluno = window.alunoLogado['Setor da Clínica'] || 'Geral';
+    const setorAluno = window.alunoLogado['Setor da ClÃ­nica'] || 'Geral';
 
     const minhasPesquisas = window.todosPesquisasRH.filter(p => window.obterPublicoPesquisaRH(p.data, nomeAluno, setorAluno));
     const pendentes = minhasPesquisas.filter(p => !window.todosRespostasRH.some(r => r.data.pesquisaId === p.id && r.data.nome === nomeAluno));
@@ -1436,7 +1410,7 @@ window.renderizarPesquisasAluno = function() {
             listaPerfil.innerHTML = perfisPendentes.map(item => `
                 <div style="background: #eff6ff; border-left: 4px solid #3182ce; padding: 15px; border-radius: 8px; display:flex; justify-content:space-between; align-items:center; box-shadow: var(--shadow-soft); gap:12px; flex-wrap:wrap;">
                     <div>
-                        <strong style="color: #1e3a5f; display:block; font-size:15px;">${window.escapeHTML(item.data.titulo || 'Avaliação de Perfil')}</strong>
+                        <strong style="color: #1e3a5f; display:block; font-size:15px;">${window.escapeHTML(item.data.titulo || 'AvaliaÃ§Ã£o de Perfil')}</strong>
                         <span style="font-size:12px; color:var(--text-muted);"><i class="ri-radar-line"></i> Perfil Profissional</span>
                     </div>
                     <button onclick="window.responderPerfilRH('${item.id}')" class="btn-hover color-9" style="height:35px; font-size:12px; padding:0 15px;">Responder Agora</button>
@@ -1450,77 +1424,173 @@ window.renderizarPesquisasAluno = function() {
 };
 
 window.responderPesquisaRH = function(pesquisaId) {
-    const p = window.todosPesquisasRH.find(x => x.id === pesquisaId);
-    if(!p) return;
+    const p = (window.todosPesquisasRH || []).find(x => x.id === pesquisaId);
+    if (!p || !p.data) {
+        alert('Pesquisa nÃ£o encontrada.');
+        return;
+    }
 
-    document.getElementById('rh-resp-titulo').textContent = p.data.titulo;
-    document.getElementById('rh-resp-id').value = pesquisaId;
+    const tituloEl = document.getElementById('rh-resp-titulo');
+    const idEl = document.getElementById('rh-resp-id');
+    const areaEl = document.getElementById('rh-resp-area');
+    const modalEl = document.getElementById('modal-responder-pesquisa');
 
+    if (!tituloEl || !idEl || !areaEl || !modalEl) {
+        alert('Estrutura do modal de respostas nÃ£o encontrada.');
+        return;
+    }
+
+    tituloEl.textContent = p.data.titulo || 'Responder Pesquisa';
+    idEl.value = pesquisaId;
+
+    const perguntas = Array.isArray(p.data.perguntas) ? p.data.perguntas : [];
     let html = '';
-    p.data.perguntas.forEach((q, idx) => {
-        html += `<div class="rh-resp-bloco" style="margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:8px; border: 1px solid var(--border-color);">
-            <label style="font-weight:600; font-size:13px; display:block; margin-bottom:10px; color:var(--text-main);">${idx+1}. ${q.texto}</label>
-            <input type="hidden" class="resp-q-texto" value="${q.texto}">
-            <input type="hidden" class="resp-q-tipo" value="${q.tipo}">
+
+    perguntas.forEach((q, idx) => {
+        const textoSeguro = window.escapeHTML(String(q?.texto || 'Pergunta'));
+        const tipoSeguro = String(q?.tipo || 'texto');
+
+        html += `
+            <div class="rh-resp-bloco" style="margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid var(--border-color);">
+                <input type="hidden" class="resp-q-texto" value="${textoSeguro}">
+                <input type="hidden" class="resp-q-tipo" value="${tipoSeguro}">
+                <label style="font-weight:600; font-size:13px; display:block; margin-bottom:10px; color:var(--text-main);">
+                    ${idx + 1}. ${textoSeguro}
+                </label>
         `;
-        if(q.tipo === 'escala') {
-            html += `<div style="display:flex; gap:10px; justify-content:space-between;">`;
+
+        if (tipoSeguro === 'escala') {
+            html += `<div style="display:flex; gap:10px; justify-content:space-between; flex-wrap:wrap;">`;
             [1,2,3,4,5].forEach(n => {
-                html += `<label style="flex:1; text-align:center; background:white; border:1px solid #cbd5e1; padding:10px; border-radius:8px; cursor:pointer; transition:0.2s;">
-                            <input type="radio" name="p_${pesquisaId}_q_${idx}" value="${n}" class="resp-q-val" style="margin-bottom:5px;">
-                            <div style="font-weight:bold; color:var(--primary-color);">${n}</div>
-                         </label>`;
+                html += `
+                    <label style="flex:1; min-width:56px; text-align:center; background:white; border:1px solid #cbd5e1; padding:10px; border-radius:8px; cursor:pointer;">
+                        <input type="radio" name="p_${pesquisaId}_q_${idx}" value="${n}" class="resp-q-val" style="margin-bottom:5px;">
+                        <div style="font-weight:bold; color:var(--primary-color);">${n}</div>
+                    </label>
+                `;
             });
             html += `</div>`;
         } else {
-            html += `<textarea class="form-input resp-q-val" style="height:80px; resize:vertical; margin:0;" placeholder="Sua resposta franca e sincera..."></textarea>`;
+            html += `
+                <textarea
+                    class="form-input resp-q-val"
+                    style="height:90px; resize:vertical; margin:0;"
+                    placeholder="Sua resposta franca e sincera."></textarea>
+            `;
         }
+
         html += `</div>`;
     });
-    
-    document.getElementById('rh-resp-area').innerHTML = html;
-    document.getElementById('modal-responder-pesquisa').style.display = 'flex';
+
+    areaEl.innerHTML = html;
+    modalEl.style.display = 'flex';
 };
 
 window.enviarRespostaRH = async function() {
-    if(!window.alunoLogado) return;
-    const pesquisaId = document.getElementById('rh-resp-id').value;
-    const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'];
-    
-    const blocos = document.querySelectorAll('.rh-resp-bloco');
-    let respostas = [];
-    let ok = true;
-
-    blocos.forEach(b => {
-        const textoP = b.querySelector('.resp-q-texto').value;
-        const tipo = b.querySelector('.resp-q-tipo').value;
-        let val = '';
-        if(tipo === 'escala') {
-            const checked = b.querySelector('input[type="radio"]:checked');
-            if(!checked) ok = false;
-            else val = checked.value;
-        } else {
-            val = b.querySelector('textarea').value.trim();
-            if(!val) ok = false;
-        }
-        respostas.push({ pergunta: textoP, resposta: val, tipo });
-    });
-
-    if(!ok) return alert("Por favor, responda todas as perguntas antes de enviar!");
-
     try {
-        const antiga = window.todosRespostasRH.find(item => item.data.pesquisaId === pesquisaId && item.data.nome === nomeAluno);
-        if(antiga) {
-            await window.updateDoc(window.doc(window.db, 'rh-respostas-pesquisa', antiga.id), { respostas, data: new Date().toISOString() });
-        } else {
-            await window.addDoc(window.collection(window.db, 'rh-respostas-pesquisa'), {
-                pesquisaId, nome: nomeAluno, respostas, data: new Date().toISOString()
-            });
+        if (!window.alunoLogado) {
+            alert('Colaborador nÃ£o identificado.');
+            return;
         }
-        alert("Muito obrigado pelas suas respostas! Isso nos ajuda a crescer juntos.");
-        document.getElementById('modal-responder-pesquisa').style.display = 'none';
-        window.renderizarPesquisasAluno();
-    } catch(e) { alert("Erro ao enviar: " + e.message); }
+
+        const pesquisaId = document.getElementById('rh-resp-id')?.value?.trim();
+        if (!pesquisaId) {
+            alert('Pesquisa nÃ£o identificada.');
+            return;
+        }
+
+        const nomeAluno =
+            window.alunoLogado['Nome Completo do Colaborador'] ||
+            window.alunoLogado.nome ||
+            window.alunoLogado.Nome ||
+            'Colaborador';
+
+        const blocos = Array.from(document.querySelectorAll('#rh-resp-area .rh-resp-bloco'));
+        if (!blocos.length) {
+            alert('Nenhuma pergunta encontrada para envio.');
+            return;
+        }
+
+        const respostas = [];
+        let ok = true;
+
+        blocos.forEach((b, idx) => {
+            const textoEl = b.querySelector('.resp-q-texto');
+            const tipoEl = b.querySelector('.resp-q-tipo');
+
+            const textoP = textoEl ? textoEl.value : `Pergunta ${idx + 1}`;
+            const tipo = tipoEl ? tipoEl.value : 'texto';
+
+            let val = '';
+
+            if (tipo === 'escala') {
+                const checked = b.querySelector('input[type="radio"]:checked');
+                if (!checked) {
+                    ok = false;
+                    return;
+                }
+                val = checked.value;
+            } else {
+                const textarea = b.querySelector('textarea');
+                if (!textarea) {
+                    ok = false;
+                    return;
+                }
+                val = textarea.value.trim();
+                if (!val) {
+                    ok = false;
+                    return;
+                }
+            }
+
+            respostas.push({
+                pergunta: textoP,
+                resposta: val,
+                tipo
+            });
+        });
+
+        if (!ok || respostas.length !== blocos.length) {
+            alert('Por favor, responda todas as perguntas antes de enviar!');
+            return;
+        }
+
+        const antiga = (window.todosRespostasRH || []).find(
+            item =>
+                item?.data?.pesquisaId === pesquisaId &&
+                item?.data?.nome === nomeAluno
+        );
+
+        const payload = {
+            pesquisaId,
+            nome: nomeAluno,
+            respostas,
+            data: new Date().toISOString()
+        };
+
+        if (antiga?.id) {
+            await window.updateDoc(
+                window.doc(window.db, 'rh-respostas-pesquisa', antiga.id),
+                payload
+            );
+        } else {
+            await window.addDoc(
+                window.collection(window.db, 'rh-respostas-pesquisa'),
+                payload
+            );
+        }
+
+        alert('Muito obrigado pelas suas respostas! Isso nos ajuda a crescer juntos.');
+        const modal = document.getElementById('modal-responder-pesquisa');
+        if (modal) modal.style.display = 'none';
+
+        if (typeof window.renderizarPesquisasAluno === 'function') {
+            window.renderizarPesquisasAluno();
+        }
+    } catch (e) {
+        console.error('Erro real ao enviar respostas RH:', e);
+        alert('Erro ao enviar: ' + (e?.message || 'falha desconhecida'));
+    }
 };
 
 window.verResultadosPesquisaRH = function(pesquisaId) {
@@ -1586,7 +1656,7 @@ window.abrirModalCriarPerfil = function(avaliacaoId = '') {
     }
 
     const titleEl = document.getElementById('rh-modal-perfil-titulo');
-    if(titleEl) titleEl.innerHTML = avaliacaoId ? '<i class="ri-pencil-line"></i> Editar Avaliação de Perfil' : '<i class="ri-radar-line"></i> Nova Avaliação de Perfil';
+    if(titleEl) titleEl.innerHTML = avaliacaoId ? '<i class="ri-pencil-line"></i> Editar AvaliaÃ§Ã£o de Perfil' : '<i class="ri-radar-line"></i> Nova AvaliaÃ§Ã£o de Perfil';
     document.getElementById('modal-criar-perfil').style.display = 'flex';
 };
 
@@ -1645,32 +1715,32 @@ window.salvarAvaliacaoPerfil = async function() {
         tipo: 'escala'
     })).filter(item => item.texto);
 
-    if(!titulo || !perguntas.length) return alert('Preencha o título e adicione pelo menos uma pergunta.');
-    if(alvoTipo !== 'Geral' && !alvoValor) return alert('Selecione o alvo da avaliação.');
+    if(!titulo || !perguntas.length) return alert('Preencha o tÃ­tulo e adicione pelo menos uma pergunta.');
+    if(alvoTipo !== 'Geral' && !alvoValor) return alert('Selecione o alvo da avaliaÃ§Ã£o.');
 
     const payload = { titulo, alvoTipo, alvoValor: alvoTipo === 'Geral' ? '' : alvoValor, perguntas, dataCriacao: new Date().toISOString() };
     try {
         if(editId) {
             await window.updateDoc(window.doc(window.db, 'rh-perfil-avaliacoes', editId), payload);
-            alert('Avaliação de perfil atualizada com sucesso!');
+            alert('AvaliaÃ§Ã£o de perfil atualizada com sucesso!');
         } else {
             await window.addDoc(window.collection(window.db, 'rh-perfil-avaliacoes'), payload);
-            alert('Avaliação de perfil enviada com sucesso!');
+            alert('AvaliaÃ§Ã£o de perfil enviada com sucesso!');
         }
         document.getElementById('modal-criar-perfil').style.display = 'none';
-    } catch(e) { alert('Erro ao salvar avaliação: ' + e.message); }
+    } catch(e) { alert('Erro ao salvar avaliaÃ§Ã£o: ' + e.message); }
 };
 
 window.excluirAvaliacaoPerfil = async function(id) {
-    if(!confirm('Excluir esta avaliação de perfil?')) return;
-    try { await window.deleteDoc(window.doc(window.db, 'rh-perfil-avaliacoes', id)); alert('Avaliação excluída!'); } catch(e) { alert('Erro ao excluir: ' + e.message); }
+    if(!confirm('Excluir esta avaliaÃ§Ã£o de perfil?')) return;
+    try { await window.deleteDoc(window.doc(window.db, 'rh-perfil-avaliacoes', id)); alert('AvaliaÃ§Ã£o excluÃ­da!'); } catch(e) { alert('Erro ao excluir: ' + e.message); }
 };
 
 window.responderPerfilRH = function(avaliacaoId) {
     const avaliacao = window.todosPerfilAvaliacoes.find(item => item.id === avaliacaoId);
     if(!avaliacao) return;
     document.getElementById('rh-perfil-resp-id').value = avaliacaoId;
-    document.getElementById('rh-perfil-resp-titulo').textContent = avaliacao.data.titulo || 'Avaliação de Perfil';
+    document.getElementById('rh-perfil-resp-titulo').textContent = avaliacao.data.titulo || 'AvaliaÃ§Ã£o de Perfil';
     const area = document.getElementById('rh-perfil-resp-area');
     if(!area) return;
     area.innerHTML = (avaliacao.data.perguntas || []).map((pergunta, idx) => `
@@ -1688,7 +1758,7 @@ window.enviarRespostaPerfilRH = async function() {
     if(!window.alunoLogado) return;
     const avaliacaoId = document.getElementById('rh-perfil-resp-id').value;
     const nome = window.alunoLogado['Nome Completo do Colaborador'];
-    const setor = window.alunoLogado['Setor da Clínica'] || 'Geral';
+    const setor = window.alunoLogado['Setor da ClÃ­nica'] || 'Geral';
     const blocos = Array.from(document.querySelectorAll('#rh-perfil-resp-area .rh-resp-bloco'));
     const respostas = [];
     let incompleto = false;
@@ -1699,7 +1769,7 @@ window.enviarRespostaPerfilRH = async function() {
         if(!marcado) incompleto = true;
         respostas.push({ pergunta: texto, categoria, resposta: marcado ? Number(marcado.value) : null });
     });
-    if(incompleto) return alert('Responda todas as perguntas para enviar a avaliação.');
+    if(incompleto) return alert('Responda todas as perguntas para enviar a avaliaÃ§Ã£o.');
     try {
         const antiga = window.todosRespostasPerfil.find(item => item.data.avaliacaoId === avaliacaoId && item.data.nome === nome);
         if(antiga) {
@@ -1707,10 +1777,10 @@ window.enviarRespostaPerfilRH = async function() {
         } else {
             await window.addDoc(window.collection(window.db, 'rh-perfil-respostas'), { avaliacaoId, nome, setor, respostas, data: new Date().toISOString() });
         }
-        alert('Avaliação de perfil enviada com sucesso!');
+        alert('AvaliaÃ§Ã£o de perfil enviada com sucesso!');
         document.getElementById('modal-responder-perfil').style.display = 'none';
         window.renderizarPesquisasAluno();
-    } catch(e) { alert('Erro ao enviar avaliação: ' + e.message); }
+    } catch(e) { alert('Erro ao enviar avaliaÃ§Ã£o: ' + e.message); }
 };
 
 window.abrirModalPerfilProfissional = function() {
@@ -1752,14 +1822,14 @@ window.renderizarGraficoPerfilProfissional = function(nome) {
     const mediaGeral = data.filter(v => v > 0).length ? (data.reduce((a,b)=>a+b,0) / data.filter(v => v > 0).length).toFixed(1) : '0.0';
     info.innerHTML = `
         <div class="rh-profile-summary-card"><span>Colaborador</span><strong>${window.escapeHTML(nome)}</strong><small>${window.escapeHTML(colaborador?.setor || 'Geral')}</small></div>
-        <div class="rh-profile-summary-card"><span>Avaliações Respondidas</span><strong>${resumo.totalAvaliacoes}</strong><small>coletas válidas</small></div>
-        <div class="rh-profile-summary-card"><span>Média Global do Perfil</span><strong>${mediaGeral}</strong><small>escala 0 a 5</small></div>
-        <div class="rh-profile-summary-card"><span>Qualidades / Skills</span><strong>${(resumo.medias['Qualidades'] || 0).toFixed(1)} / ${(resumo.medias['Skills'] || 0).toFixed(1)}</strong><small>forças-chave</small></div>
+        <div class="rh-profile-summary-card"><span>AvaliaÃ§Ãµes Respondidas</span><strong>${resumo.totalAvaliacoes}</strong><small>coletas vÃ¡lidas</small></div>
+        <div class="rh-profile-summary-card"><span>MÃ©dia Global do Perfil</span><strong>${mediaGeral}</strong><small>escala 0 a 5</small></div>
+        <div class="rh-profile-summary-card"><span>Qualidades / Skills</span><strong>${(resumo.medias['Qualidades'] || 0).toFixed(1)} / ${(resumo.medias['Skills'] || 0).toFixed(1)}</strong><small>forÃ§as-chave</small></div>
     `;
 };
 
 // ==========================================
-// 8. ATRIBUIÇÃO DE EVENTOS DE CLIQUES E INICIALIZAÇÃO
+// 8. ATRIBUIÃ‡ÃƒO DE EVENTOS DE CLIQUES E INICIALIZAÃ‡ÃƒO
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
     
@@ -1839,9 +1909,9 @@ window.addEventListener('DOMContentLoaded', () => {
                     banner_texto: texto, locais: locaisTexto, setores: setoresTexto, especialidades: especialidadesTexto, motivos: motivosTexto, 
                     cor_pendente: corPend, cor_concluido: corConc, imagem_padrao_pastas: imgPastasTexto, chat_logo: chatLogoTexto, chat_cor: chatCorVal
                 }, { merge: true });
-                alert("Configurações salvas com sucesso!");
-            } catch(e) { console.error('Erro ao salvar configurações:', e); alert("Erro ao salvar configurações: " + e.message); }
-            btnSalvarAjustes.innerHTML = 'Salvar Alterações';
+                alert("ConfiguraÃ§Ãµes salvas com sucesso!");
+            } catch(e) { console.error('Erro ao salvar configuraÃ§Ãµes:', e); alert("Erro ao salvar configuraÃ§Ãµes: " + e.message); }
+            btnSalvarAjustes.innerHTML = 'Salvar AlteraÃ§Ãµes';
         });
     }
 
@@ -1927,4 +1997,3 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
-
