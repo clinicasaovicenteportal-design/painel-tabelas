@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tabelas-app-v3';
+const CACHE_NAME = 'tabelas-app-v2';
 
 // Ficheiros que queremos guardar no dispositivo
 const urlsToCache = [
@@ -42,7 +42,7 @@ self.addEventListener('fetch', event => {
     fetch(event.request)
       .then(networkResponse => {
         const responseClone = networkResponse.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone)).catch(err => console.warn('Falha ao salvar no cache:', err));
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
         return networkResponse;
       })
       .catch(() => caches.match(event.request))
