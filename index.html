@@ -6,10 +6,10 @@
     <title>Painel Clínico</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#8B252C">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css?v=20260327-3">
+    <link rel="stylesheet" href="style.css?v=20260327-9">
     <style>
         .sidebar-nav { overflow-y: auto; max-height: 65vh; }
         .sidebar-nav::-webkit-scrollbar { width: 4px; }
@@ -17,21 +17,6 @@
     </style>
 </head>
 <body>
-
-<div id="intro-screen" class="intro-screen" style="display:none;">
-    <div class="intro-backdrop"></div>
-    <div class="intro-content">
-        <div id="intro-logo-wrap" class="intro-logo-wrap">
-            <img src="logo.png" alt="Escalas CSV" class="intro-logo-image" onerror="this.style.display='none'">
-            <div class="intro-wordmark">
-                <span class="intro-kicker">Escalas CSV 2.0</span>
-                <h1>Painel Clínico</h1>
-                <p>Gestão, escalas, treinamentos e analytics em uma experiência mais premium.</p>
-            </div>
-        </div>
-    </div>
-</div>
-
 
     <div id="login-screen" class="screen">
         <div id="form-login" class="login-box glass-effect">
@@ -105,39 +90,18 @@
                     <div id="banner-content"><h2>Bem-vindo ao Painel Clínico</h2></div>
                 </div>
 
-                
-<div class="weather-shell">
-    <div class="weather-side">
-        <div class="weather-gradient"></div>
-        <div class="date-container">
-            <h2 id="weather-dayname" class="date-dayname">terça-feira</h2>
-            <span id="weather-date-long" class="date-day">00 de janeiro de 2026</span>
-            <span class="location"><i class="ri-map-pin-line"></i> <span id="weather-city">Araucária, PR</span></span>
-        </div>
-        <div class="weather-container">
-            <i id="weather-icon-class" class="ri-sun-line weather-icon-main"></i>
-            <h1 class="weather-temp"><span id="weather-deg">--</span>°C</h1>
-            <h3 id="weather-desc" class="weather-desc">Buscando previsão do tempo...</h3>
-            <p id="weather-range" class="weather-range">-- / --</p>
-        </div>
-    </div>
-    <div class="info-side">
-        <div class="today-info">
-            <div><span class="title">VENTO</span><span id="weather-wind" class="value">-- km/h</span><div class="clear"></div></div>
-            <div><span class="title">CHUVA</span><span id="weather-rain" class="value">-- mm</span><div class="clear"></div></div>
-            <div><span class="title">CHANCE DE CHUVA</span><span id="weather-humidity" class="value">-- %</span><div class="clear"></div></div>
-        </div>
-        <div class="week-container">
-            <ul id="weather-week-list" class="week-list"></ul>
-        </div>
-        <div class="location-container">
-            <button class="location-button" onclick="window.buscarClimaAraucaria(true)"><i class="ri-map-pin-line"></i><span>Atualizar localização</span></button>
-        </div>
-    </div>
-</div>
+                <div class="weather-widget"><img id="weather-cover-image" class="weather-cover-image" style="display:none;" alt="Imagem clima">
+                    <div class="weather-info">
+                        <h3 id="weather-city"><i class="ri-map-pin-line"></i> Araucária, PR</h3>
+                        <div class="weather-temp"><span id="weather-deg">--</span>°C</div>
+                        <div id="weather-desc">Buscando previsão do tempo...</div><div id="weather-weekly" class="weather-weekly"></div>
+                    </div>
+                    <div class="weather-icon">
+                        <i id="weather-icon-class" class="ri-sun-cloudy-line"></i>
+                    </div>
+                </div>
 
-<div id="area-alertas-home"></div>
-
+                <div id="area-alertas-home"></div>
 
                 <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: var(--shadow-soft); margin-top: 20px; margin-bottom: 20px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
@@ -177,8 +141,8 @@
                         <input type="color" id="tab-color-chat" class="form-input" style="height:50px; padding:5px; cursor:pointer;">
                         <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 5px; margin-top: 15px;">Imagem Padrão das Pastas (Link)</label>
                         <input type="text" id="tab-input-imagem-pastas" class="form-input">
-                        <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 5px; margin-top: 15px;">Imagem do Bloco do Clima (Link)</label>
-                        <input type="text" id="tab-input-weather-image" class="form-input" placeholder="https://...">
+                        <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 5px; margin-top: 15px;">Imagem do Clima/Home (Link)</label>
+                        <input type="text" id="tab-input-weather-image" class="form-input" placeholder="Cole uma imagem da clínica ou da cidade">
                     </div>
 
                     <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Locais/Prédios</label>
@@ -190,19 +154,7 @@
                     <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Motivos (Gráficos)</label>
                     <textarea id="tab-input-motivos" class="form-input" style="height: 100px; resize: vertical;"></textarea>
 
-
-<div class="theme-panel">
-    <h4><i class="ri-palette-line"></i> Painel de Design</h4>
-    <div class="theme-panel-grid">
-        <div><label>Cor principal</label><input type="color" id="tab-ui-primary" class="form-input" style="height:48px; padding:6px;"></div>
-        <div><label>Cor de apoio</label><input type="color" id="tab-ui-accent" class="form-input" style="height:48px; padding:6px;"></div>
-        <div><label>Fundo base</label><input type="color" id="tab-ui-bg" class="form-input" style="height:48px; padding:6px;"></div>
-        <div><label>Plano de fundo</label><select id="tab-ui-bg-mode" class="form-input"><option value="solid">Sólido</option><option value="gradient">Gradiente</option></select></div>
-        <div style="grid-column:1/-1;"><label>Estilo dos cards</label><select id="tab-ui-card-style" class="form-input"><option value="solid">Sólido suave</option><option value="glass">Glassmorphism</option><option value="pastel">Pastel premium</option></select></div>
-    </div>
-    <div class="theme-preview-card">Preview em tempo real do visual da interface.</div>
-</div>
-<label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Cores de Status</label>
+                    <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 20px;">Cores de Status</label>
                     <div style="display:flex; gap: 15px;">
                         <div style="flex:1;"><span style="font-size:12px; color:var(--text-muted);">Pendente:</span><input type="color" id="tab-color-pendente" class="form-input" style="height:50px; padding:5px; cursor:pointer;" value="#e53e3e"></div>
                         <div style="flex:1;"><span style="font-size:12px; color:var(--text-muted);">Concluído:</span><input type="color" id="tab-color-concluido" class="form-input" style="height:50px; padding:5px; cursor:pointer;" value="#38a169"></div>
@@ -219,27 +171,13 @@
                 <div class="cards-grid" id="grid-colaboradores"></div>
             </section>
 
-            
-<section id="tab-pacotes" class="tab-content" style="display: none;">
-    <div id="pacotes-view-folders">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <p style="color: var(--text-muted);">Gestão de Pacotes do Pronto Socorro por pastas/categorias.</p>
-            <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('pacotes')" style="display:none;"><i class="ri-add-line"></i> Adicionar Pacote</button>
-        </div>
-        <div class="home-grid" id="grid-pacotes-folders"></div>
-    </div>
-    <div id="pacotes-view-list" style="display:none;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <button class="btn-hover color-8" onclick="window.fecharPastaGenerica('pacotes')"><i class="ri-arrow-left-line"></i> Voltar</button>
-                <h2 id="titulo-pasta-pacotes" style="color: var(--primary-color);">Pasta</h2>
-            </div>
-            <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('pacotes')" style="display:none;"><i class="ri-add-line"></i> Adicionar Pacote</button>
-        </div>
-        <div class="cards-grid" id="grid-pacotes-list"></div>
-    </div>
-</section>
-
+            <section id="tab-pacotes" class="tab-content" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <p style="color: var(--text-muted);">Gestão de Pacotes do Pronto Socorro.</p>
+                    <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('pacotes')" style="display:none;"><i class="ri-add-line"></i> Adicionar Pacote</button>
+                </div>
+                <div class="cards-grid" id="grid-pacotes"></div>
+            </section>
 
             <section id="tab-remocoes" class="tab-content" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -501,8 +439,11 @@
                     </div>
                     <div class="rh-header-actions">
                         <button class="btn-hover color-5" onclick="window.abrirModalCriarPesquisa()"><i class="ri-survey-line"></i> Nova Pesquisa (Clima/Fit)</button>
+                        <button class="btn-hover color-8" onclick="window.renderizarDashboardRH()"><i class="ri-refresh-line"></i> Atualizar RH</button>
                     </div>
                 </div>
+
+                <div class="rh-filters card"><div class="rh-filter-grid"><div><label class="rh-filter-label">Setor</label><select id="rh-filter-setor" class="form-input" onchange="window.renderizarDashboardRH()"></select></div><div><label class="rh-filter-label">Colaborador</label><select id="rh-filter-colaborador" class="form-input" onchange="window.renderizarDashboardRH()"></select></div><div style="display:flex; align-items:flex-end;"><button class="btn-hover color-8" style="width:100%;" onclick="window.limparFiltrosRH()"><i class="ri-filter-off-line"></i> Limpar filtros</button></div></div></div>
 
                 <div class="rh-overview-grid">
                     <div class="rh-stat-card">
@@ -623,7 +564,7 @@
 
     <div id="modal-media" class="modal-overlay" style="display: none; z-index: 9999;">
         <div class="modal-box glass-effect" style="width: 95vw; height: 90vh; max-width: 1200px; padding: 20px;">
-            <header class="modal-header" style="margin-bottom: 10px;"><h3>Visualização de Material</h3><div style="display:flex; gap:10px; align-items:center;"><a id="btn-media-external" href="#" target="_blank" rel="noopener noreferrer" class="btn-icon" style="width:auto; padding:0 14px; border-radius:12px; text-decoration:none; font-size:13px;">Nova guia</a><button id="btn-fechar-media" class="btn-icon" onclick="window.fecharMidiaFlutuante()"><i class="ri-close-line"></i></button></div></header>
+            <header class="modal-header" style="margin-bottom: 10px;"><h3>Visualização de Material</h3><div style="display:flex; gap:10px; align-items:center;"><a id="btn-abrir-media-nova-guia" href="#" target="_blank" class="btn-hover color-8" style="height:36px; padding:0 14px; font-size:12px; text-decoration:none;">Abrir em nova guia</a><button id="btn-fechar-media" class="btn-icon" onclick="window.fecharMidiaFlutuante()"><i class="ri-close-line"></i></button></div></header>
             <div class="modal-body" style="height: 100%; border-radius: 15px; overflow:hidden;"><iframe id="iframe-media" src="" allowfullscreen style="width: 100%; height: 100%; border: none; background-color: #e2e8f0;"></iframe></div>
         </div>
     </div>
@@ -710,6 +651,6 @@
         </div>
     </div>
 
-    <script type="module" src="app.js?v=20260327-2"></script>
+    <script type="module" src="app.js?v=20260327-9"></script>
 </body>
 </html>
