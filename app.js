@@ -6,7 +6,7 @@ window.addEventListener('submit', function(e) {
 }, true);
 
 // ==========================================
-// 1. CONFIGURAÃ‡Ã•ES E VARIÃVEIS GLOBAIS
+// 1. CONFIGURAÃ‡ÕES E VARIÃVEIS GLOBAIS
 // ==========================================
 const configuracaoAbas = {
     'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da ClÃ­nica', 'PIN de Acesso (Treinamentos)'] },
@@ -21,12 +21,12 @@ const configuracaoAbas = {
     'corpo-clinico': { titulo: 'MÃ©dico', campos: ['Nome do MÃ©dico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' }, 
     'convenios': { titulo: 'ConvÃªnio', campos: ['ConvÃªnio', 'CÃ³digo', 'ServiÃ§o', 'Aceita o Servico?', 'ObservaÃ§Ãµes'], campoAgrupador: 'ConvÃªnio', icone: 'ri-shield-cross-fill' },
     
-    // ðŸ‘‡ NOVOS CAMPOS DE PROFISSIONAIS AQUI ðŸ‘‡
+    // 👇 NOVOS CAMPOS DE PROFISSIONAIS AQUI 👇
     'ultrassom': { titulo: 'Exame de Ultrassom', campos: ['Exame', 'CÃ³digo', 'Profissionais que realizam (Opcional)', 'RestriÃ§Ã£o de Idade', 'ObservaÃ§Ã£o'], campoAgrupador: 'Exame', icone: 'ri-pulse-line' },
     'consultas': { titulo: 'Consulta / Procedimento', campos: ['Tipo', 'CÃ³digo', 'DescriÃ§Ã£o', 'Valor', 'Profissionais que realizam (Opcional)', 'ObservaÃ§Ãµes'], campoAgrupador: 'Tipo', icone: 'ri-stethoscope-line' },
     'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Categoria do Exame', 'CÃ³digo', 'DescriÃ§Ã£o', 'Valor', 'Prazo de Laudo', 'Profissionais que realizam (Opcional)', 'Onde encontrar resultado', 'ObservaÃ§Ãµes', 'ConvÃªnios'], campoAgrupador: 'Categoria do Exame', icone: 'ri-body-scan-line' },
     
-    'pacotes': { titulo: 'Pacote PS', campos: ['DescriÃ§Ã£o', 'Valor ou Informacao', 'O que estÃ¡ incluso', 'ObservaÃ§Ãµes', 'Pacotes', 'Kit'] },
+    'pacotes': { titulo: 'Pacote PS', campos: ['DescriÃ§Ã£o', 'Valor ou Informacao', 'O que está incluso', 'ObservaÃ§Ãµes', 'Pacotes', 'Kit'] },
     'institutos': { titulo: 'Instituto Tabela', campos: ['NÃºmero da Tabela', 'Valor da Tabela', 'Profissional', 'Especialidade', 'RestriÃ§Ã£o de Idade', 'CRM', 'CBO', 'URA', 'Outros'], campoAgrupador: 'NÃºmero da Tabela', icone: 'ri-building-line' },
     'remocoes': { titulo: 'RemoÃ§Ã£o', campos: ['Nome do Lugar', 'NÃºmeros (Separe por vÃ­rgula)', 'Local e Link Maps', 'ObservaÃ§Ãµes Importantes'] },
     'ramais': { titulo: 'Ramal', campos: ['Local ou PrÃ©dio', 'Setor', 'NÃºmero do Ramal', 'ObservaÃ§Ãµes'] },
@@ -72,7 +72,11 @@ window.pastaBoletimAtual = null; window.pastaPrivadoAtual = null; window.alunoLo
 
 window.corStatusPendente = "#e53e3e"; window.corStatusConcluido = "#38a169";
 
-window.safeParseJSON = function(raw, fallback = null) { try { return JSON.parse(raw); } catch(e) { return fallback; } };
+window.safeParseJSON = function(raw, fallback = null) {
+    if (raw === undefined || raw === null || raw === '' || raw === 'undefined' || raw === 'null') return fallback;
+    if (typeof raw === 'object') return raw;
+    try { return JSON.parse(raw); } catch(e) { console.warn('JSON inválido ignorado:', raw, e); return fallback; }
+};
 window.escapeHTML = function(value = '') { return String(value).replace(/[&<>"']/g, chr => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[chr])); };
 window.extrairNomeRegistro = function(registro = '') { return String(registro).split(' (')[0].trim(); };
 
@@ -95,7 +99,7 @@ window.confirmarAssinaturaLeitura = async function(docId, colecao) {
 
         const leituras = Array.isArray(item.data?.leituras) ? item.data.leituras : [];
         const jaExiste = leituras.some(reg => window.extrairNomeRegistro(reg) === nomeLeitor);
-        if (jaExiste) { alert('Essa leitura jÃ¡ foi registrada.'); return; }
+        if (jaExiste) { alert('Essa leitura já foi registrada.'); return; }
 
         const registro = `${nomeLeitor} (${new Date().toLocaleString('pt-BR')})`;
         await window.updateDoc(window.doc(window.db, colecao, docId), { leituras: window.arrayUnion(registro) });
@@ -262,7 +266,7 @@ window.verificarUrgentesHome = function() {
     if(totalUrgentesPendentes > 0) area.innerHTML = `<div class="alerta-urgente-home" onclick="window.irParaAba('boletins')"><i class="ri-alarm-warning-fill"></i><div><strong>AtenÃ§Ã£o! Informativos Urgentes</strong><span>Existem <b>${totalUrgentesPendentes}</b> pendentes.</span></div></div>`;
 };
 
-// ðŸ’¡ DESTAQUE DE CARD (PISCAR)
+// 💡 DESTAQUE DE CARD (PISCAR)
 window.destacarCard = function(docId) {
     setTimeout(() => {
         const card = document.getElementById(`card-${docId}`);
@@ -380,7 +384,7 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
             htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Geral">Setor PadrÃ£o (Geral)</option>`; setoresGlobais.forEach(s => { htmlCampos += `<option value="${s}" ${valorAntigo === s ? 'selected' : ''}>${s}</option>`; }); htmlCampos += `</select>`;
         }
         else if(colecao === 'treinamentos' && campo === 'Tipo (VÃ­deo, PDF, Tarefa, Prova)') {
-            htmlCampos += `<select id="input-${campo}" class="form-input">`; ['VÃ­deo', 'PDF/Documento', 'Tarefa PrÃ¡tica', 'Prova MÃºltipla Escolha'].forEach(op => { htmlCampos += `<option value="${op}" ${valorAntigo === op ? 'selected' : ''}>${op}</option>`; }); htmlCampos += `</select>`;
+            htmlCampos += `<select id="input-${campo}" class="form-input">`; ['VÃ­deo', 'PDF/Documento', 'Tarefa Prática', 'Prova MÃºltipla Escolha'].forEach(op => { htmlCampos += `<option value="${op}" ${valorAntigo === op ? 'selected' : ''}>${op}</option>`; }); htmlCampos += `</select>`;
         }
         else if(colecao === 'treinamentos' && campo === 'Colaborador EspecÃ­fico (Opcional)') {
             htmlCampos += `<select id="input-${campo}" class="form-input"><option value="">Nenhum (Vai para todo o Setor marcado)</option>`; listaColaboradoresGlobal.forEach(c => { htmlCampos += `<option value="${c.nome}" ${valorAntigo === c.nome ? 'selected' : ''}>${c.nome}</option>`; }); htmlCampos += `</select>`;
@@ -410,7 +414,7 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
         else if (campo.includes('Data')) { htmlCampos += `<input type="date" id="input-${campo}" value="${valorAntigo}" class="form-input">`; } 
         else if (campo.includes('Link') || campo.includes('URL')) { htmlCampos += `<input type="url" id="input-${campo}" placeholder="Link ou URL" value="${valorAntigo}" class="form-input">`; } 
         
-        // ðŸ‘‡ A MÃGICA DOS EXAMES/MÃ‰DICOS AQUI ðŸ‘‡
+        // 👇 A MÃGICA DOS EXAMES/MÉDICOS AQUI 👇
         else if (campo === 'Profissionais que realizam (Opcional)') {
             htmlCampos += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px; color:var(--text-muted);">Quais mÃ©dicos realizam isso?</label>`;
             htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:80px; resize:vertical;" placeholder="Ex: Dr. JoÃ£o, Dra. Maria...">${valorAntigo}</textarea>`;
@@ -434,7 +438,7 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
 
     let cardHtml = `<div class="card ${cardClass}" id="card-${docId}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border-left: 6px solid var(--primary-color);">`;
     
-    if(config.campoAgrupador) cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--text-main);"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA/MÃ“DULO: ${data[config.campoAgrupador] || 'Geral'}</div>`;
+    if(config.campoAgrupador) cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--text-main);"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA/MÓDULO: ${data[config.campoAgrupador] || 'Geral'}</div>`;
     cardHtml += `<div style="font-size:18px; font-weight:600; line-height:1.2; margin-bottom:15px;">${tituloDesteCard}</div>`;
     
     let hasFlexLayout = (colecaoNome === 'corpo-clinico' && data['Link da Foto do Profissional']);
@@ -470,7 +474,7 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
                     cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${valor}</span></div>`; 
                 }
             } else {
-                // ðŸ‘‡ AQUI APLICAMOS A QUEBRA DE LINHA GERAL ðŸ‘‡
+                // 👇 AQUI APLICAMOS A QUEBRA DE LINHA GERAL 👇
                 cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${valor}</span></div>`; 
             }
         }
@@ -571,7 +575,7 @@ window.renderizarListaBoletins = function() {
         cardHtml += `<div class="leituras-lista" style="margin-top: auto; padding-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); font-size: 13px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(255,255,255,0.7); padding: 8px 10px; border-radius: 8px;"><div style="font-size: 11px;">Lidos: <b style="color:#38a169; font-size:13px;">${qtdLidos}</b> | Faltam: <b style="color:#e53e3e; font-size:13px;">${qtdFaltam}</b></div><button onclick="window.abrirListaLeituras('${docId}', 'boletins')" style="background: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; cursor:pointer; font-size: 12px; font-weight: 500; color: var(--primary-color);"><i class="ri-team-line"></i> Detalhes</button></div>`;
         if(isAdmin) {
             cardHtml += `<div class="add-leitura-box" style="display: flex; gap: 8px; margin-top: 5px;"><select id="leitor-${docId}" style="flex:1; padding:8px; border-radius:8px; border:none; font-size:12px; background:rgba(255,255,255,0.9); outline:none;">`;
-            if(faltamAssinar.length === 0) cardHtml += `<option value="">Todos da pasta jÃ¡ leram!</option>`; else { cardHtml += `<option value="">Selecionar Pendente...</option>`; faltamAssinar.forEach(nome => { cardHtml += `<option value="${nome}">${nome}</option>`; }); }
+            if(faltamAssinar.length === 0) cardHtml += `<option value="">Todos da pasta já leram!</option>`; else { cardHtml += `<option value="">Selecionar Pendente...</option>`; faltamAssinar.forEach(nome => { cardHtml += `<option value="${nome}">${nome}</option>`; }); }
             cardHtml += `</select><button class="btn-action btn-assinar" data-id="${docId}" data-colecao="boletins" style="background:#38a169; color:white; padding:8px 12px; border-radius:8px; cursor:pointer;"><i class="ri-check-line"></i></button></div>`;
         }
         cardHtml += `</div>`;
@@ -747,7 +751,7 @@ window.handleChatFollowUp = function(resposta, btnElement) {
 
 window.processarLogicaDoBot = function(mensagemUser) {
     const texto = mensagemUser.toLowerCase().trim();
-    if (texto === 'oi' || texto === 'olÃ¡' || texto === 'ola' || texto.includes('bom dia') || texto.includes('boa tarde')) return "OlÃ¡! Sou a assistente virtual da clÃ­nica. Como posso ajudar? Busque por especialidades, mÃ©dicos ou exames!";
+    if (texto === 'oi' || texto === 'olá' || texto === 'ola' || texto.includes('bom dia') || texto.includes('boa tarde')) return "Olá! Sou a assistente virtual da clÃ­nica. Como posso ajudar? Busque por especialidades, mÃ©dicos ou exames!";
     let resultadosUnicos = {};
     ['corpo-clinico', 'ultrassom', 'exames-imagem', 'consultas', 'convenios', 'ramais', 'pacotes', 'institutos', 'boletins'].forEach(colecao => {
         const itens = window.todosOsDadosDoSistema[colecao] || window.dadosGlobaisAbas[colecao] || [];
@@ -765,7 +769,7 @@ window.processarLogicaDoBot = function(mensagemUser) {
                 let tituloItem = item.data[config.campos[0]] || 'Detalhes'; let detalhesStr = '';
                 if(colecao === 'boletins') tituloItem = `Boletim: ${item.data['TÃ­tulo do Informativo']}`;
                 
-                // ðŸ‘‡ A MÃGICA: O BOT PROCURA QUEM FAZ O EXAME ðŸ‘‡
+                // 👇 A MÃGICA: O BOT PROCURA QUEM FAZ O EXAME 👇
                 let profissionais = item.data['Profissionais que realizam (Opcional)'];
                 if(profissionais && profissionais.trim() !== '') {
                     detalhesStr += `<div style="background:#eefbf4; padding:8px; border-radius:8px; margin-bottom:8px; border-left:3px solid #38a169;"><b>ðŸ‘¨â€âš•ï¸ Quem realiza:</b> ${profissionais}</div>`;
@@ -798,13 +802,13 @@ window.processarLogicaDoBot = function(mensagemUser) {
         const limite = resultadosEncontrados.slice(0, 3); respostaFormatada += limite.join('');
         if (resultadosEncontrados.length > 3) { respostaFormatada += `<div style="text-align:center; font-size:11px; color:var(--text-muted); margin-top:5px;">+${resultadosEncontrados.length - 3} resultados ocultos.</div><br>`; }
         const dicas = ["Dica: Se o paciente precisar de exames, pesquise o nome do exame que eu te digo qual mÃ©dico faz! ðŸ©º", "VocÃª tambÃ©m pode pesquisar por ConvÃªnios para ver as regras de atendimento!", "Na dÃºvida? Pesquise pelo setor e eu te mostro os ramais."];
-        respostaFormatada += `<div style="background: #e2e8f0; padding: 10px; border-radius: 8px; font-size: 11px; margin-top: 10px; border-left: 3px solid var(--primary-color);">ðŸ’¡ <b>Dica:</b> ${dicas[Math.floor(Math.random() * dicas.length)]}</div>`;
+        respostaFormatada += `<div style="background: #e2e8f0; padding: 10px; border-radius: 8px; font-size: 11px; margin-top: 10px; border-left: 3px solid var(--primary-color);">💡 <b>Dica:</b> ${dicas[Math.floor(Math.random() * dicas.length)]}</div>`;
         return respostaFormatada;
     }
     return "Desculpe, nÃ£o localizei nenhuma informaÃ§Ã£o no sistema sobre isso. ðŸ¤”<br><br>Tente pesquisar por uma palavra-chave mais simples, como o nome de um exame ou especialidade!";
 };
     // ==========================================
-// 6. LÃ“GICA DA JORNADA DE APRENDIZADO E CORREÃ‡ÃƒO ADMIN
+// 6. LÓGICA DA JORNADA DE APRENDIZADO E CORREÃ‡ÃƒO ADMIN
 // ==========================================
 if (!document.getElementById('modal-resposta-aluno')) {
     const m = document.createElement('div'); m.id = 'modal-resposta-aluno'; m.className = 'modal-overlay'; m.style.display = 'none'; m.style.zIndex = '10001';
@@ -873,7 +877,7 @@ window.abrirListaLeituras = function(docId, colecao) {
         const faltantes = publico.filter(nome => !respondidos.has(nome));
         areaPend.innerHTML = faltantes.length
             ? faltantes.map(nome => cardBase(`<strong style="display:block; color:var(--text-main);">${window.escapeHTML(nome)}</strong><span style="font-size:12px; color:var(--text-muted);">Ainda nÃ£o enviou a atividade.</span>`, '#e53e3e')).join('')
-            : renderEmpty('Todos os colaboradores do pÃºblico-alvo jÃ¡ responderam.');
+            : renderEmpty('Todos os colaboradores do pÃºblico-alvo já responderam.');
     } else {
         const publico = colecao === 'boletins-privados'
             ? [String(data['Para qual Colaborador?'] || '').trim()].filter(Boolean)
@@ -914,12 +918,12 @@ window.renderizarTrilhaAluno = function() {
         return setorAlvo.includes('Geral') || setorAlvo.includes(setorAluno);
     });
 
-    if(treinamentosAluno.length === 0) { grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:var(--text-muted); background: white; padding: 20px; border-radius: 10px;">Sem treinamentos pendentes. ParabÃ©ns! ðŸŽ‰</p>'; }
+    if(treinamentosAluno.length === 0) { grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:var(--text-muted); background: white; padding: 20px; border-radius: 10px;">Sem treinamentos pendentes. ParabÃ©ns! ‰</p>'; }
 
     treinamentosAluno.forEach(item => {
         const d = item.data; const docId = item.id;
         const respostas = d.respostas_alunos || [];
-        let minhaResposta = null; respostas.forEach(r => { try { let obj = JSON.parse(r); if(obj.nome === nomeAluno) minhaResposta = obj; } catch(e){} });
+        let minhaResposta = null; respostas.forEach(r => { try { let obj = window.safeParseJSON(r, null); if(obj.nome === nomeAluno) minhaResposta = obj; } catch(e){} });
 
         const concluidos = d.leituras || []; const jaLeu = concluidos.some(txt => txt.startsWith(nomeAluno));
         const tipo = d['Tipo (VÃ­deo, PDF, Tarefa, Prova)'] || 'VÃ­deo';
@@ -950,10 +954,10 @@ window.renderizarTrilhaAluno = function() {
                 btnAcao += `<button onclick="window.concluirTreinamento('${docId}')" class="btn-hover color-11" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; background: #38a169; color:white; border:none;"><i class="ri-check-double-line"></i> Marcar como LIDO</button>`;
             }
         } else if (precisaResponder && minhaResposta && minhaResposta.nota !== "") {
-            btnAcao += `<button onclick="window.verFeedback('${minhaResposta.nota}', \`${(minhaResposta.feedback || 'Sem comentÃ¡rios.').replace(/'/g, "&apos;")}\`)" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-top:8px;"><i class="ri-message-3-line"></i> Ver CorreÃ§Ã£o</button>`;
+            btnAcao += `<button onclick="window.verFeedback('${minhaResposta.nota}', \`${(minhaResposta.feedback || 'Sem comentários.').replace(/'/g, "&apos;")}\`)" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-top:8px;"><i class="ri-message-3-line"></i> Ver CorreÃ§Ã£o</button>`;
         }
 
-        grid.innerHTML += `<div class="card" style="border: 2px solid ${corStatus}; display:flex; flex-direction:column; background: white; border-radius: 10px; padding: 15px;"><div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--primary-color);"><i class="ri-book-open-line"></i> MÃ“DULO: ${d['Pasta / MÃ³dulo']} | TIPO: ${tipo}</div><div style="font-size:16px; font-weight:600; margin-bottom:10px; line-height: 1.2;">${d['TÃ­tulo da Atividade']}</div><div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; flex:1;"><b>Pontos Base:</b> <span style="color:#e75516; font-weight:700;">+${pontosItem} XP</span><br><b>Status:</b> <span style="color:${corStatus}; font-weight:600;"><i class="${iconeStatus}"></i> ${statusTexto}</span></div>${btnAcao}</div>`;
+        grid.innerHTML += `<div class="card" style="border: 2px solid ${corStatus}; display:flex; flex-direction:column; background: white; border-radius: 10px; padding: 15px;"><div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--primary-color);"><i class="ri-book-open-line"></i> MÓDULO: ${d['Pasta / MÃ³dulo']} | TIPO: ${tipo}</div><div style="font-size:16px; font-weight:600; margin-bottom:10px; line-height: 1.2;">${d['TÃ­tulo da Atividade']}</div><div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; flex:1;"><b>Pontos Base:</b> <span style="color:#e75516; font-weight:700;">+${pontosItem} XP</span><br><b>Status:</b> <span style="color:${corStatus}; font-weight:600;"><i class="${iconeStatus}"></i> ${statusTexto}</span></div>${btnAcao}</div>`;
     });
 
     const ptsEl = document.getElementById('aluno-pontos'); const pendEl = document.getElementById('aluno-tarefas-pendentes');
@@ -967,7 +971,7 @@ window.concluirTreinamento = async function(docId) {
     const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'];
     if(!confirm(`VocÃª realmente assistiu/leu este material, ${nomeAluno}?\nAo confirmar, os pontos serÃ£o computados na sua jornada.`)) return;
     const registro = `${nomeAluno} (ConcluÃ­do em: ${new Date().toLocaleString('pt-BR')})`;
-    try { await window.updateDoc(window.doc(window.db, 'treinamentos', docId), { leituras: window.arrayUnion(registro) }); alert("ConcluÃ­do com sucesso! +XP ðŸŽ‰"); } catch(e) { alert("Erro ao salvar: " + e.message); }
+    try { await window.updateDoc(window.doc(window.db, 'treinamentos', docId), { leituras: window.arrayUnion(registro) }); alert("ConcluÃ­do com sucesso! +XP ‰"); } catch(e) { alert("Erro ao salvar: " + e.message); }
 };
 
 window.abrirModalResposta = function(docId, configJSON) {
@@ -1082,7 +1086,7 @@ window.entrarPortalAluno = function() {
 };
 
 // ==========================================
-// MÃ“DULO: RH & PEOPLE ANALYTICS
+// MÓDULO: RH & PEOPLE ANALYTICS
 // ==========================================
 window.escutarRH = function() {
     if(!isAdmin) return;
@@ -1349,7 +1353,7 @@ window.salvarPesquisaRH = async function() {
     if(alvoTipo !== 'Geral' && !alvoValor) return alert('Selecione o alvo da pesquisa.');
 
     const perguntas = Array.from(blocos).map(b => ({ tipo: b.querySelector('.rh-p-tipo').value, texto: b.querySelector('.rh-p-texto').value.trim() })).filter(item => item.texto);
-    if(!perguntas.length) return alert('Adicione pelo menos uma pergunta vÃ¡lida.');
+    if(!perguntas.length) return alert('Adicione pelo menos uma pergunta válida.');
 
     const payload = {
         titulo, categoria, perguntas,
@@ -1823,7 +1827,7 @@ window.renderizarGraficoPerfilProfissional = function(nome) {
     const mediaGeral = data.filter(v => v > 0).length ? (data.reduce((a,b)=>a+b,0) / data.filter(v => v > 0).length).toFixed(1) : '0.0';
     info.innerHTML = `
         <div class="rh-profile-summary-card"><span>Colaborador</span><strong>${window.escapeHTML(nome)}</strong><small>${window.escapeHTML(colaborador?.setor || 'Geral')}</small></div>
-        <div class="rh-profile-summary-card"><span>AvaliaÃ§Ãµes Respondidas</span><strong>${resumo.totalAvaliacoes}</strong><small>coletas vÃ¡lidas</small></div>
+        <div class="rh-profile-summary-card"><span>AvaliaÃ§Ãµes Respondidas</span><strong>${resumo.totalAvaliacoes}</strong><small>coletas válidas</small></div>
         <div class="rh-profile-summary-card"><span>MÃ©dia Global do Perfil</span><strong>${mediaGeral}</strong><small>escala 0 a 5</small></div>
         <div class="rh-profile-summary-card"><span>Qualidades / Skills</span><strong>${(resumo.medias['Qualidades'] || 0).toFixed(1)} / ${(resumo.medias['Skills'] || 0).toFixed(1)}</strong><small>forÃ§as-chave</small></div>
     `;
@@ -1850,7 +1854,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             if (btnEditar && isAdmin) {
-                window.abrirModal(btnEditar.dataset.colecao, btnEditar.dataset.id, JSON.parse(btnEditar.dataset.info));
+                window.abrirModal(btnEditar.dataset.colecao, btnEditar.dataset.id, window.safeParseJSON(btnEditar.dataset.info, {}));
             }
         });
     }
@@ -1998,3 +2002,12 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+// Garantia final de exposição das funções globais usadas no HTML
+window.efetuarLogin = window.efetuarLogin;
+window.safeParseJSON = window.safeParseJSON;
+window.aplicarImagemClimaHome = window.aplicarImagemClimaHome;
+window.abrirMidiaFlutuante = window.abrirMidiaFlutuante;
+window.abrirMidaFlutuante = window.abrirMidiaFlutuante;
+window.fecharMidiaFlutuante = window.fecharMidiaFlutuante;
+window.abrirListaLeituras = window.abrirListaLeituras;
