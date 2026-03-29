@@ -713,6 +713,25 @@ window.renderizarCards = function(colecaoNome) {
         itens.sort((a, b) => { return String(a.data[configuracaoAbas[colecaoNome].campos[0]]).localeCompare(String(b.data[configuracaoAbas[colecaoNome].campos[0]])); }).forEach((item) => { grid.innerHTML += window.gerarHTMLCard(colecaoNome, item.id, item.data); });
     });
 };
+window.aplicarImagemClimaHome = function(imageUrl = '') {
+    const weatherWidget = document.querySelector('.weather-widget');
+    if (!weatherWidget) return;
+
+    const urlFormatada = (window.formatarLinkImagem ? window.formatarLinkImagem(imageUrl) : imageUrl || '').trim();
+
+    if (!urlFormatada) {
+        weatherWidget.style.backgroundImage = '';
+        weatherWidget.style.backgroundSize = '';
+        weatherWidget.style.backgroundPosition = '';
+        weatherWidget.style.backgroundRepeat = '';
+        return;
+    }
+
+    weatherWidget.style.backgroundImage = `linear-gradient(rgba(30,60,114,0.72), rgba(30,60,114,0.72)), url("${urlFormatada}")`;
+    weatherWidget.style.backgroundSize = 'cover';
+    weatherWidget.style.backgroundPosition = 'center';
+    weatherWidget.style.backgroundRepeat = 'no-repeat';
+};
 
 window.carregarConfiguracoes = function() {
     onSnapshot(doc(db, "configuracoes", "gerais"), (docSnap) => {
