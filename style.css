@@ -73,7 +73,7 @@ body.is-auth-loading { cursor: progress; }
 .btn-delete { color: #e53e3e; background: #fff5f5; } .btn-delete:hover { background: #fed7d7; }
 
 /* MODAIS */
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(3px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(3px); display: flex; justify-content: center; align-items: center; z-index: 1000; }
 .modal-box { background: var(--surface-color); padding: 35px; border-radius: 24px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px rgba(0,0,0,0.15); max-height: 90vh; display: flex; flex-direction: column;}
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
 .modal-header h3 { font-size: 20px; font-weight: 600; color: #1a202c; }
@@ -198,18 +198,201 @@ body.is-auth-loading { cursor: progress; }
         font-size: 28px;
     }
 }
+window.abrirModalImpressao = function(tipo = 'boletins') {
+    const modal = document.getElementById('modal-imprimir-boletim');
+    const inputTipo = document.getElementById('print-boletim-id');
+
+    if (!modal) {
+        alert('Modal de impressão não encontrado.');
+        return;
+    }
+
+    if (inputTipo) inputTipo.value = tipo;
+    modal.style.display = 'flex';
+};
+
+window.gerarImpressaoBoletim = function() {
+    const incluirNome = document.getElementById('print-chk-nome')?.checked;
+    const incluirData = document.getElementById('print-chk-data')?.checked;
+    const incluirTema = document.getElementById('print-chk-tema')?.checked;
+    const incluirMotivo = document.getElementById('print-chk-motivo')?.checked;
+    const incluirPublicacao = document.getElementById('print-chk-publicacao')?.checked;
+
+    let boletins = Array.isArray(window.todosBoletinsData) ? [...window.todosBoletinsData] : [];
+
+    if (window.pastaBoletimAtual) {
+        boletins = boletins.filter(item => {
+            const setor = String(item?.data?.['Para quais Setores?'] || 'Geral');
+            return setor.includes(window.pastaBoletimAtual);
+        });
+    }
+
+    if (!boletins.length) {
+        alert('Não há dados de boletins carregados para gerar o relatório.');
+        return;
+    }
+
+    const linhas = [];
+
+    boletins.forEach(item => {
+        const data = item.data || {};
+        const leituras = Array.isArray(data.leituras) ? data.leituras : [];
+        const titulo = data['Título do Documento'] || data['Título do Informativo'] || 'Sem título';
+        const motivo = data['Motivo do Informativo'] || data['Motivo'] || '-';
+        const dataPublicacao = data['Data de Publicação'] || data['Publicado em'] || '-';
+
+        if (!leituras.length) {
+            linhas.push({
+                nome: 'Nenhuma assinatura registrada',
+                dataHora: '-',
+                tema: titulo,
+                motivo,
+                publicacao: dataPublicacao
+            });
+            return;
+        }
+
+        leituras.forEach(registro => {
+            const texto = String(registro || '').trim();
+
+            let nomeColaborador = texto;
+            let dataHora = '-';
+
+            const match = texto.match(/^(.*?)\s*-\s*(\d{2}\/\d{2}\/\d{4}.*)$/);
+            if (match) {
+                nomeColaborador = match[1].trim();
+                dataHora = match[2].trim();
+            }
+
+            linhas.push({
+                nome: nomeColaborador || '-',
+                dataHora,
+                tema: titulo,
+                motivo,
+                publicacao: dataPublicacao
+            });
+        });
+    });
+
+    const ths = [];
+    if (incluirNome) ths.push('<th>Nome do Colaborador</th>');
+    if (incluirData) ths.push('<th>Data/Hora da Assinatura</th>');
+    if (incluirTema) ths.push('<th>Tema</th>');
+    if (incluirMotivo) ths.push('<th>Motivo</th>');
+    if (incluirPublicacao) ths.push('<th>Data de Publicação</th>');
+
+    const escape = (valor) => {
+        const texto = String(valor ?? '');
+        return texto
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    };
+
+    const trs = linhas.map(linha => {
+        const cols = [];
+        if (incluirNome) cols.push(`<td>${escape(linha.nome)}</td>`);
+        if (incluirData) cols.push(`<td>${escape(linha.dataHora)}</td>`);
+        if (incluirTema) cols.push(`<td>${escape(linha.tema)}</td>`);
+        if (incluirMotivo) cols.push(`<td>${escape(linha.motivo)}</td>`);
+        if (incluirPublicacao) cols.push(`<td>${escape(linha.publicacao)}</td>`);
+        return `<tr>${cols.join('')}</tr>`;
+    }).join('');
+
+    const totalColunas = Math.max(ths.length, 1);
+
+    const janela = window.open('', '_blank', 'width=1200,height=800');
+
+    if (!janela) {
+        alert('O navegador bloqueou a janela de impressão. Libere pop-ups para este site.');
+        return;
+    }
+
+    const html = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Relatório de Assinaturas</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 24px;
+        color: #1f2937;
+    }
+    h1 {
+        color: #8B252C;
+        margin-bottom: 8px;
+    }
+    p {
+        margin: 0 0 18px;
+        color: #6b7280;
+        font-size: 14px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 14px;
+    }
+    th, td {
+        border: 1px solid #d1d5db;
+        padding: 10px;
+        text-align: left;
+        font-size: 13px;
+        vertical-align: top;
+    }
+    th {
+        background: #8B252C;
+        color: white;
+    }
+    tr:nth-child(even) td {
+        background: #f9fafb;
+    }
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 12mm;
+        }
+        body {
+            margin: 0;
+        }
+    }
+</style>
+</head>
+<body>
+    <h1>Relatório de Assinaturas</h1>
+    <p>Gerado em ${new Date().toLocaleString('pt-BR')}</p>
+    <table>
+        <thead>
+            <tr>${ths.join('')}</tr>
+        </thead>
+        <tbody>
+            ${trs || `<tr><td colspan="${totalColunas}">Nenhum registro encontrado.</td></tr>`}
+        </tbody>
+    </table>
+</body>
+</html>
+`;
+
+    janela.document.open();
+    janela.document.write(html);
+    janela.document.close();
+
+    setTimeout(() => {
+        janela.focus();
+        janela.print();
+    }, 500);
+
+    const modal = document.getElementById('modal-imprimir-boletim');
+    if (modal) modal.style.display = 'none';
+};
+
 
 #modal-imprimir-boletim { z-index: 10001; }
 #modal-media .modal-box { overflow: hidden; }
 #chat-fab img, #chat-header-img { display:block; }
-.bottom-quickbar {
-  position: sticky; bottom: 16px; z-index: 50; margin-top: 20px;
-  background: rgba(255,255,255,0.96); backdrop-filter: blur(8px);
-  border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);
-  border-radius: 18px; padding: 10px; display:flex; gap:10px; justify-content:space-between;
-}
-.bottom-quickbar button { flex:1; border:none; background:#f8fafc; border-radius:14px; padding:10px 12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; color:var(--text-main); font-weight:600; }
-.bottom-quickbar button:hover { background:#eef2f7; }
 #tab-rh .rh-shell, #tab-rh { line-height:1.6; }
 #tab-rh .card, #tab-rh .rh-card, #tab-rh .resultado-item, #tab-rh .pesquisa-item, #tab-rh .perfil-item, #tab-rh .colaborador-item { margin-bottom: 16px; }
 #tab-rh h2, #tab-rh h3, #tab-rh h4 { margin-bottom:10px; line-height:1.35; }
@@ -217,12 +400,3 @@ body.is-auth-loading { cursor: progress; }
 #tab-ensino .atividade-resposta-box textarea { min-height: 120px; }
 #modal-media iframe { border-radius: 12px; }
 @media (max-width: 900px) { #floating-window-persistent { width: calc(100vw - 24px) !important; right: 12px !important; left: 12px !important; bottom: 12px !important; height: 70vh !important; } .bottom-quickbar { position: fixed; left: 12px; right:12px; bottom:12px; } }
-
-
-#modal-imprimir-boletim.is-open,
-#modal-media.is-open {
-  display: flex !important;
-}
-
-#modal-imprimir-boletim { z-index: 10001; }
-#modal-media { z-index: 10002; }
