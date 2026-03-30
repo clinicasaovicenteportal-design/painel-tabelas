@@ -19,7 +19,7 @@ const configuracaoAbas = {
     'consultas': { titulo: 'Consulta / Procedimento', campos: ['Tipo', 'Código', 'Descrição', 'Valor', 'Profissionais que realizam (Opcional)', 'Observações'], campoAgrupador: 'Tipo', icone: 'ri-stethoscope-line' },
     'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Categoria do Exame', 'Código', 'Descrição', 'Valor', 'Prazo de Laudo', 'Profissionais que realizam (Opcional)', 'Onde encontrar resultado', 'Observações', 'Convênios'], campoAgrupador: 'Categoria do Exame', icone: 'ri-body-scan-line' },
     
-    'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor ou Informacao', 'O que est incluso', 'Observações', 'Pacotes', 'Kit'] },
+    'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor ou Informacao', 'O que est incluso', 'Observações', 'Pacotes', 'Kit'], campoAgrupador: 'Pacotes', icone: 'ri-first-aid-kit-line' },
     'institutos': { titulo: 'Instituto Tabela', campos: ['Número da Tabela', 'Valor da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'], campoAgrupador: 'Número da Tabela', icone: 'ri-building-line' },
     'remocoes': { titulo: 'Remoção', campos: ['Nome do Lugar', 'Números (Separe por vírgula)', 'Local e Link Maps', 'Observações Importantes'] },
     'ramais': { titulo: 'Ramal', campos: ['Local ou Prédio', 'Setor', 'Número do Ramal', 'Observações'] },
@@ -33,7 +33,7 @@ const configuracaoAbas = {
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCVphiwmF-SBFyYYkjV-QvTvSFIigzIsoc",
@@ -45,7 +45,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = initializeFirestore(app, { localCache: persistentLocalCache() });
+const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
 const auth = getAuth(app);
 
 window.db = db; window.updateDoc = updateDoc; window.doc = doc; window.arrayUnion = arrayUnion; window.arrayRemove = arrayRemove; window.addDoc = addDoc; window.collection = collection; window.deleteDoc = deleteDoc; window.onSnapshot = onSnapshot; window.setDoc = setDoc;
@@ -73,32 +73,6 @@ window.safeParseJSON = function(raw, fallback = null) {
 window.escapeHTML = function(value = '') { return String(value).replace(/[&<>"']/g, chr => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[chr])); };
 window.extrairNomeRegistro = function(registro = '') { return String(registro).split(' (')[0].trim(); };
 
-window.abrirMidiaFlutuante = function(url = '', titulo = 'Material') {
-    const link = String(url || '').trim();
-    if (!link) { alert('Link do material não informado.'); return; }
-
-    const floatingWindow = document.getElementById('floating-window-persistent');
-    const iframe = document.getElementById('fw-iframe');
-    const title = document.getElementById('fw-title');
-
-    if (!floatingWindow || !iframe) {
-        window.open(link, '_blank', 'noopener,noreferrer');
-        return;
-    }
-
-    const linkTratado = window.formatarLinkImagem ? (window.formatarLinkImagem(link) || link) : link;
-    if (title) title.innerHTML = `<i class="ri-global-line"></i> ${window.escapeHTML ? window.escapeHTML(titulo) : titulo}`;
-    iframe.src = linkTratado;
-    floatingWindow.style.display = 'flex';
-};
-window.abrirMidaFlutuante = window.abrirMidiaFlutuante;
-
-window.fecharJanelaFlutuante = function() {
-    const floatingWindow = document.getElementById('floating-window-persistent');
-    const iframe = document.getElementById('fw-iframe');
-    if (floatingWindow) floatingWindow.style.display = 'none';
-    if (iframe) iframe.src = '';
-};
 
 window.confirmarAssinaturaLeitura = async function(docId, colecao) {
     try {
@@ -259,6 +233,7 @@ onAuthStateChanged(auth, (user) => {
         window.carregarConfiguracoes(); window.buscarClimaAraucaria();
         if (typeof window.aplicarFraseMotivacional === 'function') window.aplicarFraseMotivacional();
         if(window.escutarRH) window.escutarRH();
+        if (window.atualizarBottomQuickbar) window.atualizarBottomQuickbar();
     } else {
         if(loginScreen) loginScreen.style.display = 'flex'; if(dashboardScreen) dashboardScreen.style.display = 'none';
         if(chatFab) chatFab.style.display = 'none';
@@ -268,7 +243,7 @@ onAuthStateChanged(auth, (user) => {
         if (floatingWindow) {
             floatingWindow.style.display = 'none';
             const iframe = document.getElementById('fw-iframe');
-            if (iframe) iframe.src = '';
+            if (iframe) iframe.src = 'about:blank';
         }
     }
 });
@@ -278,6 +253,54 @@ window.formatarLinkImagem = function(link) {
     if (!link || link.includes('file:///')) return null;
     if (link.includes("drive.google.com")) { const match = link.match(/\/d\/([a-zA-Z0-9_-]+)/) || link.match(/id=([a-zA-Z0-9_-]+)/); if (match && match[1]) return `https://drive.google.com/uc?export=view&id=${match[1]}`; }
     return link;
+};
+
+window.obterUrlPreviewGoogleDrive = function(link = '') {
+    const raw = String(link || '').trim();
+    const match = raw.match(/\/d\/([a-zA-Z0-9_-]+)/) || raw.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    return match && match[1] ? `https://drive.google.com/file/d/${match[1]}/preview` : raw;
+};
+window.obterUrlEmbedMaterial = function(link = '') {
+    const raw = String(link || '').trim();
+    if (!raw) return '';
+    if (/drive\.google\.com/i.test(raw)) return window.obterUrlPreviewGoogleDrive(raw);
+    if (/\.(pdf)(\?|#|$)/i.test(raw)) return `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(raw)}`;
+    if (/\.(doc|docx|ppt|pptx|xls|xlsx)(\?|#|$)/i.test(raw)) return `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(raw)}`;
+    return raw;
+};
+window.fecharMidiaFlutuante = function() {
+    const modal = document.getElementById('modal-media');
+    const iframe = document.getElementById('iframe-media');
+    const title = document.getElementById('modal-media-title');
+    if (iframe) iframe.src = 'about:blank';
+    if (modal) modal.style.display = 'none';
+    if (title) title.textContent = 'Visualização de Material';
+};
+window.abrirMidiaFlutuante = function(url = '', titulo = 'Visualização de Material') {
+    const link = String(url || '').trim();
+    if (!link) { alert('Link do material não informado.'); return; }
+    const modal = document.getElementById('modal-media');
+    const iframe = document.getElementById('iframe-media');
+    const titleEl = document.getElementById('modal-media-title');
+    if (!modal || !iframe) {
+        window.open(link, '_blank', 'noopener,noreferrer');
+        return;
+    }
+    const embedUrl = window.obterUrlEmbedMaterial(link);
+    iframe.src = embedUrl || link;
+    if (titleEl) titleEl.textContent = titulo;
+    modal.style.display = 'flex';
+};
+window.abrirMidaFlutuante = window.abrirMidiaFlutuante;
+window.imprimirMidiaAtual = function() {
+    const iframe = document.getElementById('iframe-media');
+    if (!iframe || !iframe.src || iframe.src === 'about:blank') return;
+    try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+    } catch (e) {
+        window.open(iframe.src, '_blank', 'noopener,noreferrer');
+    }
 };
 
 window.buscarClimaAraucaria = async function() {
@@ -559,9 +582,10 @@ window.renderizarPastasGenericas = function(colecao) {
     const grid = document.getElementById(`grid-${colecao}-folders`); if(!grid) return; grid.innerHTML = '';
     const config = configuracaoAbas[colecao]; const dadosAtuais = window.dadosGlobaisAbas[colecao] || [];
     if (dadosAtuais.length === 0) { grid.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">Nenhuma pasta/módulo encontrado. Clique em "Novo" para criar.</p>'; return; }
-    const pastasUnicas = [...new Set(dadosAtuais.map(i => i.data[config.campoAgrupador] || 'Geral'))].sort();
+    const obterNomePasta = (item) => { const bruto = item?.data?.[config.campoAgrupador] || item?.data?.Pacotes || item?.data?.['Pasta / Módulo'] || item?.data?.Especialidade || item?.data?.Convênio || item?.data?.Exame || item?.data?.Tipo || item?.data?.['Categoria do Exame'] || item?.data?.['Número da Tabela'] || 'Geral'; return String(bruto || 'Geral').trim() || 'Geral'; };
+    const pastasUnicas = [...new Set(dadosAtuais.map(obterNomePasta))].sort((a,b)=>String(a).localeCompare(String(b))); 
     pastasUnicas.forEach(nomePasta => {
-        const itensPasta = dadosAtuais.filter(i => (i.data[config.campoAgrupador] || 'Geral') === nomePasta);
+        const itensPasta = dadosAtuais.filter(i => obterNomePasta(i) === nomePasta);
         const qtd = itensPasta.length;
         const corIcone = itensPasta[0].data.corCard && itensPasta[0].data.corCard !== "transparent" ? itensPasta[0].data.corCard : "var(--primary-color)";
         let iconeHtml = `<div style="background: var(--bg-color); padding: 15px; border-radius: 12px; color: ${corIcone}; font-size: 24px;"><i class="${config.icone}"></i></div>`;
@@ -736,9 +760,8 @@ window.renderizarCards = function(colecaoNome) {
 window.aplicarImagemClimaHome = function(imageUrl = '') {
     const weatherWidget = document.querySelector('.weather-widget');
     if (!weatherWidget) return;
-
-    const urlFormatada = (window.formatarLinkImagem ? window.formatarLinkImagem(imageUrl) : imageUrl || '').trim();
-
+    const bruto = window.formatarLinkImagem ? window.formatarLinkImagem(imageUrl) : imageUrl;
+    const urlFormatada = String(bruto || '').trim();
     if (!urlFormatada) {
         weatherWidget.style.backgroundImage = '';
         weatherWidget.style.backgroundSize = '';
@@ -746,7 +769,6 @@ window.aplicarImagemClimaHome = function(imageUrl = '') {
         weatherWidget.style.backgroundRepeat = '';
         return;
     }
-
     weatherWidget.style.backgroundImage = `linear-gradient(rgba(30,60,114,0.72), rgba(30,60,114,0.72)), url("${urlFormatada}")`;
     weatherWidget.style.backgroundSize = 'cover';
     weatherWidget.style.backgroundPosition = 'center';
@@ -2072,6 +2094,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if(abaAtual === 'boletins-privados') window.fecharPastaPrivado();
             ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico', 'treinamentos'].forEach(col => { if(abaAtual === col) window.fecharPastaGenerica(col); });
             if(abaAtual === 'rh' && isAdmin) { window.atualizarOpcoesFiltrosRH(); window.renderizarDashboardRH(); }
+            if (window.atualizarBottomQuickbar) window.atualizarBottomQuickbar();
         });
     });
 });
@@ -2084,6 +2107,7 @@ window.abrirMidiaFlutuante = window.abrirMidiaFlutuante;
 window.abrirMidaFlutuante = window.abrirMidiaFlutuante;
 window.fecharMidiaFlutuante = window.fecharMidiaFlutuante;
 window.abrirListaLeituras = window.abrirListaLeituras;
+window.fecharModalImpressao = window.fecharModalImpressao;
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -2101,10 +2125,6 @@ window.abrirModalImpressao = function(tipo = 'boletins') {
 
     if (inputTipo) inputTipo.value = tipo;
     modal.style.display = 'flex';
-};
-
-window.fecharModalImpressao = function() {
-    window.fecharModalImpressao();
 };
 
 window.gerarImpressaoBoletim = function() {
@@ -2154,10 +2174,14 @@ window.gerarImpressaoBoletim = function() {
             let nomeColaborador = texto;
             let dataHora = '-';
 
-            const match = texto.match(/^(.*?)\s*-\s*(\d{2}\/\d{2}\/\d{4}.*)$/);
-            if (match) {
-                nomeColaborador = match[1].trim();
-                dataHora = match[2].trim();
+            const matchParenteses = texto.match(/^(.*?)\s*\((.*?)\)$/);
+            const matchHifen = texto.match(/^(.*?)\s*-\s*(\d{2}\/\d{2}\/\d{4}.*)$/);
+            if (matchParenteses) {
+                nomeColaborador = matchParenteses[1].trim();
+                dataHora = matchParenteses[2].trim();
+            } else if (matchHifen) {
+                nomeColaborador = matchHifen[1].trim();
+                dataHora = matchHifen[2].trim();
             }
 
             linhas.push({
@@ -2251,4 +2275,14 @@ window.gerarImpressaoBoletim = function() {
     }, 500);
 
     window.fecharModalImpressao();
+};
+window.fecharModalImpressao = function() {
+    const modal = document.getElementById('modal-imprimir-boletim');
+    if (modal) modal.style.display = 'none';
+};
+
+window.atualizarBottomQuickbar = function() {
+  const bar = document.getElementById('colaboradores-quickbar');
+  if (!bar) return;
+  bar.style.display = (abaAtual === 'colaboradores' || abaAtual === 'ensino' || abaAtual === 'rh') ? 'flex' : 'none';
 };
