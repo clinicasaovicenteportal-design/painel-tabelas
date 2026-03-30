@@ -73,12 +73,32 @@ window.safeParseJSON = function(raw, fallback = null) {
 window.escapeHTML = function(value = '') { return String(value).replace(/[&<>"']/g, chr => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[chr])); };
 window.extrairNomeRegistro = function(registro = '') { return String(registro).split(' (')[0].trim(); };
 
-window.abrirMidiaFlutuante = function(url = '') {
+window.abrirMidiaFlutuante = function(url = '', titulo = 'Material') {
     const link = String(url || '').trim();
     if (!link) { alert('Link do material não informado.'); return; }
-    window.open(link, '_blank', 'noopener,noreferrer');
+
+    const floatingWindow = document.getElementById('floating-window-persistent');
+    const iframe = document.getElementById('fw-iframe');
+    const title = document.getElementById('fw-title');
+
+    if (!floatingWindow || !iframe) {
+        window.open(link, '_blank', 'noopener,noreferrer');
+        return;
+    }
+
+    const linkTratado = window.formatarLinkImagem ? (window.formatarLinkImagem(link) || link) : link;
+    if (title) title.innerHTML = `<i class="ri-global-line"></i> ${window.escapeHTML ? window.escapeHTML(titulo) : titulo}`;
+    iframe.src = linkTratado;
+    floatingWindow.style.display = 'flex';
 };
 window.abrirMidaFlutuante = window.abrirMidiaFlutuante;
+
+window.fecharJanelaFlutuante = function() {
+    const floatingWindow = document.getElementById('floating-window-persistent');
+    const iframe = document.getElementById('fw-iframe');
+    if (floatingWindow) floatingWindow.style.display = 'none';
+    if (iframe) iframe.src = '';
+};
 
 window.confirmarAssinaturaLeitura = async function(docId, colecao) {
     try {
@@ -717,8 +737,7 @@ window.aplicarImagemClimaHome = function(imageUrl = '') {
     const weatherWidget = document.querySelector('.weather-widget');
     if (!weatherWidget) return;
 
-    const bruto = window.formatarLinkImagem ? window.formatarLinkImagem(imageUrl) : imageUrl;
-    const urlFormatada = String(bruto || '').trim();
+    const urlFormatada = (window.formatarLinkImagem ? window.formatarLinkImagem(imageUrl) : imageUrl || '').trim();
 
     if (!urlFormatada) {
         weatherWidget.style.backgroundImage = '';
@@ -1641,7 +1660,7 @@ window.enviarRespostaRH = async function() {
 
         alert('Muito obrigado pelas suas respostas! Isso nos ajuda a crescer juntos.');
         const modal = document.getElementById('modal-responder-pesquisa');
-        window.fecharModalImpressao();
+        if (modal) modal.style.display = 'none';
 
         if (typeof window.renderizarPesquisasAluno === 'function') {
             window.renderizarPesquisasAluno();
@@ -2085,7 +2104,6 @@ window.abrirModalImpressao = function(tipo = 'boletins') {
 };
 
 window.fecharModalImpressao = function() {
-    const modal = document.getElementById('modal-imprimir-boletim');
     window.fecharModalImpressao();
 };
 
@@ -2136,15 +2154,10 @@ window.gerarImpressaoBoletim = function() {
             let nomeColaborador = texto;
             let dataHora = '-';
 
-            const matchParenteses = texto.match(/^(.*?)\s*\((.*?)\)$/);
-            const matchHifen = texto.match(/^(.*?)\s*-\s*(\d{2}\/\d{2}\/\d{4}.*)$/);
-
-            if (matchParenteses) {
-                nomeColaborador = matchParenteses[1].trim();
-                dataHora = matchParenteses[2].trim();
-            } else if (matchHifen) {
-                nomeColaborador = matchHifen[1].trim();
-                dataHora = matchHifen[2].trim();
+            const match = texto.match(/^(.*?)\s*-\s*(\d{2}\/\d{2}\/\d{4}.*)$/);
+            if (match) {
+                nomeColaborador = match[1].trim();
+                dataHora = match[2].trim();
             }
 
             linhas.push({
@@ -2237,6 +2250,5 @@ window.gerarImpressaoBoletim = function() {
         janela.print();
     }, 500);
 
-    const modal = document.getElementById('modal-imprimir-boletim');
     window.fecharModalImpressao();
 };
