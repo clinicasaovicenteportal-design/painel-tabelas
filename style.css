@@ -73,7 +73,7 @@ body.is-auth-loading { cursor: progress; }
 .btn-delete { color: #e53e3e; background: #fff5f5; } .btn-delete:hover { background: #fed7d7; }
 
 /* MODAIS */
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(3px); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(3px); display: none; justify-content: center; align-items: center; z-index: 1000; }
 .modal-box { background: var(--surface-color); padding: 35px; border-radius: 24px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px rgba(0,0,0,0.15); max-height: 90vh; display: flex; flex-direction: column;}
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
 .modal-header h3 { font-size: 20px; font-weight: 600; color: #1a202c; }
@@ -199,71 +199,30 @@ body.is-auth-loading { cursor: progress; }
     }
 }
 
+#modal-imprimir-boletim { z-index: 10001; }
+#modal-media .modal-box { overflow: hidden; }
+#chat-fab img, #chat-header-img { display:block; }
+.bottom-quickbar {
+  position: sticky; bottom: 16px; z-index: 50; margin-top: 20px;
+  background: rgba(255,255,255,0.96); backdrop-filter: blur(8px);
+  border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);
+  border-radius: 18px; padding: 10px; display:flex; gap:10px; justify-content:space-between;
+}
+.bottom-quickbar button { flex:1; border:none; background:#f8fafc; border-radius:14px; padding:10px 12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; color:var(--text-main); font-weight:600; }
+.bottom-quickbar button:hover { background:#eef2f7; }
+#tab-rh .rh-shell, #tab-rh { line-height:1.6; }
+#tab-rh .card, #tab-rh .rh-card, #tab-rh .resultado-item, #tab-rh .pesquisa-item, #tab-rh .perfil-item, #tab-rh .colaborador-item { margin-bottom: 16px; }
+#tab-rh h2, #tab-rh h3, #tab-rh h4 { margin-bottom:10px; line-height:1.35; }
+#tab-rh p, #tab-rh span, #tab-rh label, #tab-rh li { line-height:1.6; }
+#tab-ensino .atividade-resposta-box textarea { min-height: 120px; }
+#modal-media iframe { border-radius: 12px; }
+@media (max-width: 900px) { #floating-window-persistent { width: calc(100vw - 24px) !important; right: 12px !important; left: 12px !important; bottom: 12px !important; height: 70vh !important; } .bottom-quickbar { position: fixed; left: 12px; right:12px; bottom:12px; } }
 
-.chat-quick-replies{
-    display:flex;
-    flex-wrap:wrap;
-    gap:10px;
-    padding:12px 15px;
-    background:#fff;
-    border-top:1px solid var(--border-color);
+
+#modal-imprimir-boletim.is-open,
+#modal-media.is-open {
+  display: flex !important;
 }
-.chat-quick-replies button{
-    border:none;
-    border-radius:999px;
-    background:rgba(11,163,96,.12);
-    color:var(--chat-primary);
-    padding:9px 14px;
-    font-size:12px;
-    font-weight:600;
-    cursor:pointer;
-    transition:all .2s ease;
-    box-shadow:0 2px 6px rgba(0,0,0,.05);
-}
-.chat-quick-replies button:hover{
-    background:var(--chat-primary);
-    color:#fff;
-    transform:translateY(-1px);
-}
-#modal-media iframe,
-#fw-iframe{
-    min-height:320px;
-}
-#floating-window-persistent{
-    display:none !important;
-}
-#tab-rh .card,
-#tab-rh .rh-panel,
-#tab-rh .rh-collab-card{
-    line-height:1.55;
-}
-#tab-rh p,
-#tab-rh span,
-#tab-rh li,
-#tab-rh label{
-    line-height:1.6;
-}
-#tab-rh .rh-collab-card p,
-#tab-rh .rh-panel p{
-    margin-bottom:8px;
-}
-.bottom-shortcuts-bar{
-    position:sticky;
-    bottom:14px;
-    z-index:15;
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-top:18px;
-}
-.bottom-shortcuts-bar button{
-    height:38px;
-    padding:0 14px;
-    border:none;
-    border-radius:999px;
-    background:#fff;
-    box-shadow:var(--shadow-soft);
-    cursor:pointer;
-    color:var(--primary-color);
-    font-weight:600;
-}
+
+#modal-imprimir-boletim { z-index: 10001; }
+#modal-media { z-index: 10002; }
