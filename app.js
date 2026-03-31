@@ -74,6 +74,106 @@ window.escapeHTML = function(value = '') { return String(value).replace(/[&<>"']
 window.extrairNomeRegistro = function(registro = '') { return String(registro).split(' (')[0].trim(); };
 
 
+window.chatJaInicializado = false;
+
+window.CHATBOT_DICAS = [
+    { titulo: "Assistente Clínica", texto: "Posso te ajudar a localizar um médico em poucos cliques." },
+    { titulo: "Busca rápida", texto: "Pesquise especialidades, exames, convênios e contatos úteis." },
+    { titulo: "Atalho inteligente", texto: "Consigo encontrar boletins, ultrassom, consultas e ramais." },
+    { titulo: "Ajuda imediata", texto: "Se precisar, estou aqui para acelerar sua busca no Painel." }
+];
+
+window.chatTooltipTimer = null;
+window.chatTooltipHideTimer = null;
+
+window.normalizarTextoChat = function(txt = '') {
+    return String(txt)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+};
+
+window.extrairTokensChat = function(txt = '') {
+    return window.normalizarTextoChat(txt)
+        .replace(/[^\w\s-]/g, ' ')
+        .split(/\s+/)
+        .filter(t => t && t.length > 1);
+};
+
+const CHAT_SAUDACAO_HTML = `
+    <div class="chat-msg bot">
+        <strong>👋 Olá!</strong><br>
+        Sou a inteligência virtual da clínica.<br>
+        Posso te ajudar com:
+        <ul style="margin:8px 0 0 18px; padding:0;">
+            <li>especialidades</li>
+            <li>médicos</li>
+            <li>convênios</li>
+            <li>ultrassom, exames e consultas</li>
+            <li>ramais, boletins e contatos</li>
+        </ul>
+    </div>
+`;
+
+window.abrirSaudacaoChat = function() {
+    const body = document.getElementById('chat-body');
+    if (!body) return;
+    body.innerHTML = CHAT_SAUDACAO_HTML;
+};
+
+window.garantirTooltipChatbot = function() {
+    const fab = document.getElementById('chat-fab');
+    if (!fab) return null;
+
+    let tooltip = fab.querySelector('.chatbot-tooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.className = 'chatbot-tooltip';
+        fab.appendChild(tooltip);
+    }
+    return tooltip;
+};
+
+window.mostrarTooltipChatbot = function() {
+    const fab = document.getElementById('chat-fab');
+    const win = document.getElementById('chat-window');
+    if (!fab || !win) return;
+    if (win.style.display === 'flex') return;
+
+    const tooltip = window.garantirTooltipChatbot();
+    if (!tooltip) return;
+
+    const dica = window.CHATBOT_DICAS[Math.floor(Math.random() * window.CHATBOT_DICAS.length)];
+    tooltip.innerHTML = `<strong>${dica.titulo}</strong><span>${dica.texto}</span>`;
+    tooltip.style.display = 'block';
+
+    clearTimeout(window.chatTooltipHideTimer);
+    window.chatTooltipHideTimer = setTimeout(() => {
+        tooltip.style.display = 'none';
+    }, 7000);
+};
+
+window.ocultarTooltipChatbot = function() {
+    const tooltip = document.querySelector('#chat-fab .chatbot-tooltip');
+    if (tooltip) tooltip.style.display = 'none';
+};
+
+window.agendarTooltipChatbot = function() {
+    clearInterval(window.chatTooltipTimer);
+    window.chatTooltipTimer = setInterval(() => {
+        window.mostrarTooltipChatbot();
+    }, 5 * 60 * 1000);
+};
+
+window.inicializarTooltipChatbot = function() {
+    window.garantirTooltipChatbot();
+    setTimeout(() => window.mostrarTooltipChatbot(), 2500);
+    window.agendarTooltipChatbot();
+};
+
+
+
 window.confirmarAssinaturaLeitura = async function(docId, colecao) {
     try {
         const inputLeitor = document.getElementById(`leitor-${docId}`);
@@ -150,7 +250,7 @@ window.obterAvaliacoesPerfilDisponiveis = function(nomeColaborador = '', setorCo
 };
 
 let chartBoletinsInst = null; let chartPrivadosInst = null; let chartHomeInst = null; let chartPrivadosGeralInst = null;
-const APP_VERSION = '3.1.0';
+const APP_VERSION = '3.1.10';
 let loginEmAndamento = false;
 
 if ('serviceWorker' in navigator) {
@@ -234,6 +334,7 @@ onAuthStateChanged(auth, (user) => {
         if (typeof window.aplicarFraseMotivacional === 'function') window.aplicarFraseMotivacional();
         if(window.escutarRH) window.escutarRH();
         if (window.atualizarBottomQuickbar) window.atualizarBottomQuickbar();
+        window.inicializarTooltipChatbot();
     } else {
         if(loginScreen) loginScreen.style.display = 'flex'; if(dashboardScreen) dashboardScreen.style.display = 'none';
         if(chatFab) chatFab.style.display = 'none';
@@ -250,10 +351,9 @@ onAuthStateChanged(auth, (user) => {
 
 setInterval(() => { const rl = document.getElementById('relogio'); if(rl) rl.innerText = new Date().toLocaleTimeString('pt-BR'); }, 1000);
 window.formatarLinkImagem = function(link) {
-    const raw = String(link || '').trim();
-    if (!raw || raw.includes('file:///')) return null;
-    if (raw.includes('drive.google.com')) { const match = raw.match(/\/d\/([a-zA-Z0-9_-]+)/) || raw.match(/id=([a-zA-Z0-9_-]+)/); if (match && match[1]) return `https://drive.google.com/uc?export=view&id=${match[1]}`; }
-    return raw;
+    if (!link || link.includes('file:///')) return null;
+    if (link.includes("drive.google.com")) { const match = link.match(/\/d\/([a-zA-Z0-9_-]+)/) || link.match(/id=([a-zA-Z0-9_-]+)/); if (match && match[1]) return `https://drive.google.com/uc?export=view&id=${match[1]}`; }
+    return link;
 };
 
 window.obterUrlPreviewGoogleDrive = function(link = '') {
@@ -279,7 +379,7 @@ window.fecharMidiaFlutuante = function() {
 };
 window.abrirMidiaFlutuante = function(url = '', titulo = 'Visualização de Material') {
     const link = String(url || '').trim();
-    if (!link || ['#','_','null','undefined','-'].includes(link.toLowerCase())) { alert('Link do material não informado.'); return; }
+    if (!link) { alert('Link do material não informado.'); return; }
     const modal = document.getElementById('modal-media');
     const iframe = document.getElementById('iframe-media');
     const titleEl = document.getElementById('modal-media-title');
@@ -306,94 +406,18 @@ window.imprimirMidiaAtual = function() {
 
 window.buscarClimaAraucaria = async function() {
     try {
-        const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-25.59&longitude=-49.41&current_weather=true&hourly=relativehumidity_2m,apparent_temperature&forecast_days=1');
-        const data = await response.json();
-        const clima = data.current_weather || {};
-
-        const wDeg = document.getElementById('weather-deg');
-        const wDesc = document.getElementById('weather-desc');
-        const wIcon = document.getElementById('weather-icon-class');
-        const wHumidity = document.getElementById('weather-humidity');
-        const wWind = document.getElementById('weather-wind');
-        const wFeel = document.getElementById('weather-feel');
-        const wStatus = document.getElementById('weather-status');
-
-        if (wDeg) wDeg.textContent = Math.round(clima.temperature ?? 0);
-
-        let desc = "Céu Limpo";
-        let icon = "ri-sun-fill";
-        let status = "Agradável";
-
-        if (clima.weathercode >= 1 && clima.weathercode <= 3) {
-            desc = "Parcialmente Nublado";
-            icon = "ri-sun-cloudy-fill";
-            status = "Estável";
-        }
-        if (clima.weathercode === 45 || clima.weathercode === 48) {
-            desc = "Neblina";
-            icon = "ri-foggy-fill";
-            status = "Neblina";
-        }
-        if (clima.weathercode >= 51 && clima.weathercode <= 67) {
-            desc = "Chuva Leve";
-            icon = "ri-drizzle-fill";
-            status = "Úmido";
-        }
-        if (clima.weathercode >= 71 && clima.weathercode <= 77) {
-            desc = "Chuva/Neve";
-            icon = "ri-snowy-line";
-            status = "Instável";
-        }
-        if (clima.weathercode >= 80 && clima.weathercode <= 82) {
-            desc = "Pancadas de Chuva";
-            icon = "ri-showers-fill";
-            status = "Chuvoso";
-        }
-        if (clima.weathercode >= 95) {
-            desc = "Tempestade";
-            icon = "ri-thunderstorms-fill";
-            status = "Atenção";
-        }
-
-        if (wDesc) wDesc.textContent = desc;
-        if (wIcon) wIcon.className = icon;
-        if (wStatus) wStatus.textContent = status;
-
-        if (wWind) {
-            const vento = Math.round(clima.windspeed ?? 0);
-            wWind.textContent = `${vento} km/h`;
-        }
-
-        const hourlyTimes = data.hourly?.time || [];
-        const humidityValues = data.hourly?.relativehumidity_2m || [];
-        const apparentValues = data.hourly?.apparent_temperature || [];
-
-        const currentTime = clima.time;
-        const idx = hourlyTimes.indexOf(currentTime);
-
-        if (wHumidity) {
-            const humidity = idx >= 0 ? humidityValues[idx] : '--';
-            wHumidity.textContent = `${humidity}%`;
-        }
-
-        if (wFeel) {
-            const feel = idx >= 0 ? Math.round(apparentValues[idx]) : Math.round(clima.temperature ?? 0);
-            wFeel.textContent = `${feel} °C`;
-        }
-
-    } catch (e) {
-        const wDesc = document.getElementById('weather-desc');
-        const wHumidity = document.getElementById('weather-humidity');
-        const wWind = document.getElementById('weather-wind');
-        const wFeel = document.getElementById('weather-feel');
-        const wStatus = document.getElementById('weather-status');
-
-        if (wDesc) wDesc.textContent = "Clima indisponível";
-        if (wHumidity) wHumidity.textContent = "--%";
-        if (wWind) wWind.textContent = "-- km/h";
-        if (wFeel) wFeel.textContent = "-- °C";
-        if (wStatus) wStatus.textContent = "Offline";
-    }
+        const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-25.59&longitude=-49.41&current_weather=true'); const data = await response.json(); const clima = data.current_weather;
+        const wDeg = document.getElementById('weather-deg'); if(wDeg) wDeg.textContent = Math.round(clima.temperature);
+        let desc = "Céu Limpo"; let icon = "ri-sun-fill";
+        if(clima.weathercode >= 1 && clima.weathercode <= 3) { desc = "Parcialmente Nublado"; icon = "ri-sun-cloudy-fill"; }
+        if(clima.weathercode === 45 || clima.weathercode === 48) { desc = "Neblina"; icon = "ri-foggy-fill"; }
+        if(clima.weathercode >= 51 && clima.weathercode <= 67) { desc = "Chuva Leve"; icon = "ri-drizzle-fill"; }
+        if(clima.weathercode >= 71 && clima.weathercode <= 77) { desc = "Chuva/Neve"; icon = "ri-snowy-line"; }
+        if(clima.weathercode >= 80 && clima.weathercode <= 82) { desc = "Pancadas de Chuva"; icon = "ri-showers-fill"; }
+        if(clima.weathercode >= 95) { desc = "Tempestade"; icon = "ri-thunderstorms-fill"; }
+        const wDesc = document.getElementById('weather-desc'); const wIcon = document.getElementById('weather-icon-class');
+        if(wDesc) wDesc.textContent = desc; if(wIcon) wIcon.className = icon;
+    } catch(e) { const wDesc = document.getElementById('weather-desc'); if(wDesc) wDesc.textContent = "Clima indisponível"; }
 };
 
 window.obterPublicoAlvo = function(setoresAlvoString, colabEsp = '') {
@@ -875,9 +899,7 @@ window.carregarConfiguracoes = function() {
             document.documentElement.style.setProperty('--chat-primary', chatCor);
             
             const fabImg = document.getElementById('chat-fab-img'); const headerImg = document.getElementById('chat-header-img');
-            const _chatLogoFinal = window.formatarLinkImagem(chatLogo) || chatLogo || './logo.png';
-            if(fabImg){ fabImg.src = _chatLogoFinal; fabImg.onerror = () => { fabImg.src = './logo.png'; }; }
-            if(headerImg){ headerImg.src = _chatLogoFinal; headerImg.onerror = () => { headerImg.src = './logo.png'; }; }
+            if(fabImg) fabImg.src = window.formatarLinkImagem(chatLogo) || chatLogo; if(headerImg) headerImg.src = window.formatarLinkImagem(chatLogo) || chatLogo;
             window.aplicarImagemClimaHome(data.weather_image || '');
 
             window.corStatusPendente = data.cor_pendente || '#e53e3e'; window.corStatusConcluido = data.cor_concluido || '#38a169';
@@ -893,28 +915,94 @@ window.carregarConfiguracoes = function() {
     });
 };
 
-window.toggleChat = function() {
-    const win = document.getElementById('chat-window'); const fab = document.getElementById('chat-fab'); if(!win || !fab) return;
-    if (win.style.display === 'none' || win.style.display === '') {
-        win.style.display = 'flex'; const tooltip = fab.querySelector('.chatbot-tooltip'); if(tooltip) tooltip.style.display = 'none';
-        const termosPopulares = ['Cardiologia', 'Ultrassom', 'Unimed', 'Raio-X', 'Pediatria', 'Ortopedia', 'Consulta', 'Boletim'];
-        termosPopulares.sort(() => 0.5 - Math.random());
-        const top3 = termosPopulares.slice(0, 3);
-        const quickRepliesDiv = document.querySelector('.chat-quick-replies');
-        if(quickRepliesDiv) { quickRepliesDiv.innerHTML = ''; top3.forEach(termo => { quickRepliesDiv.innerHTML += `<button onclick="window.sendQuickMsg('${termo}')">${termo}</button>`; }); }
-        setTimeout(() => { document.getElementById('chat-input').focus(); }, 100);
-    } else { win.style.display = 'none'; }
+window.renderizarSugestoesChat = function() {
+    const quickRepliesDiv = document.querySelector('.chat-quick-replies');
+    if (!quickRepliesDiv) return;
+
+    const termosPopulares = [
+        { label: 'Cardiologia', icon: 'ri-heart-pulse-line' },
+        { label: 'Ultrassom', icon: 'ri-pulse-line' },
+        { label: 'Unimed', icon: 'ri-shield-cross-line' },
+        { label: 'Raio-X', icon: 'ri-scan-2-line' },
+        { label: 'Pediatria', icon: 'ri-user-heart-line' },
+        { label: 'Ortopedia', icon: 'ri-wheelchair-line' },
+        { label: 'Consulta', icon: 'ri-stethoscope-line' },
+        { label: 'Boletim', icon: 'ri-newspaper-line' }
+    ];
+
+    termosPopulares.sort(() => 0.5 - Math.random());
+    const top4 = termosPopulares.slice(0, 4);
+
+    quickRepliesDiv.innerHTML = top4.map(item =>
+        `<button type="button" onclick="window.sendQuickMsg('${item.label.replace(/'/g, "\\'")}')">
+            <i class="${item.icon}"></i>
+            <span>${item.label}</span>
+        </button>`
+    ).join('');
 };
 
-window.sendQuickMsg = function(texto) { const input = document.getElementById('chat-input'); if(input) { input.value = texto; window.sendChat(); } };
+window.sendQuickMsg = function(texto) {
+    const input = document.getElementById('chat-input');
+    if (!input) return;
+    input.value = texto;
+    window.sendChat();
+};
+
 window.sendChat = function() {
-    const input = document.getElementById('chat-input'); if(!input) return;
-    const msg = input.value.trim(); if (!msg) return;
-    window.addChatBubble(msg, 'user'); input.value = '';
-    setTimeout(() => { const resposta = window.processarLogicaDoBot(msg); window.addChatBubble(resposta, 'bot'); }, 600);
+    const input = document.getElementById('chat-input');
+    if (!input) return;
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    window.addChatBubble(msg, 'user');
+    input.value = '';
+
+    setTimeout(() => {
+        const resposta = window.processarLogicaDoBot(msg);
+        window.addChatBubble(resposta, 'bot');
+    }, 600);
 };
 
-window.addChatBubble = function(text, sender) { const chatArea = document.getElementById('chat-body'); if(!chatArea) return; const div = document.createElement('div'); div.className = `chat-msg ${sender}`; div.innerHTML = text; chatArea.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight; };
+window.addChatBubble = function(text, sender) {
+    const chatArea = document.getElementById('chat-body');
+    if (!chatArea) return;
+
+    const div = document.createElement('div');
+    div.className = `chat-msg ${sender}`;
+    div.innerHTML = text;
+    chatArea.appendChild(div);
+    chatArea.scrollTop = chatArea.scrollHeight;
+};
+
+window.toggleChat = function() {
+    const win = document.getElementById('chat-window');
+    const fab = document.getElementById('chat-fab');
+    const input = document.getElementById('chat-input');
+    if (!win || !fab) return;
+
+    const abrindo = (win.style.display === 'none' || win.style.display === '');
+    if (abrindo) {
+        win.style.display = 'flex';
+        window.ocultarTooltipChatbot();
+
+        if (!window.chatJaInicializado) {
+            window.abrirSaudacaoChat();
+            window.chatJaInicializado = true;
+        } else {
+            const body = document.getElementById('chat-body');
+            if (body && body.innerHTML.trim() === '') {
+                window.abrirSaudacaoChat();
+            }
+        }
+
+        window.renderizarSugestoesChat();
+        setTimeout(() => input?.focus(), 100);
+    } else {
+        win.style.display = 'none';
+        setTimeout(() => window.mostrarTooltipChatbot(), 1200);
+    }
+};
+
 window.handleChatFollowUp = function(resposta, btnElement) {
     if(btnElement && btnElement.parentElement) { btnElement.parentElement.innerHTML = `<span style="color: var(--text-muted); font-size: 11px;">Opção selecionada: ${resposta === 'sim' ? 'Sim' : 'Não'}</span>`; }
     if (resposta === 'sim') { window.addChatBubble("Pode escrever aqui abaixo que estou aqui para te ajudar! ", 'bot'); } else {
@@ -2171,7 +2259,7 @@ window.addEventListener('DOMContentLoaded', () => {
             
             if(abaAtual === 'boletins') window.fecharPastaBoletim(); 
             if(abaAtual === 'boletins-privados') window.fecharPastaPrivado();
-            ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico', 'treinamentos', 'pacotes'].forEach(col => { if(abaAtual === col) window.fecharPastaGenerica(col); });
+            ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico', 'treinamentos'].forEach(col => { if(abaAtual === col) window.fecharPastaGenerica(col); });
             if(abaAtual === 'rh' && isAdmin) { window.atualizarOpcoesFiltrosRH(); window.renderizarDashboardRH(); }
             if (window.atualizarBottomQuickbar) window.atualizarBottomQuickbar();
         });
@@ -2362,5 +2450,6 @@ window.fecharModalImpressao = function() {
 
 window.atualizarBottomQuickbar = function() {
   const bar = document.getElementById('colaboradores-quickbar');
-  if (bar) bar.style.display = 'none';
+  if (!bar) return;
+  bar.style.display = (abaAtual === 'colaboradores' || abaAtual === 'ensino' || abaAtual === 'rh') ? 'flex' : 'none';
 };
