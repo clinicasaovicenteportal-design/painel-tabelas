@@ -393,6 +393,14 @@ window.gerarImpressaoBoletim = function() {
 #modal-imprimir-boletim { z-index: 10001; }
 #modal-media .modal-box { overflow: hidden; }
 #chat-fab img, #chat-header-img { display:block; }
+.bottom-quickbar {
+  position: sticky; bottom: 16px; z-index: 50; margin-top: 20px;
+  background: rgba(255,255,255,0.96); backdrop-filter: blur(8px);
+  border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);
+  border-radius: 18px; padding: 10px; display:flex; gap:10px; justify-content:space-between;
+}
+.bottom-quickbar button { flex:1; border:none; background:#f8fafc; border-radius:14px; padding:10px 12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; color:var(--text-main); font-weight:600; }
+.bottom-quickbar button:hover { background:#eef2f7; }
 #tab-rh .rh-shell, #tab-rh { line-height:1.6; }
 #tab-rh .card, #tab-rh .rh-card, #tab-rh .resultado-item, #tab-rh .pesquisa-item, #tab-rh .perfil-item, #tab-rh .colaborador-item { margin-bottom: 16px; }
 #tab-rh h2, #tab-rh h3, #tab-rh h4 { margin-bottom:10px; line-height:1.35; }
@@ -401,75 +409,70 @@ window.gerarImpressaoBoletim = function() {
 #modal-media iframe { border-radius: 12px; }
 @media (max-width: 900px) { #floating-window-persistent { width: calc(100vw - 24px) !important; right: 12px !important; left: 12px !important; bottom: 12px !important; height: 70vh !important; } .bottom-quickbar { position: fixed; left: 12px; right:12px; bottom:12px; } }
 
-                  /* ===== PADRÃO DE CARDS MODERNOS ===== */
-.card-modern {
-  border-radius: 20px;
+
+/* ====== Patch visual v3.1.9 ====== */
+#colaboradores-quickbar, .bottom-quickbar { display: none !important; }
+
+#gradient-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(42px, 1fr));
+  gap: 10px;
+  margin: 12px 0 18px;
+}
+.color-swatch {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 2px solid rgba(255,255,255,0.9);
+  box-shadow: 0 6px 16px rgba(15,23,42,0.12);
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.color-swatch:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 10px 20px rgba(15,23,42,0.18); }
+.color-swatch.selected { border-color: var(--primary-color); transform: scale(1.08); box-shadow: 0 0 0 3px rgba(139,37,44,0.12), 0 10px 20px rgba(15,23,42,0.18); }
+
+.card {
+  border-radius: 22px;
   padding: 20px;
-  color: white;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 12px 28px rgba(15,23,42,0.08);
+  border: 1px solid rgba(148,163,184,0.16);
 }
-
-.card-modern:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+.card:hover { transform: translateY(-4px); box-shadow: 0 18px 32px rgba(15,23,42,0.12); }
+.card.has-gradient {
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 14px 28px rgba(15,23,42,0.16);
 }
+.card.has-gradient .card-info,
+.card.has-gradient .card-title,
+.card.has-gradient strong,
+.card.has-gradient .card-actions,
+.card.has-gradient .leituras-lista,
+.card.has-gradient .status-negado,
+.card.has-gradient .status-aceito { color: #fff !important; }
+.card.has-gradient .card-actions { border-top-color: rgba(255,255,255,0.22); }
+.card.has-gradient .btn-edit { background: rgba(255,255,255,0.18); color: #fff; }
+.card.has-gradient .btn-delete { background: rgba(255,255,255,0.18); color: #fff; }
+.card.has-gradient .btn-edit:hover,
+.card.has-gradient .btn-delete:hover { background: rgba(255,255,255,0.28); }
+.card-info { line-height: 1.55; }
 
-/* Ícone central */
-.card-modern .icon {
-  font-size: 40px;
-  opacity: 0.3;
-  text-align: center;
-  margin-bottom: 10px;
+.shortcut-card {
+  border-radius: 24px;
+  box-shadow: 0 10px 24px rgba(15,23,42,0.06);
 }
+.shortcut-card:hover { box-shadow: 0 16px 30px rgba(139,37,44,0.12); }
 
-/* Texto */
-.card-modern h3 {
-  font-weight: 600;
-  font-size: 16px;
+#tab-rh .card,
+#tab-rh .shortcut-card,
+#tab-rh .cards-grid > div {
+  border-radius: 20px;
 }
+#tab-rh .cards-grid { gap: 22px; }
+#tab-rh .form-input, #tab-rh select, #tab-rh input { background: #fbfcfe; }
+#tab-rh .card-soft, #tab-rh .card { box-shadow: 0 8px 20px rgba(15,23,42,0.05); }
 
-.card-modern span {
-  font-size: 12px;
-  opacity: 0.8;
-}
-
-/* ===== GRADIENTES BONITOS ===== */
-.gradient-red {
-  background: linear-gradient(135deg, #ef4444, #b91c1c);
-}
-
-.gradient-blue {
-  background: linear-gradient(135deg, #3b82f6, #1e3a8a);
-}
-
-.gradient-green {
-  background: linear-gradient(135deg, #10b981, #065f46);
-}
-
-.gradient-orange {
-  background: linear-gradient(135deg, #f59e0b, #b45309);
-}
-
-.gradient-purple {
-  background: linear-gradient(135deg, #8b5cf6, #4c1d95);
-}
-
-.gradient-pink {
-  background: linear-gradient(135deg, #ec4899, #9d174d);
-}
-
-/* ===== CARDS CLAROS (RH estilo leve) ===== */
-.card-soft {
-  background: #f9fafb;
-  border-radius: 16px;
-  padding: 16px;
-  border: 1px solid #e5e7eb;
-}
-
-.card-soft-title {
-  font-weight: 600;
-  color: #374151;
+#chat-fab img, #chat-header-img {
+  object-fit: cover;
+  border-radius: 50%;
 }
