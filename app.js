@@ -350,10 +350,23 @@ onAuthStateChanged(auth, (user) => {
 });
 
 setInterval(() => { const rl = document.getElementById('relogio'); if(rl) rl.innerText = new Date().toLocaleTimeString('pt-BR'); }, 1000);
-window.formatarLinkImagem = function(link) {
-    if (!link || link.includes('file:///')) return null;
-    if (link.includes("drive.google.com")) { const match = link.match(/\/d\/([a-zA-Z0-9_-]+)/) || link.match(/id=([a-zA-Z0-9_-]+)/); if (match && match[1]) return `https://drive.google.com/uc?export=view&id=${match[1]}`; }
-    return link;
+window.aplicarImagemClimaHome = function(link = '') {
+    const area = document.querySelector('.weather-card-uiverse, .weather-widget, #weather-widget');
+    if (!area) return;
+
+    const url = window.formatarLinkImagem(link);
+    if (!url) {
+        area.style.backgroundImage = '';
+        area.style.backgroundSize = '';
+        area.style.backgroundPosition = '';
+        area.style.backgroundRepeat = '';
+        return;
+    }
+
+    area.style.backgroundImage = `linear-gradient(rgba(30,60,114,0.78), rgba(42,82,152,0.78)), url('${url}')`;
+    area.style.backgroundSize = 'cover';
+    area.style.backgroundPosition = 'center';
+    area.style.backgroundRepeat = 'no-repeat';
 };
 
 window.obterUrlPreviewGoogleDrive = function(link = '') {
@@ -832,30 +845,51 @@ window.renderizarListaPrivados = function() {
 };
 
 window.renderizarCards = function(colecaoNome) {
-    const grid = document.getElementById(`grid-${colecaoNome}`);
-    if(!grid && colecaoNome !== 'boletins' && colecaoNome !== 'boletins-privados' && !configuracaoAbas[colecaoNome]?.campoAgrupador) return;
+    const config = configuracaoAbas[colecaoNome];
+    if (!config) return;
+
+    let grid = document.getElementById(`grid-${colecaoNome}`);
+    if (!grid && config.campoAgrupador) {
+        grid = document.getElementById(`grid-${colecaoNome}-folders`) || document.getElementById(`grid-${colecaoNome}-list`);
+    }
 
     onSnapshot(collection(db, colecaoNome), (snapshot) => {
-        if(snapshot.empty) {
-            if(colecaoNome === 'treinamentos') { window.todosTreinamentosData = []; if(window.alunoLogado) window.renderizarTrilhaAluno(); }
-            if(colecaoNome === 'boletins') { window.todosBoletinsData = []; window.verificarUrgentesHome(); window.renderizarGraficoHome(); }
-            if(colecaoNome === 'boletins-privados') { window.todosPrivadosData = []; window.verificarUrgentesHome(); window.renderizarGraficoPrivadosGeral(); }
-            if(configuracaoAbas[colecaoNome] && configuracaoAbas[colecaoNome].campoAgrupador) { window.dadosGlobaisAbas[colecaoNome] = []; if(abaAtual === colecaoNome) window.renderizarPastasGenericas(colecaoNome); }
-            if(grid) { grid.style.display = 'block'; grid.innerHTML = ''; }
+        const itens = snapshot.docs.map(d => ({ id: d.id, data: d.data() }));
+        window.dadosGlobaisAbas[colecaoNome] = itens;
+        window.todosOsDadosDoSistema[colecaoNome] = itens;
+
+        if (colecaoNome === 'colaboradores') {
+            listaColaboradoresGlobal = itens.map(item => ({
+                id: item.id,
+                nome: item.data['Nome Completo do Colaborador'] || '',
+                setor: item.data['Setor da Clínica'] || 'Geral',
+                pin: item.data['PIN de Acesso (Treinamentos)'] || ''
+            }));
+        }
+
+        if (colecaoNome === 'boletins') window.todosBoletinsData = itens;
+        if (colecaoNome === 'boletins-privados') window.todosPrivadosData = itens;
+        if (colecaoNome === 'treinamentos') window.todosTreinamentosData = itens;
+
+        if (config.campoAgrupador) {
+            if (window[`pasta_${colecaoNome}_Atual`]) window.renderizarListaGenerica(colecaoNome);
+            else window.renderizarPastasGenericas(colecaoNome);
             return;
         }
-        let itens = []; snapshot.forEach(doc => itens.push({ id: doc.id, data: doc.data() })); window.todosOsDadosDoSistema[colecaoNome] = itens;
-        if(colecaoNome === 'colaboradores') { 
-            listaColaboradoresGlobal = itens.map(item => { return { nome: item.data['Nome Completo do Colaborador'], setor: item.data['Setor da Clínica'] || 'Geral' }; }).filter(c => c.nome).sort((a,b) => a.nome.localeCompare(b.nome)); 
-            if(abaAtual === 'colaboradores') window.renderizarListaGenerica(colecaoNome); 
-            if(isAdmin && abaAtual === 'rh') window.renderizarDashboardRH(); 
+
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        itens
+            .sort((a, b) => String(a.data[config.campos[0]] || '').localeCompare(String(b.data[config.campos[0]] || '')))
+            .forEach(item => {
+                grid.innerHTML += window.gerarHTMLCard(colecaoNome, item.id, item.data);
+            });
+    }, (error) => {
+        console.warn(`Falha ao ler coleção ${colecaoNome}:`, error?.message || error);
+        if (grid && !grid.innerHTML.trim()) {
+            grid.innerHTML = '<div class="card"><p style="color:var(--text-muted)">Sem permissão para visualizar esta coleção no momento.</p></div>';
         }
-        if(colecaoNome === 'boletins') { window.todosBoletinsData = itens; if(abaAtual === 'boletins') { if(window.pastaBoletimAtual) window.renderizarListaBoletins(); else window.renderizarPastasBoletins(); } window.verificarUrgentesHome(); window.renderizarGraficoHome(); return; }
-        if(colecaoNome === 'boletins-privados') { window.todosPrivadosData = itens; if(abaAtual === 'boletins-privados') { if(window.pastaPrivadoAtual) window.renderizarListaPrivados(); else window.renderizarPastasPrivados(); } window.verificarUrgentesHome(); window.renderizarGraficoPrivadosGeral(); return; }
-        if(colecaoNome === 'treinamentos') { window.todosTreinamentosData = itens; if(window.alunoLogado) window.renderizarTrilhaAluno(); if(isAdmin && abaAtual === 'rh') window.renderizarDashboardRH(); }
-        if(configuracaoAbas[colecaoNome] && configuracaoAbas[colecaoNome].campoAgrupador && colecaoNome !== 'colaboradores') { window.dadosGlobaisAbas[colecaoNome] = itens; if(abaAtual === colecaoNome) { if(window[`pasta_${colecaoNome}_Atual`]) window.renderizarListaGenerica(colecaoNome); else window.renderizarPastasGenericas(colecaoNome); } return; }
-        if(!grid) return; grid.style.display = 'grid'; grid.innerHTML = '';
-        itens.sort((a, b) => { return String(a.data[configuracaoAbas[colecaoNome].campos[0]]).localeCompare(String(b.data[configuracaoAbas[colecaoNome].campos[0]])); }).forEach((item) => { grid.innerHTML += window.gerarHTMLCard(colecaoNome, item.id, item.data); });
     });
 };
 window.aplicarImagemClimaHome = function(imageUrl = '') {
@@ -878,40 +912,80 @@ window.aplicarImagemClimaHome = function(imageUrl = '') {
 
 window.carregarConfiguracoes = function() {
     onSnapshot(doc(db, "configuracoes", "gerais"), (docSnap) => {
-        if (docSnap.exists()) {
+        try {
+            if (!docSnap.exists()) return;
+
             const data = docSnap.data();
             const area = document.getElementById('banner-content');
-            if(area) { if(data.banner_texto && data.banner_texto.trim() !== '') area.innerHTML = `<h2>${data.banner_texto.replace(/\n/g, '<br>')}</h2>`; else area.innerHTML = `<h2>Bem-vindo ao Painel Clínico</h2>`; }
-            
+            if (area) {
+                if (data.banner_texto && String(data.banner_texto).trim() !== '') {
+                    area.innerHTML = `<h2>${String(data.banner_texto).replace(/\n/g, '<br>')}</h2>`;
+                } else {
+                    area.innerHTML = `<h2>Bem-vindo ao Painel Clínico</h2>`;
+                }
+            }
+
             const mapIds = {
-                'tab-input-banner': 'banner_texto', 'tab-input-locais': 'locais', 'tab-input-setores': 'setores',
-                'tab-input-especialidades': 'especialidades', 'tab-input-motivos': 'motivos', 'tab-input-imagem-pastas': 'imagem_padrao_pastas',
-                'tab-input-chat-logo': 'chat_logo', 'tab-color-chat': 'chat_cor', 'tab-color-pendente': 'cor_pendente', 'tab-color-concluido': 'cor_concluido', 'tab-input-weather-image': 'weather_image'
+                'tab-input-banner': 'banner_texto',
+                'tab-input-locais': 'locais',
+                'tab-input-setores': 'setores',
+                'tab-input-especialidades': 'especialidades',
+                'tab-input-motivos': 'motivos',
+                'tab-input-imagem-pastas': 'imagem_padrao_pastas',
+                'tab-input-chat-logo': 'chat_logo',
+                'tab-color-chat': 'chat_cor',
+                'tab-color-pendente': 'cor_pendente',
+                'tab-color-concluido': 'cor_concluido'
             };
 
             Object.keys(mapIds).forEach(id => {
                 const el = document.getElementById(id);
-                if(el && data[mapIds[id]] !== undefined) el.value = data[mapIds[id]];
+                if (el && data[mapIds[id]] !== undefined) {
+                    el.value = data[mapIds[id]];
+                }
             });
 
             const chatLogo = data.chat_logo || "https://cdn-icons-png.flaticon.com/512/8943/8943377.png";
             const chatCor = data.chat_cor || "#0ba360";
             document.documentElement.style.setProperty('--chat-primary', chatCor);
-            
-            const fabImg = document.getElementById('chat-fab-img'); const headerImg = document.getElementById('chat-header-img');
-            if(fabImg) fabImg.src = window.formatarLinkImagem(chatLogo) || chatLogo; if(headerImg) headerImg.src = window.formatarLinkImagem(chatLogo) || chatLogo;
-            window.aplicarImagemClimaHome(data.weather_image || '');
 
-            window.corStatusPendente = data.cor_pendente || '#e53e3e'; window.corStatusConcluido = data.cor_concluido || '#38a169';
-            
-            locaisGlobais = data.locais ? data.locais.split('\n').filter(l => l.trim() !== '') : [];
-            setoresGlobais = data.setores ? data.setores.split('\n').filter(s => s.trim() !== '') : [];
-            especialidadesGlobais = data.especialidades ? data.especialidades.split('\n').filter(s => s.trim() !== '') : [];
-            motivosGlobais = data.motivos ? data.motivos.split('\n').filter(m => m.trim() !== '') : [];
-            
-            if(abaAtual === 'boletins' && !window.pastaBoletimAtual) window.renderizarPastasBoletins();
-            if(abaAtual === 'boletins-privados' && !window.pastaPrivadoAtual) window.renderizarPastasPrivados();
+            const fabImg = document.getElementById('chat-fab-img');
+            const headerImg = document.getElementById('chat-header-img');
+            const logoFinal = window.formatarLinkImagem(chatLogo) || chatLogo || './logo.png';
+
+            if (fabImg) {
+                fabImg.src = logoFinal;
+                fabImg.onerror = () => { fabImg.src = './logo.png'; };
+            }
+            if (headerImg) {
+                headerImg.src = logoFinal;
+                headerImg.onerror = () => { headerImg.src = './logo.png'; };
+            }
+
+            if (typeof window.aplicarImagemClimaHome === 'function') {
+                window.aplicarImagemClimaHome(data.weather_image || '');
+            }
+
+            window.corStatusPendente = data.cor_pendente || '#e53e3e';
+            window.corStatusConcluido = data.cor_concluido || '#38a169';
+
+            locaisGlobais = data.locais ? String(data.locais).split('\n').filter(l => l.trim() !== '') : [];
+            setoresGlobais = data.setores ? String(data.setores).split('\n').filter(s => s.trim() !== '') : [];
+            especialidadesGlobais = data.especialidades ? String(data.especialidades).split('\n').filter(s => s.trim() !== '') : [];
+            motivosGlobais = data.motivos ? String(data.motivos).split('\n').filter(m => m.trim() !== '') : [];
+            imagemPadraoPastas = data.imagem_padrao_pastas || '';
+
+            if (abaAtual === 'boletins' && !window.pastaBoletimAtual) window.renderizarPastasBoletins?.();
+            if (abaAtual === 'boletins-privados' && !window.pastaPrivadoAtual) window.renderizarPastasPrivados?.();
+            if (abaAtual === 'pacotes') {
+                if (window.pasta_pacotes_Atual) window.renderizarListaGenerica?.('pacotes');
+                else window.renderizarPastasGenericas?.('pacotes');
+            }
+        } catch (e) {
+            console.error('Erro ao carregar configurações:', e);
         }
+    }, (err) => {
+        console.warn('Falha ao ouvir configurações:', err?.message || err);
     });
 };
 
@@ -2259,7 +2333,9 @@ window.addEventListener('DOMContentLoaded', () => {
             
             if(abaAtual === 'boletins') window.fecharPastaBoletim(); 
             if(abaAtual === 'boletins-privados') window.fecharPastaPrivado();
-            ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico', 'treinamentos'].forEach(col => { if(abaAtual === col) window.fecharPastaGenerica(col); });
+            ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico', 'treinamentos', 'pacotes'].forEach(col => {
+    if (abaAtual === col) window.fecharPastaGenerica(col);
+});
             if(abaAtual === 'rh' && isAdmin) { window.atualizarOpcoesFiltrosRH(); window.renderizarDashboardRH(); }
             if (window.atualizarBottomQuickbar) window.atualizarBottomQuickbar();
         });
