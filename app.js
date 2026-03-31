@@ -45,7 +45,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = initializeFirestore(app, {});
+const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
 const auth = getAuth(app);
 
 window.db = db; window.updateDoc = updateDoc; window.doc = doc; window.arrayUnion = arrayUnion; window.arrayRemove = arrayRemove; window.addDoc = addDoc; window.collection = collection; window.deleteDoc = deleteDoc; window.onSnapshot = onSnapshot; window.setDoc = setDoc;
@@ -150,16 +150,16 @@ window.obterAvaliacoesPerfilDisponiveis = function(nomeColaborador = '', setorCo
 };
 
 let chartBoletinsInst = null; let chartPrivadosInst = null; let chartHomeInst = null; let chartPrivadosGeralInst = null;
-const APP_VERSION = '3.2.1';
+const APP_VERSION = '3.1.0';
 let loginEmAndamento = false;
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {
-            const regs = await navigator.serviceWorker.getRegistrations();
-            for (const reg of regs) await reg.unregister();
+            const registration = await navigator.serviceWorker.register(`./sw.js?v=${APP_VERSION}`);
+            if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
         } catch (err) {
-            console.warn('Falha ao limpar service workers antigos:', err);
+            console.warn('SW não registrado:', err);
         }
     });
 }
@@ -777,74 +777,41 @@ window.aplicarImagemClimaHome = function(imageUrl = '') {
 
 window.carregarConfiguracoes = function() {
     onSnapshot(doc(db, "configuracoes", "gerais"), (docSnap) => {
-        try {
-            if (!docSnap.exists()) return;
+        if (docSnap.exists()) {
             const data = docSnap.data();
             const area = document.getElementById('banner-content');
-            if (area) {
-                if (data.banner_texto && String(data.banner_texto).trim() !== '') area.innerHTML = `<h2>${String(data.banner_texto).replace(/\n/g, '<br>')}</h2>`;
-                else area.innerHTML = `<h2>Bem-vindo ao Painel Clínico</h2>`;
-            }
-
+            if(area) { if(data.banner_texto && data.banner_texto.trim() !== '') area.innerHTML = `<h2>${data.banner_texto.replace(/\n/g, '<br>')}</h2>`; else area.innerHTML = `<h2>Bem-vindo ao Painel Clínico</h2>`; }
+            
             const mapIds = {
-                'tab-input-banner': 'banner_texto',
-                'tab-input-locais': 'locais',
-                'tab-input-setores': 'setores',
-                'tab-input-especialidades': 'especialidades',
-                'tab-input-motivos': 'motivos',
-                'tab-input-imagem-pastas': 'imagem_padrao_pastas',
-                'tab-input-chat-logo': 'chat_logo',
-                'tab-color-chat': 'chat_cor',
-                'tab-color-pendente': 'cor_pendente',
-                'tab-color-concluido': 'cor_concluido',
-                'tab-input-weather-image': 'weather_image'
+                'tab-input-banner': 'banner_texto', 'tab-input-locais': 'locais', 'tab-input-setores': 'setores',
+                'tab-input-especialidades': 'especialidades', 'tab-input-motivos': 'motivos', 'tab-input-imagem-pastas': 'imagem_padrao_pastas',
+                'tab-input-chat-logo': 'chat_logo', 'tab-color-chat': 'chat_cor', 'tab-color-pendente': 'cor_pendente', 'tab-color-concluido': 'cor_concluido', 'tab-input-weather-image': 'weather_image'
             };
 
             Object.keys(mapIds).forEach(id => {
                 const el = document.getElementById(id);
-                if (el && data[mapIds[id]] !== undefined) el.value = data[mapIds[id]];
+                if(el && data[mapIds[id]] !== undefined) el.value = data[mapIds[id]];
             });
 
             const chatLogo = data.chat_logo || "https://cdn-icons-png.flaticon.com/512/8943/8943377.png";
             const chatCor = data.chat_cor || "#0ba360";
             document.documentElement.style.setProperty('--chat-primary', chatCor);
+            
+            const fabImg = document.getElementById('chat-fab-img'); const headerImg = document.getElementById('chat-header-img');
+            if(fabImg) fabImg.src = window.formatarLinkImagem(chatLogo) || chatLogo; if(headerImg) headerImg.src = window.formatarLinkImagem(chatLogo) || chatLogo;
+            window.aplicarImagemClimaHome(data.weather_image || '');
 
-            const fabImg = document.getElementById('chat-fab-img');
-            const headerImg = document.getElementById('chat-header-img');
-            const logoFinal = (typeof window.formatarLinkImagem === 'function' ? window.formatarLinkImagem(chatLogo) : String(chatLogo || '').trim()) || './logo.png';
-
-            if (fabImg) {
-                fabImg.src = logoFinal;
-                fabImg.onerror = () => { fabImg.src = './logo.png'; };
-            }
-            if (headerImg) {
-                headerImg.src = logoFinal;
-                headerImg.onerror = () => { headerImg.src = './logo.png'; };
-            }
-
-            if (typeof window.aplicarImagemClimaHome === 'function') {
-                window.aplicarImagemClimaHome(data.weather_image || '');
-            }
-
-            window.corStatusPendente = data.cor_pendente || '#e53e3e';
-            window.corStatusConcluido = data.cor_concluido || '#38a169';
-
-            locaisGlobais = data.locais ? String(data.locais).split('\n').filter(l => l.trim() !== '') : [];
-            setoresGlobais = data.setores ? String(data.setores).split('\n').filter(s => s.trim() !== '') : [];
-            especialidadesGlobais = data.especialidades ? String(data.especialidades).split('\n').filter(s => s.trim() !== '') : [];
-            motivosGlobais = data.motivos ? String(data.motivos).split('\n').filter(m => m.trim() !== '') : [];
-            imagemPadraoPastas = data.imagem_padrao_pastas || '';
-
-            if (abaAtual === 'boletins' && !window.pastaBoletimAtual && typeof window.renderizarPastasBoletins === 'function') window.renderizarPastasBoletins();
-            if (abaAtual === 'boletins-privados' && !window.pastaPrivadoAtual && typeof window.renderizarPastasPrivados === 'function') window.renderizarPastasPrivados();
-            if (abaAtual === 'pacotes') {
-                if (window.pasta_pacotes_Atual) window.renderizarListaGenerica?.('pacotes');
-                else window.renderizarPastasGenericas?.('pacotes');
-            }
-        } catch (e) {
-            console.error('Erro ao carregar configurações:', e);
+            window.corStatusPendente = data.cor_pendente || '#e53e3e'; window.corStatusConcluido = data.cor_concluido || '#38a169';
+            
+            locaisGlobais = data.locais ? data.locais.split('\n').filter(l => l.trim() !== '') : [];
+            setoresGlobais = data.setores ? data.setores.split('\n').filter(s => s.trim() !== '') : [];
+            especialidadesGlobais = data.especialidades ? data.especialidades.split('\n').filter(s => s.trim() !== '') : [];
+            motivosGlobais = data.motivos ? data.motivos.split('\n').filter(m => m.trim() !== '') : [];
+            
+            if(abaAtual === 'boletins' && !window.pastaBoletimAtual) window.renderizarPastasBoletins();
+            if(abaAtual === 'boletins-privados' && !window.pastaPrivadoAtual) window.renderizarPastasPrivados();
         }
-    }, (err) => console.warn('Falha ao ouvir configurações:', err?.message || err));
+    });
 };
 
 window.toggleChat = function() {
@@ -2035,13 +2002,12 @@ window.addEventListener('DOMContentLoaded', () => {
             const imgPastaInput = document.getElementById('tab-input-imagem-pastas'); const imgPastasTexto = imgPastaInput ? imgPastaInput.value : "";
             const chatLogoInput = document.getElementById('tab-input-chat-logo'); const chatLogoTexto = chatLogoInput ? chatLogoInput.value : "";
             const chatCorInput = document.getElementById('tab-color-chat'); const chatCorVal = chatCorInput ? chatCorInput.value : "#0ba360";
-            const weatherImageInput = document.getElementById('tab-input-weather-image'); const weatherImageVal = weatherImageInput ? weatherImageInput.value : "";
             
             btnSalvarAjustes.innerHTML = "Salvando...";
             try {
                 await window.setDoc(window.doc(window.db, "configuracoes", "gerais"), { 
                     banner_texto: texto, locais: locaisTexto, setores: setoresTexto, especialidades: especialidadesTexto, motivos: motivosTexto, 
-                    cor_pendente: corPend, cor_concluido: corConc, imagem_padrao_pastas: imgPastasTexto, chat_logo: chatLogoTexto, chat_cor: chatCorVal, weather_image: weatherImageVal
+                    cor_pendente: corPend, cor_concluido: corConc, imagem_padrao_pastas: imgPastasTexto, chat_logo: chatLogoTexto, chat_cor: chatCorVal
                 }, { merge: true });
                 alert("Configurações salvas com sucesso!");
             } catch(e) { console.error('Erro ao salvar configurações:', e); alert("Erro ao salvar configurações: " + e.message); }
@@ -2126,7 +2092,7 @@ window.addEventListener('DOMContentLoaded', () => {
             
             if(abaAtual === 'boletins') window.fecharPastaBoletim(); 
             if(abaAtual === 'boletins-privados') window.fecharPastaPrivado();
-            ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico', 'treinamentos', 'pacotes'].forEach(col => { if(abaAtual === col) window.fecharPastaGenerica(col); });
+            ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico', 'treinamentos'].forEach(col => { if(abaAtual === col) window.fecharPastaGenerica(col); });
             if(abaAtual === 'rh' && isAdmin) { window.atualizarOpcoesFiltrosRH(); window.renderizarDashboardRH(); }
             if (window.atualizarBottomQuickbar) window.atualizarBottomQuickbar();
         });
@@ -2319,4 +2285,243 @@ window.atualizarBottomQuickbar = function() {
   const bar = document.getElementById('colaboradores-quickbar');
   if (!bar) return;
   bar.style.display = (abaAtual === 'colaboradores' || abaAtual === 'ensino' || abaAtual === 'rh') ? 'flex' : 'none';
+};
+
+
+/* ===== UI PATCH v3.2.2 ===== */
+
+window.verificarUrgentesHome = function() {
+    const area = document.getElementById('area-alertas-home');
+    if (area) area.innerHTML = '';
+};
+window.renderizarGraficoHome = function() { return; };
+window.atualizarBottomQuickbar = function() {
+    const bar = document.getElementById('colaboradores-quickbar');
+    if (bar) bar.style.display = 'none';
+};
+
+// palette suave + pastel
+const novasCoresPastel = [
+  { valor: 'linear-gradient(135deg,#ffd6e0,#ffc2d1,#ffb3c6)', nome: 'Rosa Pastel', dark: false },
+  { valor: 'linear-gradient(135deg,#dbeafe,#bfdbfe,#93c5fd)', nome: 'Azul Pastel', dark: false },
+  { valor: 'linear-gradient(135deg,#dcfce7,#bbf7d0,#86efac)', nome: 'Verde Pastel', dark: false },
+  { valor: 'linear-gradient(135deg,#fef3c7,#fde68a,#fcd34d)', nome: 'Amarelo Pastel', dark: false },
+  { valor: 'linear-gradient(135deg,#ede9fe,#ddd6fe,#c4b5fd)', nome: 'Lilás Pastel', dark: false },
+  { valor: 'linear-gradient(135deg,#fae8ff,#f5d0fe,#f0abfc)', nome: 'Lavanda', dark: false }
+];
+novasCoresPastel.forEach(c => { if (!paletaGradientes.some(p => p.valor === c.valor)) paletaGradientes.push(c); });
+
+window.abrirJanelaFlutuanteConv = function(url = '', titulo = 'Portal do Convênio') {
+    const link = String(url || '').trim();
+    if (!link) return alert('Link do convênio não informado.');
+    const box = document.getElementById('floating-window-persistent');
+    const iframe = document.getElementById('fw-iframe');
+    const title = document.getElementById('fw-title');
+    const blocked = document.getElementById('fw-blocked');
+    if (!box || !iframe) return window.open(link, '_blank', 'noopener,noreferrer');
+
+    box.dataset.currentUrl = link;
+    box.classList.remove('minimized');
+    box.style.display = 'flex';
+    if (title) title.innerHTML = `<i class="ri-global-line"></i> ${titulo}`;
+    if (blocked) blocked.style.display = 'none';
+    iframe.style.display = 'block';
+    iframe.src = link;
+    clearTimeout(window.__fwBlockTimer);
+    window.__fwBlockTimer = setTimeout(() => {
+        try {
+            const current = iframe.contentWindow.location.href;
+            if (!current || current === 'about:blank') throw new Error('blank');
+        } catch (e) {
+            if (blocked) blocked.style.display = 'block';
+        }
+    }, 2500);
+};
+window.minimizarJanelaFlutuante = function() {
+    const box = document.getElementById('floating-window-persistent');
+    if (box) box.classList.add('minimized');
+};
+window.restaurarJanelaFlutuante = function() {
+    const box = document.getElementById('floating-window-persistent');
+    if (box) box.classList.remove('minimized');
+};
+window.fecharJanelaFlutuante = function() {
+    const box = document.getElementById('floating-window-persistent');
+    const iframe = document.getElementById('fw-iframe');
+    const blocked = document.getElementById('fw-blocked');
+    if (iframe) iframe.src = 'about:blank';
+    if (blocked) blocked.style.display = 'none';
+    if (box) { box.classList.remove('minimized'); box.style.display = 'none'; }
+};
+window.abrirJanelaFlutuanteNovaGuia = function() {
+    const box = document.getElementById('floating-window-persistent');
+    const url = box?.dataset?.currentUrl || '';
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+};
+
+// drag floating window
+(function(){
+  const box = document.getElementById('floating-window-persistent');
+  const header = document.getElementById('fw-header');
+  if (!box || !header) return;
+  let dragging = false, sx=0, sy=0, startL=0, startT=0;
+  header.addEventListener('mousedown', e => {
+    if (e.target.closest('button')) return;
+    dragging = true;
+    box.style.left = box.getBoundingClientRect().left + 'px';
+    box.style.top = box.getBoundingClientRect().top + 'px';
+    box.style.right = 'auto'; box.style.bottom = 'auto';
+    sx = e.clientX; sy = e.clientY; startL = parseFloat(box.style.left)||0; startT = parseFloat(box.style.top)||0;
+    document.body.style.userSelect='none';
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    box.style.left = (startL + e.clientX - sx) + 'px';
+    box.style.top = (startT + e.clientY - sy) + 'px';
+  });
+  window.addEventListener('mouseup', ()=>{ dragging=false; document.body.style.userSelect=''; });
+})();
+
+// atualizar configurações com weather image e fallback do chat
+const __oldCarregarConfiguracoes = window.carregarConfiguracoes;
+window.carregarConfiguracoes = function() {
+  onSnapshot(doc(db, 'configuracoes', 'gerais'), (docSnap) => {
+    if (!docSnap.exists()) return;
+    const data = docSnap.data();
+    const area = document.getElementById('banner-content');
+    if (area) area.innerHTML = data.banner_texto && String(data.banner_texto).trim() !== '' ? `<h2>${String(data.banner_texto).replace(/
+/g, '<br>')}</h2>` : '<h2>Bem-vindo ao Painel Clínico</h2>';
+    const mapIds = {
+      'tab-input-banner':'banner_texto','tab-input-locais':'locais','tab-input-setores':'setores','tab-input-especialidades':'especialidades','tab-input-motivos':'motivos','tab-input-imagem-pastas':'imagem_padrao_pastas','tab-input-chat-logo':'chat_logo','tab-color-chat':'chat_cor','tab-color-pendente':'cor_pendente','tab-color-concluido':'cor_concluido','tab-input-weather-image':'weather_image'
+    };
+    Object.keys(mapIds).forEach(id=>{ const el=document.getElementById(id); if(el && data[mapIds[id]]!==undefined) el.value=data[mapIds[id]]; });
+    const chatLogo = data.chat_logo || './logo.png';
+    const chatCor = data.chat_cor || '#0ba360';
+    document.documentElement.style.setProperty('--chat-primary', chatCor);
+    ['chat-fab-img','chat-header-img'].forEach(id=>{ const img=document.getElementById(id); if(img){ img.src=(window.formatarLinkImagem(chatLogo)||chatLogo); img.onerror=()=>{img.src='./logo.png';}; }});
+    if (typeof window.aplicarImagemClimaHome === 'function') window.aplicarImagemClimaHome(data.weather_image || '');
+    window.corStatusPendente = data.cor_pendente || '#e53e3e';
+    window.corStatusConcluido = data.cor_concluido || '#38a169';
+    locaisGlobais = data.locais ? String(data.locais).split('
+').filter(Boolean) : [];
+    setoresGlobais = data.setores ? String(data.setores).split('
+').filter(Boolean) : [];
+    especialidadesGlobais = data.especialidades ? String(data.especialidades).split('
+').filter(Boolean) : [];
+    motivosGlobais = data.motivos ? String(data.motivos).split('
+').filter(Boolean) : [];
+    imagemPadraoPastas = data.imagem_padrao_pastas || '';
+  });
+};
+
+// save ajustes incluindo weather_image
+(function(){
+ const btn = document.getElementById('btn-salvar-ajustes');
+ if (!btn) return;
+ const clone = btn.cloneNode(true);
+ btn.parentNode.replaceChild(clone, btn);
+ clone.addEventListener('click', async () => {
+   if(!isAdmin) return;
+   const payload = {
+     banner_texto: document.getElementById('tab-input-banner')?.value || '',
+     locais: document.getElementById('tab-input-locais')?.value || '',
+     setores: document.getElementById('tab-input-setores')?.value || '',
+     especialidades: document.getElementById('tab-input-especialidades')?.value || '',
+     motivos: document.getElementById('tab-input-motivos')?.value || '',
+     cor_pendente: document.getElementById('tab-color-pendente')?.value || '#e53e3e',
+     cor_concluido: document.getElementById('tab-color-concluido')?.value || '#38a169',
+     imagem_padrao_pastas: document.getElementById('tab-input-imagem-pastas')?.value || '',
+     chat_logo: document.getElementById('tab-input-chat-logo')?.value || '',
+     chat_cor: document.getElementById('tab-color-chat')?.value || '#0ba360',
+     weather_image: document.getElementById('tab-input-weather-image')?.value || ''
+   };
+   clone.innerHTML = 'Salvando...';
+   try { await window.setDoc(window.doc(window.db,'configuracoes','gerais'), payload, {merge:true}); alert('Configurações salvas!'); }
+   catch(e){ alert('Erro ao salvar: '+e.message); }
+   finally{ clone.innerHTML = '<i class="ri-save-line"></i> Salvar Alterações'; }
+ });
+})();
+
+// workspace tabs and hide in portal aluno login/dashboard
+window.renderizarTabsVisuaisWorkspace = function() {
+  const ensureTabs = (sectionId, activeLabel) => {
+    const section = document.getElementById(sectionId);
+    if(!section || section.querySelector('.section-top-tabs')) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'section-top-tabs';
+    const labels = ['Equipe','Ensino','Boletins','RH'];
+    wrap.innerHTML = labels.map(label => `<div class="section-top-tab ${label===activeLabel?'active':''}"><i class="ri-${label==='Equipe'?'group-line':label==='Ensino'?'graduation-cap-line':label==='Boletins'?'newspaper-line':'pie-chart-2-line'}"></i><span>${label}</span></div>`).join('');
+    section.insertBefore(wrap, section.firstChild);
+  };
+  ensureTabs('tab-ensino','Ensino');
+  ensureTabs('tab-rh','RH');
+};
+document.addEventListener('DOMContentLoaded',()=>window.renderizarTabsVisuaisWorkspace());
+
+// chatbot tooltip and better buttons
+window.CHATBOT_DICAS = [
+ {titulo:'Busca rápida', texto:'Posso localizar médicos, códigos, exames e convênios.'},
+ {titulo:'Assistente Clínica', texto:'Clique aqui e eu te ajudo a navegar no Tabelas.'},
+ {titulo:'Dica', texto:'Busque por especialidades, boletins ou contatos úteis.'}
+];
+window.garantirTooltipChatbot = function(){ const fab=document.getElementById('chat-fab'); if(!fab) return null; let tooltip=fab.querySelector('.chatbot-tooltip'); if(!tooltip){ tooltip=document.createElement('div'); tooltip.className='chatbot-tooltip'; fab.appendChild(tooltip);} return tooltip; };
+window.mostrarTooltipChatbot = function(){ const fab=document.getElementById('chat-fab'); const win=document.getElementById('chat-window'); if(!fab||!win||win.style.display==='flex') return; const tooltip=window.garantirTooltipChatbot(); const dica=window.CHATBOT_DICAS[Math.floor(Math.random()*window.CHATBOT_DICAS.length)]; tooltip.innerHTML=`<strong>${dica.titulo}</strong><span>${dica.texto}</span>`; tooltip.style.display='block'; clearTimeout(window.__chatHide); window.__chatHide=setTimeout(()=>tooltip.style.display='none',6500); };
+window.toggleChat = function(){
+ const win=document.getElementById('chat-window'); const fab=document.getElementById('chat-fab'); if(!win||!fab) return;
+ if(win.style.display==='none'||win.style.display===''){
+   win.style.display='flex'; const tip=fab.querySelector('.chatbot-tooltip'); if(tip) tip.style.display='none';
+   const termos=['Cardiologia','Ultrassom','Unimed','Raio-X','Pediatria','Ortopedia','Consulta','Boletim']; termos.sort(()=>0.5-Math.random());
+   const quick=document.querySelector('.chat-quick-replies'); if(quick){ quick.innerHTML = termos.slice(0,4).map(t=>`<button type="button" onclick="window.sendQuickMsg('${t.replace(/'/g,"\'")}')"><i class="ri-sparkling-line"></i><span>${t}</span></button>`).join(''); }
+   setTimeout(()=>document.getElementById('chat-input')?.focus(),100);
+ } else { win.style.display='none'; setTimeout(()=>window.mostrarTooltipChatbot(),1000); }
+};
+document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>window.mostrarTooltipChatbot(),2500));
+
+const __oldGerarHTMLCard = window.gerarHTMLCard;
+window.gerarHTMLCard = function(colecaoNome, docId, data) {
+  if (colecaoNome === 'senhas') {
+    const titulo = data['Convênio ou Sistema'] || 'Acesso';
+    const link = String(data['Link de Acesso'] || '').trim();
+    const senha = data['Senha'] || '';
+    const local = data['Local de Acesso Permitido'] || '';
+    const cor = data.corCard && data.corCard !== 'transparent' ? data.corCard : 'linear-gradient(135deg,#dbeafe,#bfdbfe,#93c5fd)';
+    return `
+      <div class="uiverse-shell" id="card-${docId}" style="background:${cor}">
+        <div class="uiverse-head"><p>Portal / Acesso</p><i class="ri-global-line"></i></div>
+        <div class="uiverse-body">
+          <div class="uiverse-card-title">${window.escapeHTML(titulo)}</div>
+          <div class="uiverse-subtle"><strong>Senha:</strong> ${window.escapeHTML(senha)}</div>
+          <div class="uiverse-subtle"><strong>Local:</strong> ${window.escapeHTML(local)}</div>
+          <div class="uiverse-subtle" style="word-break:break-word;"><strong>Link:</strong> ${window.escapeHTML(link)}</div>
+          <div class="uiverse-actions">
+            <button class="uiverse-btn" onclick="window.abrirJanelaFlutuanteConv('${window.escapeHTML(link).replace(/'/g,"&#39;")}','${window.escapeHTML(titulo).replace(/'/g,"&#39;")}')"><i class="ri-window-line"></i> Acessar página</button>
+            <button class="uiverse-btn neutral" onclick="window.abrirJanelaFlutuanteNovaGuia.call({},{}) ; window.open('${window.escapeHTML(link).replace(/'/g,"&#39;")}','_blank','noopener,noreferrer')"><i class="ri-external-link-line"></i> Nova guia</button>
+          </div>
+          ${isAdmin ? `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${JSON.stringify(data).replace(/'/g,"&apos;").replace(/"/g,"&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`:''}
+        </div>
+      </div>`;
+  }
+  if (colecaoNome === 'corpo-clinico') {
+    const title = data['Especialidade'] || data['Nome do Médico'] || 'Especialidade';
+    const descricao = data['Observações da Especialidade'] || data['Segmento'] || data['Nome do Médico'] || '';
+    const exames = !!String(data['Exames que Realiza'] || '').trim();
+    const convenios = !!String(data['Convênios Atendidos'] || data['Unimed'] || '').trim();
+    const cor = data.corCard && data.corCard !== 'transparent' ? data.corCard : 'linear-gradient(135deg,#c8b6ff,#8ec5ff,#e0d4ff)';
+    return `
+      <div class="uiverse-shell" id="card-${docId}" style="background:${cor}">
+        <div class="uiverse-head"><p>Corpo Clínico</p><i class="ri-sparkling-line"></i></div>
+        <div class="uiverse-body">
+          <div class="uiverse-card-title">${window.escapeHTML(title)}</div>
+          <div class="uiverse-subtle">${window.escapeHTML(descricao)}</div>
+          <div class="uiverse-subtle"><strong>Médico:</strong> ${window.escapeHTML(data['Nome do Médico'] || '-')}</div>
+          <div class="uiverse-subtle"><strong>CRM:</strong> ${window.escapeHTML(data['CRM'] || '-')}</div>
+          <div class="uiverse-actions">
+            ${exames ? `<button class="uiverse-btn alt" onclick="window.verExamesMedico('${docId}')"><i class="ri-flask-line"></i> Exames</button>`:''}
+            ${convenios ? `<button class="uiverse-btn" onclick="window.verConveniosMedico('${docId}')"><i class="ri-shield-check-line"></i> Convênios</button>`:''}
+          </div>
+          ${isAdmin ? `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${JSON.stringify(data).replace(/'/g,"&apos;").replace(/"/g,"&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`:''}
+        </div>
+      </div>`;
+  }
+  return __oldGerarHTMLCard(colecaoNome, docId, data);
 };
