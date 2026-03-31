@@ -476,3 +476,145 @@ window.gerarImpressaoBoletim = function() {
   object-fit: cover;
   border-radius: 50%;
 }
+
+                  .weather-card-uiverse {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 0 30px 0;
+  border-radius: 28px;
+  overflow: visible;
+}
+
+.weather-card-front {
+  position: relative;
+  z-index: 2;
+  min-height: 160px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 28px;
+  box-shadow: 0 14px 35px rgba(30, 60, 114, 0.22);
+  transition: all 0.35s ease;
+}
+
+.weather-card-back {
+  position: absolute;
+  top: 18px;
+  left: 10px;
+  right: 10px;
+  z-index: 1;
+  min-height: 150px;
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  padding: 95px 22px 22px;
+  transition: all 0.35s ease;
+}
+
+.weather-card-uiverse:hover .weather-card-front {
+  transform: translateY(-10px);
+  background: linear-gradient(135deg, #274b87, #3566b8);
+}
+
+.weather-card-uiverse:hover .weather-card-back {
+  top: 110px;
+  min-height: 185px;
+}
+
+.weather-main-icon {
+  width: 92px;
+  height: 92px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.weather-main-icon i {
+  font-size: 48px;
+  color: #ffe066;
+}
+
+.weather-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.weather-temp-line {
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.weather-unit {
+  font-size: 22px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.weather-city-line {
+  font-size: 15px;
+  font-weight: 500;
+  opacity: 0.96;
+}
+
+.weather-desc-line {
+  font-size: 14px;
+  opacity: 0.88;
+}
+
+.weather-back-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.weather-mini-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.weather-mini-title {
+  font-size: 12px;
+  color: #718096;
+}
+
+.weather-mini-box strong {
+  font-size: 16px;
+  color: #2d3748;
+}
+
+.weather-status-box {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+}
+
+@media (max-width: 640px) {
+  .weather-card-front {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 22px;
+  }
+
+  .weather-card-back {
+    padding-top: 110px;
+  }
+
+  .weather-temp-line {
+    font-size: 38px;
+  }
+}
