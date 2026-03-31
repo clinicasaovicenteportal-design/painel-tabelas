@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tabelas-app-v3.2.0';
+const CACHE_NAME = 'tabelas-app-v3.2.1';
 
 // Ficheiros que queremos guardar no dispositivo
 const urlsToCache = [
@@ -16,7 +16,7 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Cache aberto');
-        return cache.addAll(urlsToCache);
+        return cache.addAll(urlsToCache).catch(err => console.warn('Falha ao pré-carregar cache:', err));
       })
   );
   self.skipWaiting();
