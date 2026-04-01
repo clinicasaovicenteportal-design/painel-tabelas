@@ -2,7 +2,7 @@
 // 1. CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
 // ==========================================
 const configuracaoAbas = {
-    'colaboradorfes': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da Clínica', 'PIN de Acesso (Treinamentos)'] },
+    'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da Clínica', 'PIN de Acesso (Treinamentos)'] },
     
     'treinamentos': { 
         titulo: 'Material de Ensino', 
@@ -72,6 +72,7 @@ window.safeParseJSON = function(raw, fallback = null) {
 window.escapeHTML = function(value = '') { return String(value).replace(/[&<>"']/g, chr => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[chr])); };
 window.extrairNomeRegistro = function(registro = '') { return String(registro).split(' (')[0].trim(); };
 
+
 window.confirmarAssinaturaLeitura = async function(docId, colecao) {
     try {
         const inputLeitor = document.getElementById(`leitor-${docId}`);
@@ -93,9 +94,7 @@ window.confirmarAssinaturaLeitura = async function(docId, colecao) {
         if (colecao === 'boletins-privados') window.renderizarListaPrivados();
         if (typeof window.verificarUrgentesHome === 'function') window.verificarUrgentesHome();
         alert('Assinatura registrada com sucesso!');
-    } catch (e) {
-        alert('Erro ao registrar assinatura.');
-    }
+    } catch (e) { alert('Erro ao registrar assinatura: ' + (e?.message || 'falha desconhecida')); }
 };
 
 window.filtrarPorDataPublicacao = function(lista = [], dtInicio = '', dtFim = '') {
@@ -113,9 +112,7 @@ window.getSetoresRHDisponiveis = function() {
     return Array.from(new Set([...setFromConfig, ...setFromPeople])).sort((a,b) => a.localeCompare(b));
 };
 window.getColaboradoresFiltradosPorSetor = function(setor = '') {
-    return listaColaboradoresGlobal
-        .filter(c => !setor || c.setor === setor)
-        .sort((a,b) => a.nome.localeCompare(b.nome));
+    return listaColaboradoresGlobal.filter(c => !setor || c.setor === setor).sort((a,b) => a.nome.localeCompare(b.nome));
 };
 window.isTreinamentoAvaliativo = function(itemData = {}) {
     const tipo = String(itemData['Tipo (Vídeo, PDF, Tarefa, Prova)'] || '');
@@ -147,15 +144,12 @@ window.obterAvaliacoesPerfilDisponiveis = function(nomeColaborador = '', setorCo
 };
 
 let chartBoletinsInst = null; let chartPrivadosInst = null; let chartHomeInst = null; let chartPrivadosGeralInst = null;
-const APP_VERSION = '3.2.3';
+const APP_VERSION = '3.2.4';
 let loginEmAndamento = false;
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
-        try {
-            const regs = await navigator.serviceWorker.getRegistrations();
-            for (const reg of regs) await reg.unregister();
-        } catch (err) {}
+        try { const regs = await navigator.serviceWorker.getRegistrations(); for (const reg of regs) await reg.unregister(); } catch (err) { }
     });
 }
 
@@ -177,35 +171,21 @@ window.efetuarLogin = async function(e) {
     const email = emailInput ? emailInput.value.trim() : '';
     const senha = senhaInput ? senhaInput.value.trim() : '';
 
-    if (!email || !senha) {
-        alert('Por favor, preencha o e-mail e a senha.');
-        return;
-    }
+    if (!email || !senha) { alert('Por favor, preencha o e-mail e a senha.'); return; }
 
     const textoOriginal = btn ? btn.innerHTML : 'Entrar';
-    loginEmAndamento = true;
-    document.body.classList.add('is-auth-loading');
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> Autenticando...";
-    }
+    loginEmAndamento = true; document.body.classList.add('is-auth-loading');
+    if (btn) { btn.disabled = true; btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> Autenticando..."; }
 
-    try {
-        await signInWithEmailAndPassword(auth, email, senha);
-    } catch (err) {
-        alert('Erro ao entrar: e-mail ou senha incorretos.');
-    } finally {
-        loginEmAndamento = false;
-        document.body.classList.remove('is-auth-loading');
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = textoOriginal;
-        }
+    try { await signInWithEmailAndPassword(auth, email, senha); } catch (err) { alert('Erro ao entrar: e-mail ou senha incorretos.'); } 
+    finally {
+        loginEmAndamento = false; document.body.classList.remove('is-auth-loading');
+        if (btn) { btn.disabled = false; btn.innerHTML = textoOriginal; }
     }
 }
 
-const btnLoginInit = document.getElementById('btn-login'); if(btnLoginInit) btnLoginInit.onclick = window.efetuarLogin; 
-const formLoginInit = document.getElementById('form-login'); if(formLoginInit) formLoginInit.onsubmit = window.efetuarLogin;
+const btnLoginInit = document.getElementById('btn-login'); const formLoginInit = document.getElementById('form-login');
+if(btnLoginInit) btnLoginInit.onclick = window.efetuarLogin; if(formLoginInit) formLoginInit.onsubmit = window.efetuarLogin;
 
 const btnLogout = document.getElementById('btn-logout'); if(btnLogout) btnLogout.addEventListener('click', () => signOut(auth));
 
@@ -218,11 +198,8 @@ onAuthStateChanged(auth, (user) => {
         isAdmin = (user.email === EMAIL_GESTAO);
         const badge = document.getElementById('user-role-badge');
         if(badge) badge.textContent = isAdmin ? "Gestão Administrador" : "Acesso Geral";
-        if(isAdmin) {
-            if(badge) badge.classList.add('admin'); document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
-        } else {
-            if(badge) badge.classList.remove('admin'); document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-        }
+        if(isAdmin) { if(badge) badge.classList.add('admin'); document.querySelectorAll('.admin-only').forEach(el => el.style.display = ''); } 
+        else { if(badge) badge.classList.remove('admin'); document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none'); }
         Object.keys(configuracaoAbas).forEach(idColecao => window.renderizarCards(idColecao));
         window.carregarConfiguracoes(); window.buscarClimaAraucaria();
         if(window.escutarRH) window.escutarRH();
@@ -230,14 +207,9 @@ onAuthStateChanged(auth, (user) => {
     } else {
         if(loginScreen) loginScreen.style.display = 'flex'; if(dashboardScreen) dashboardScreen.style.display = 'none';
         if(chatFab) chatFab.style.display = 'none';
-        const chatWindow = document.getElementById('chat-window');
-        const floatingWindow = document.getElementById('floating-window-persistent');
+        const chatWindow = document.getElementById('chat-window'); const floatingWindow = document.getElementById('floating-window-persistent');
         if (chatWindow) chatWindow.style.display = 'none';
-        if (floatingWindow) {
-            floatingWindow.style.display = 'none';
-            const iframe = document.getElementById('fw-iframe');
-            if (iframe) iframe.src = 'about:blank';
-        }
+        if (floatingWindow) { floatingWindow.style.display = 'none'; const iframe = document.getElementById('fw-iframe'); if (iframe) iframe.src = 'about:blank'; }
     }
 });
 
@@ -261,59 +233,47 @@ window.obterUrlEmbedMaterial = function(link = '') {
     if (/drive\.google\.com/i.test(raw)) return window.obterUrlPreviewGoogleDrive(raw);
     if (/\.(pdf)(\?|#|$)/i.test(raw)) return `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(raw)}`;
     if (/\.(doc|docx|ppt|pptx|xls|xlsx)(\?|#|$)/i.test(raw)) return `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(raw)}`;
+    if (raw.includes('youtube.com/watch?v=')) return raw.replace('watch?v=', 'embed/');
+    if (raw.includes('youtu.be/')) return raw.replace('youtu.be/', 'youtube.com/embed/');
     return raw;
 };
 
 window.fecharMidiaFlutuante = function() {
     const modal = document.getElementById('modal-media');
     const iframe = document.getElementById('iframe-media');
-    const title = document.getElementById('modal-media-title');
     if (iframe) iframe.src = 'about:blank';
     if (modal) modal.style.display = 'none';
-    if (title) title.textContent = 'Visualização de Material';
 };
+
 window.abrirMidiaFlutuante = function(url = '', titulo = 'Visualização de Material') {
     const link = String(url || '').trim();
     if (!link || ['#','_','null','undefined','-'].includes(link.toLowerCase())) { alert('Link do material não informado.'); return; }
     const modal = document.getElementById('modal-media');
     const iframe = document.getElementById('iframe-media');
     const titleEl = document.getElementById('modal-media-title');
-    if (!modal || !iframe) {
-        window.open(link, '_blank', 'noopener,noreferrer');
-        return;
-    }
+    if (!modal || !iframe) { window.open(link, '_blank', 'noopener,noreferrer'); return; }
     const embedUrl = window.obterUrlEmbedMaterial(link);
     iframe.src = embedUrl || link;
     if (titleEl) titleEl.textContent = titulo;
     modal.style.display = 'flex';
 };
+window.abrirMidaFlutuante = window.abrirMidiaFlutuante;
+
 window.imprimirMidiaAtual = function() {
     const iframe = document.getElementById('iframe-media');
     if (!iframe || !iframe.src || iframe.src === 'about:blank') return;
-    try {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-    } catch (e) {
-        window.open(iframe.src, '_blank', 'noopener,noreferrer');
-    }
+    try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch (e) { window.open(iframe.src, '_blank', 'noopener,noreferrer'); }
 };
 
 window.buscarClimaAraucaria = async function() {
     try {
         const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-25.59&longitude=-49.41&current_weather=true&hourly=relativehumidity_2m,apparent_temperature&forecast_days=1');
-        const data = await response.json();
-        const clima = data.current_weather || {};
-
-        const wDeg = document.getElementById('weather-deg');
-        const wDesc = document.getElementById('weather-desc');
-        const wIcon = document.getElementById('weather-icon-class');
-        const wHumidity = document.getElementById('weather-humidity');
-        const wWind = document.getElementById('weather-wind');
-        const wFeel = document.getElementById('weather-feel');
-        const wStatus = document.getElementById('weather-status');
+        const data = await response.json(); const clima = data.current_weather || {};
+        const wDeg = document.getElementById('weather-deg'); const wDesc = document.getElementById('weather-desc');
+        const wIcon = document.getElementById('weather-icon-class'); const wHumidity = document.getElementById('weather-humidity');
+        const wWind = document.getElementById('weather-wind'); const wFeel = document.getElementById('weather-feel'); const wStatus = document.getElementById('weather-status');
 
         if (wDeg) wDeg.textContent = Math.round(clima.temperature ?? 0);
-
         let desc = "Céu Limpo"; let icon = "ri-sun-fill"; let status = "Agradável";
         if (clima.weathercode >= 1 && clima.weathercode <= 3) { desc = "Parcialmente Nublado"; icon = "ri-sun-cloudy-fill"; status = "Estável"; }
         if (clima.weathercode === 45 || clima.weathercode === 48) { desc = "Neblina"; icon = "ri-foggy-fill"; status = "Neblina"; }
@@ -322,21 +282,14 @@ window.buscarClimaAraucaria = async function() {
         if (clima.weathercode >= 80 && clima.weathercode <= 82) { desc = "Pancadas de Chuva"; icon = "ri-showers-fill"; status = "Chuvoso"; }
         if (clima.weathercode >= 95) { desc = "Tempestade"; icon = "ri-thunderstorms-fill"; status = "Atenção"; }
 
-        if (wDesc) wDesc.textContent = desc;
-        if (wIcon) wIcon.className = icon;
-        if (wStatus) wStatus.textContent = status;
+        if (wDesc) wDesc.textContent = desc; if (wIcon) wIcon.className = icon; if (wStatus) wStatus.textContent = status;
+        if (wWind) { wWind.textContent = `${Math.round(clima.windspeed ?? 0)} km/h`; }
 
-        if (wWind) wWind.textContent = `${Math.round(clima.windspeed ?? 0)} km/h`;
-
-        const hourlyTimes = data.hourly?.time || [];
-        const humidityValues = data.hourly?.relativehumidity_2m || [];
-        const apparentValues = data.hourly?.apparent_temperature || [];
+        const hourlyTimes = data.hourly?.time || []; const humidityValues = data.hourly?.relativehumidity_2m || []; const apparentValues = data.hourly?.apparent_temperature || [];
         const idx = hourlyTimes.indexOf(clima.time);
-
         if (wHumidity) wHumidity.textContent = idx >= 0 ? `${humidityValues[idx]}%` : '--%';
         if (wFeel) wFeel.textContent = idx >= 0 ? `${Math.round(apparentValues[idx])} °C` : `${Math.round(clima.temperature ?? 0)} °C`;
-
-    } catch (e) { }
+    } catch (e) {}
 };
 
 window.obterPublicoAlvo = function(setoresAlvoString, colabEsp = '') {
@@ -781,6 +734,7 @@ window.renderizarCards = function(colecaoNome) {
         itens.sort((a, b) => { return String(a.data[configuracaoAbas[colecaoNome].campos[0]]).localeCompare(String(b.data[configuracaoAbas[colecaoNome].campos[0]])); }).forEach((item) => { grid.innerHTML += window.gerarHTMLCard(colecaoNome, item.id, item.data); });
     });
 };
+
 window.aplicarImagemClimaHome = function(imageUrl = '') {
     const weatherWidget = document.querySelector('.weather-widget');
     if (!weatherWidget) return;
@@ -866,7 +820,6 @@ window.toggleChat = function() {
 };
 
 window.renderizarSugestoesChat = function() {
-
     const quickRepliesDiv = document.querySelector('.chat-quick-replies');
     if (!quickRepliesDiv) return;
 
@@ -885,7 +838,7 @@ window.renderizarSugestoesChat = function() {
     const top4 = termosPopulares.slice(0, 4);
 
     quickRepliesDiv.innerHTML = top4.map(item =>
-        `<button type="button" onclick="window.sendQuickMsg('${item.label}')">
+        `<button type="button" onclick="window.sendQuickMsg('${item.label.replace(/'/g, "\\'")}')">
             <i class="${item.icon}"></i>
             <span>${item.label}</span>
         </button>`
@@ -1580,14 +1533,14 @@ window.renderizarPesquisasAluno = function() {
 
 window.responderPesquisaRH = function(pesquisaId) {
     const p = (window.todosPesquisasRH || []).find(x => x.id === pesquisaId);
-    if (!p || !p.data) { return; }
+    if (!p || !p.data) return;
 
     const tituloEl = document.getElementById('rh-resp-titulo');
     const idEl = document.getElementById('rh-resp-id');
     const areaEl = document.getElementById('rh-resp-area');
     const modalEl = document.getElementById('modal-responder-pesquisa');
 
-    if (!tituloEl || !idEl || !areaEl || !modalEl) { return; }
+    if (!tituloEl || !idEl || !areaEl || !modalEl) return;
 
     tituloEl.textContent = p.data.titulo || 'Responder Pesquisa';
     idEl.value = pesquisaId;
@@ -1620,11 +1573,8 @@ window.responderPesquisaRH = function(pesquisaId) {
             });
             html += `</div>`;
         } else {
-            html += `
-                <textarea class="form-input resp-q-val" style="height:90px; resize:vertical; margin:0;" placeholder="Sua resposta franca e sincera."></textarea>
-            `;
+            html += `<textarea class="form-input resp-q-val" style="height:90px; resize:vertical; margin:0;" placeholder="Sua resposta franca e sincera."></textarea>`;
         }
-
         html += `</div>`;
     });
 
@@ -1634,15 +1584,13 @@ window.responderPesquisaRH = function(pesquisaId) {
 
 window.enviarRespostaRH = async function() {
     try {
-        if (!window.alunoLogado) { return; }
-
+        if (!window.alunoLogado) return;
         const pesquisaId = document.getElementById('rh-resp-id')?.value?.trim();
-        if (!pesquisaId) { return; }
+        if (!pesquisaId) return;
 
         const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'] || window.alunoLogado.nome || window.alunoLogado.Nome || 'Colaborador';
-
         const blocos = Array.from(document.querySelectorAll('#rh-resp-area .rh-resp-bloco'));
-        if (!blocos.length) { return; }
+        if (!blocos.length) return;
 
         const respostas = [];
         let ok = true;
@@ -1650,10 +1598,8 @@ window.enviarRespostaRH = async function() {
         blocos.forEach((b, idx) => {
             const textoEl = b.querySelector('.resp-q-texto');
             const tipoEl = b.querySelector('.resp-q-tipo');
-
             const textoP = textoEl ? textoEl.value : `Pergunta ${idx + 1}`;
             const tipo = tipoEl ? tipoEl.value : 'texto';
-
             let val = '';
 
             if (tipo === 'escala') {
@@ -1666,17 +1612,12 @@ window.enviarRespostaRH = async function() {
                 val = textarea.value.trim();
                 if (!val) { ok = false; return; }
             }
-
             respostas.push({ pergunta: textoP, resposta: val, tipo });
         });
 
-        if (!ok || respostas.length !== blocos.length) {
-            alert('Por favor, responda todas as perguntas antes de enviar!');
-            return;
-        }
+        if (!ok || respostas.length !== blocos.length) { alert('Por favor, responda todas as perguntas antes de enviar!'); return; }
 
         const antiga = (window.todosRespostasRH || []).find(item => item?.data?.pesquisaId === pesquisaId && item?.data?.nome === nomeAluno);
-
         const payload = { pesquisaId, nome: nomeAluno, respostas, data: new Date().toISOString() };
 
         if (antiga?.id) { await window.updateDoc(window.doc(window.db, 'rh-respostas-pesquisa', antiga.id), payload); } 
@@ -1685,8 +1626,7 @@ window.enviarRespostaRH = async function() {
         alert('Muito obrigado pelas suas respostas! Isso nos ajuda a crescer juntos.');
         const modal = document.getElementById('modal-responder-pesquisa');
         if (modal) modal.style.display = 'none';
-
-        if (typeof window.renderizarPesquisasAluno === 'function') { window.renderizarPesquisasAluno(); }
+        if (typeof window.renderizarPesquisasAluno === 'function') window.renderizarPesquisasAluno();
     } catch (e) { alert('Erro ao enviar: ' + (e?.message || 'falha desconhecida')); }
 };
 
@@ -2095,19 +2035,100 @@ window.efetuarLogin = window.efetuarLogin;
 window.safeParseJSON = window.safeParseJSON;
 window.aplicarImagemClimaHome = window.aplicarImagemClimaHome;
 window.abrirMidiaFlutuante = window.abrirMidiaFlutuante;
-window.abrirMidaFlutuante = window.abrirMidiaFlutuante;
 window.fecharMidiaFlutuante = window.fecharMidiaFlutuante;
 window.abrirListaLeituras = window.abrirListaLeituras;
 window.fecharModalImpressao = window.fecharModalImpressao;
 
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.info('Novo service worker ativo.');
+window.abrirModalImpressao = function(tipo = 'boletins') {
+    const modal = document.getElementById('modal-imprimir-boletim');
+    const inputTipo = document.getElementById('print-boletim-id');
+
+    if (!modal) { alert('Modal de impressão não encontrado.'); return; }
+    if (inputTipo) inputTipo.value = tipo;
+    modal.style.display = 'flex';
+};
+
+window.gerarImpressaoBoletim = function() {
+    const incluirNome = document.getElementById('print-chk-nome')?.checked;
+    const incluirData = document.getElementById('print-chk-data')?.checked;
+    const incluirTema = document.getElementById('print-chk-tema')?.checked;
+    const incluirMotivo = document.getElementById('print-chk-motivo')?.checked;
+    const incluirPublicacao = document.getElementById('print-chk-publicacao')?.checked;
+
+    let boletins = Array.isArray(window.todosBoletinsData) ? [...window.todosBoletinsData] : [];
+
+    if (window.pastaBoletimAtual) {
+        boletins = boletins.filter(item => {
+            const setor = String(item?.data?.['Para quais Setores?'] || 'Geral');
+            return setor.includes(window.pastaBoletimAtual);
+        });
+    }
+
+    if (!boletins.length) { alert('Não há dados de boletins carregados para gerar o relatório.'); return; }
+
+    const linhas = [];
+
+    boletins.forEach(item => {
+        const data = item.data || {};
+        const leituras = Array.isArray(data.leituras) ? data.leituras : [];
+        const titulo = data['Título do Documento'] || data['Título do Informativo'] || 'Sem título';
+        const motivo = data['Motivo do Informativo'] || data['Motivo'] || '-';
+        const dataPublicacao = data['Data de Publicação'] || data['Publicado em'] || '-';
+
+        if (!leituras.length) {
+            linhas.push({ nome: 'Nenhuma assinatura registrada', dataHora: '-', tema: titulo, motivo, publicacao: dataPublicacao });
+            return;
+        }
+
+        leituras.forEach(registro => {
+            const texto = String(registro || '').trim();
+            let nomeColaborador = texto; let dataHora = '-';
+            const matchParenteses = texto.match(/^(.*?)\s*\((.*?)\)$/);
+            const matchHifen = texto.match(/^(.*?)\s*-\s*(\d{2}\/\d{2}\/\d{4}.*)$/);
+            
+            if (matchParenteses) { nomeColaborador = matchParenteses[1].trim(); dataHora = matchParenteses[2].trim(); } 
+            else if (matchHifen) { nomeColaborador = matchHifen[1].trim(); dataHora = matchHifen[2].trim(); }
+
+            linhas.push({ nome: nomeColaborador || '-', dataHora, tema: titulo, motivo, publicacao: dataPublicacao });
+        });
     });
-}
+
+    const ths = [];
+    if (incluirNome) ths.push('<th>Nome do Colaborador</th>');
+    if (incluirData) ths.push('<th>Data/Hora da Assinatura</th>');
+    if (incluirTema) ths.push('<th>Tema</th>');
+    if (incluirMotivo) ths.push('<th>Motivo</th>');
+    if (incluirPublicacao) ths.push('<th>Data de Publicação</th>');
+
+    const escape = (valor) => {
+        const texto = String(valor ?? '');
+        return texto.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+    };
+
+    const trs = linhas.map(linha => {
+        const cols = [];
+        if (incluirNome) cols.push(`<td>${escape(linha.nome)}</td>`);
+        if (incluirData) cols.push(`<td>${escape(linha.dataHora)}</td>`);
+        if (incluirTema) cols.push(`<td>${escape(linha.tema)}</td>`);
+        if (incluirMotivo) cols.push(`<td>${escape(linha.motivo)}</td>`);
+        if (incluirPublicacao) cols.push(`<td>${escape(linha.publicacao)}</td>`);
+        return `<tr>${cols.join('')}</tr>`;
+    }).join('');
+
+    const totalColunas = Math.max(ths.length, 1);
+    const janela = window.open('', '_blank', 'width=1200,height=800');
+
+    if (!janela) { alert('O navegador bloqueou a janela de impressão. Libere pop-ups para este site.'); return; }
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório de Assinaturas</title><style>body { font-family: Arial, sans-serif; margin: 24px; color: #1f2937; } h1 { color: #8B252C; margin-bottom: 8px; } p { margin: 0 0 18px; color: #6b7280; font-size: 14px; } table { width: 100%; border-collapse: collapse; margin-top: 14px; } th, td { border: 1px solid #d1d5db; padding: 10px; text-align: left; font-size: 13px; vertical-align: top; } th { background: #8B252C; color: white; } tr:nth-child(even) td { background: #f9fafb; } @media print { @page { size: A4 portrait; margin: 12mm; } body { margin: 0; } } </style></head><body><h1>Relatório de Assinaturas</h1><p>Gerado em ${new Date().toLocaleString('pt-BR')}</p><table><thead><tr>${ths.join('')}</tr></thead><tbody>${trs || `<tr><td colspan="${totalColunas}">Nenhum registro encontrado.</td></tr>`}</tbody></table></body></html>`;
+
+    janela.document.open(); janela.document.write(html); janela.document.close();
+    setTimeout(() => { janela.focus(); janela.print(); }, 500);
+    window.fecharModalImpressao();
+};
 
 // ==========================================
-// JANELA FLUTUANTE (NAVEGADOR INTERNO)
+// JANELA FLUTUANTE (NAVEGADOR INTERNO) MÁGICA
 // ==========================================
 window.abrirJanelaFlutuante = function(url, titulo) {
     const win = document.getElementById('floating-window-persistent');
@@ -2115,7 +2136,10 @@ window.abrirJanelaFlutuante = function(url, titulo) {
     const titleEl = document.getElementById('fw-title');
     if(!win || !iframe) return;
     
-    iframe.src = url;
+    // AQUI ESTÁ A MÁGICA: Converter Links Drive/PDF para formato visualizável!
+    const urlFinal = typeof window.obterUrlEmbedMaterial === 'function' ? (window.obterUrlEmbedMaterial(url) || url) : url;
+    
+    iframe.src = urlFinal;
     if(titleEl) titleEl.innerHTML = `<i class="ri-global-line"></i> ${titulo || 'Navegador Interno'}`;
     
     win.classList.remove('minimized');
