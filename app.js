@@ -2,7 +2,7 @@
 // 1. CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
 // ==========================================
 const configuracaoAbas = {
-    'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da Clínica', 'PIN de Acesso (Treinamentos)'] },
+    'colaboradorfes': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da Clínica', 'PIN de Acesso (Treinamentos)'] },
     
     'treinamentos': { 
         titulo: 'Material de Ensino', 
@@ -843,6 +843,7 @@ window.carregarConfiguracoes = function() {
 window.toggleChat = function() {
     const win = document.getElementById('chat-window');
     const fab = document.getElementById('chat-fab');
+    const input = document.getElementById('chat-input');
     if (!win || !fab) return;
 
     const abrindo = (win.style.display === 'none' || win.style.display === '');
@@ -865,6 +866,7 @@ window.toggleChat = function() {
 };
 
 window.renderizarSugestoesChat = function() {
+
     const quickRepliesDiv = document.querySelector('.chat-quick-replies');
     if (!quickRepliesDiv) return;
 
