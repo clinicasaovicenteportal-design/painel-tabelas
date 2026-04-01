@@ -328,8 +328,17 @@ window.destacarCard = function(docId) {
 };
 
 window.irParaAba = function(aba) { const btn = document.querySelector(`.nav-btn[data-tab='${aba}']`); if(btn) btn.click(); };
-window.abrirSubAba = function(subAbaId) { document.getElementById('menu-contatos').style.display = 'none'; document.getElementById('sub-' + subAbaId).style.display = 'block'; };
-window.voltarSubAba = function() { ['ramais', 'emails', 'contatos-gerais', 'contatos-convenios', 'senhas'].forEach(id => { const sub = document.getElementById('sub-' + id); if(sub) sub.style.display = 'none'; }); document.getElementById('menu-contatos').style.display = 'grid'; };
+window.abrirSubAba = function(subAbaId) {
+    const menu = document.getElementById('menu-contatos');
+    const sub = document.getElementById('sub-' + subAbaId);
+
+    if (menu) menu.style.display = 'none';
+    if (sub) sub.style.display = 'block';
+
+    if (subAbaId === 'ramais') {
+        window.renderizarRamaisAgrupados();
+    }
+};
 
 window.abrirPastaGenerica = function(colecao, valorPasta, docIdDestino = null) { window[`pasta_${colecao}_Atual`] = valorPasta; document.getElementById(`${colecao}-view-folders`).style.display = 'none'; document.getElementById(`${colecao}-view-list`).style.display = 'block'; const titleEl = document.getElementById(`titulo-pasta-${colecao}`); if(titleEl && configuracaoAbas[colecao]) titleEl.innerHTML = `<i class="${configuracaoAbas[colecao].icone}"></i> Pasta: ${valorPasta}`; window.renderizarListaGenerica(colecao); if(docIdDestino) window.destacarCard(docIdDestino); };
 window.fecharPastaGenerica = function(colecao) { window[`pasta_${colecao}_Atual`] = null; document.getElementById(`${colecao}-view-folders`).style.display = 'block'; document.getElementById(`${colecao}-view-list`).style.display = 'none'; window.renderizarPastasGenericas(colecao); };
@@ -721,6 +730,11 @@ window.renderizarCards = function(colecaoNome) {
             return;
         }
         let itens = []; snapshot.forEach(doc => itens.push({ id: doc.id, data: doc.data() })); window.todosOsDadosDoSistema[colecaoNome] = itens;
+        if (colecaoNome === 'ramais') {
+    if (abaAtual === 'contatos' || document.getElementById('sub-ramais')?.style.display !== 'none') {
+        window.renderizarRamaisAgrupados();
+    }
+}
         if(colecaoNome === 'colaboradores') { 
             listaColaboradoresGlobal = itens.map(item => { return { nome: item.data['Nome Completo do Colaborador'], setor: item.data['Setor da Clínica'] || 'Geral' }; }).filter(c => c.nome).sort((a,b) => a.nome.localeCompare(b.nome)); 
             if(abaAtual === 'colaboradores') window.renderizarListaGenerica(colecaoNome); 
