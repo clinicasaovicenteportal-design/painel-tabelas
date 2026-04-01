@@ -377,3 +377,37 @@ body.is-auth-loading { cursor: progress; }
     box-shadow: 0 12px 25px rgba(0,0,0,0.08);
     transform: translateY(-3px);
 }
+
+.ramais-agrupados {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.ramal-unidade-bloco {
+  background: rgba(255,255,255,0.55);
+  border: 1px solid var(--border-color);
+  border-radius: 22px;
+  padding: 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+.ramal-unidade-titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.ramal-unidade-titulo i {
+  font-size: 22px;
+}
+
+.ramal-unidade-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
