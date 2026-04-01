@@ -11,7 +11,7 @@ const configuracaoAbas = {
         icone: 'ri-book-read-fill' 
     },
 
-    'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional', 'Observações da Especialidade', 'Exames que Realiza', 'Convênios Atendidos'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' }, 
+    'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' }, 
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'], campoAgrupador: 'Convênio', icone: 'ri-shield-cross-fill' },
     
     //  NOVOS CAMPOS DE PROFISSIONAIS AQUI 
@@ -218,7 +218,7 @@ const btnLogout = document.getElementById('btn-logout'); if(btnLogout) btnLogout
 onAuthStateChanged(auth, (user) => {
     const loginScreen = document.getElementById('login-screen'); const dashboardScreen = document.getElementById('dashboard-screen');
     const chatFab = document.getElementById('chat-fab');
-    if (user) {
+    if (user) {window.inicializarTooltipChatbot();
         if(loginScreen) loginScreen.style.display = 'none'; if(dashboardScreen) dashboardScreen.style.display = 'flex';
         if(chatFab) chatFab.style.display = 'flex';
         isAdmin = (user.email === EMAIL_GESTAO);
@@ -250,22 +250,10 @@ onAuthStateChanged(auth, (user) => {
 
 setInterval(() => { const rl = document.getElementById('relogio'); if(rl) rl.innerText = new Date().toLocaleTimeString('pt-BR'); }, 1000);
 window.formatarLinkImagem = function(link) {
-    if (!link || String(link).includes('file:///')) return null;
-    if (String(link).includes("drive.google.com")) { const match = String(link).match(/\/d\/([a-zA-Z0-9_-]+)/) || String(link).match(/id=([a-zA-Z0-9_-]+)/); if (match && match[1]) return `https://drive.google.com/uc?export=view&id=${match[1]}`; }
-    return String(link).trim();
-};
-window.aplicarImagemClimaHome = function(link = '') {
-    const area = document.querySelector('.home-weather-shell .card-time-cloud-front');
-    if (!area) return;
-    const url = window.formatarLinkImagem(link);
-    if (!url) {
-        area.style.backgroundImage = '';
-        return;
-    }
-    area.style.backgroundImage = `linear-gradient(rgba(39,75,139,.88), rgba(54,95,167,.88)), url('${url}')`;
-    area.style.backgroundSize = 'cover';
-    area.style.backgroundPosition = 'center';
-    area.style.backgroundRepeat = 'no-repeat';
+    const raw = String(link || '').trim();
+    if (!raw || raw.includes('file:///')) return null;
+    if (raw.includes('drive.google.com')) { const match = raw.match(/\/d\/([a-zA-Z0-9_-]+)/) || raw.match(/id=([a-zA-Z0-9_-]+)/); if (match && match[1]) return `https://drive.google.com/uc?export=view&id=${match[1]}`; }
+    return raw;
 };
 
 window.obterUrlPreviewGoogleDrive = function(link = '') {
@@ -291,7 +279,7 @@ window.fecharMidiaFlutuante = function() {
 };
 window.abrirMidiaFlutuante = function(url = '', titulo = 'Visualização de Material') {
     const link = String(url || '').trim();
-    if (!link) { alert('Link do material não informado.'); return; }
+    if (!link || ['#','_','null','undefined','-'].includes(link.toLowerCase())) { alert('Link do material não informado.'); return; }
     const modal = document.getElementById('modal-media');
     const iframe = document.getElementById('iframe-media');
     const titleEl = document.getElementById('modal-media-title');
@@ -316,54 +304,8 @@ window.imprimirMidiaAtual = function() {
     }
 };
 
-window.abrirMiniModalInfo = function(titulo = '', itens = [], botao = null) {
-    let modal = document.getElementById('mini-info-modal');
-    if(!modal) {
-        modal = document.createElement('div');
-        modal.id = 'mini-info-modal';
-        modal.className = 'modal-overlay';
-        modal.style.zIndex = '10005';
-        modal.innerHTML = `<div class="modal-box" style="max-width:520px;"><div class="modal-header"><h3 id="mini-info-title"></h3><button class="btn-icon" onclick="document.getElementById('mini-info-modal').style.display='none'"><i class="ri-close-line"></i></button></div><div class="modal-body"><div id="mini-info-list"></div><div id="mini-info-extra" style="margin-top:16px;"></div></div></div>`;
-        document.body.appendChild(modal);
-    }
-    const titleEl = document.getElementById('mini-info-title');
-    const listEl = document.getElementById('mini-info-list');
-    const extraEl = document.getElementById('mini-info-extra');
-    if(titleEl) titleEl.textContent = titulo;
-    if(listEl) {
-        const normalized = Array.isArray(itens) ? itens : String(itens || '').split(/\n|,/).map(v => v.trim()).filter(Boolean);
-        listEl.innerHTML = normalized.length ? normalized.map(item => `<div style="padding:12px 14px; border:1px solid var(--border-color); border-radius:14px; margin-bottom:10px; background:#f8fafc;">${window.escapeHTML(item)}</div>`).join('') : '<p style="color:var(--text-muted);">Nenhum item informado.</p>';
-    }
-    if(extraEl) {
-        extraEl.innerHTML = botao ? `<button class="btn-hover color-8" onclick="${botao.action}" style="width:100%;">${botao.label}</button>` : '';
-    }
-    modal.style.display = 'flex';
-};
-window.verExamesMedico = function(docId) {
-    const item = (window.dadosGlobaisAbas['corpo-clinico'] || []).find(i => i.id === docId);
-    const exames = item?.data?.['Exames que Realiza'] || item?.data?.['Profissionais que realizam (Opcional)'] || '';
-    window.abrirMiniModalInfo('Exames realizados', exames ? String(exames).split(/\n|,/).map(v => v.trim()).filter(Boolean) : [], null);
-};
-window.verConveniosMedico = function(docId) {
-    const item = (window.dadosGlobaisAbas['corpo-clinico'] || []).find(i => i.id === docId);
-    const convenios = item?.data?.['Convênios Atendidos'] || item?.data?.['Unimed'] || '';
-    window.abrirMiniModalInfo('Convênios vinculados', convenios ? String(convenios).split(/\n|,/).map(v => v.trim()).filter(Boolean) : [], {label:'Abrir aba Convênios', action:"document.getElementById('mini-info-modal').style.display='none'; window.irParaAba('convenios');"});
-};
-
-
 window.buscarClimaAraucaria = async function() {
-    const setDataTopo = () => {
-        const agora = new Date();
-        const dias = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
-        const dayEl = document.getElementById('weather-day');
-        const dateEl = document.getElementById('weather-date');
-        const hourEl = document.getElementById('weather-hour');
-        if(dayEl) dayEl.textContent = dias[agora.getDay()];
-        if(dateEl) dateEl.textContent = agora.toLocaleDateString('pt-BR');
-        if(hourEl) hourEl.textContent = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-    };
     try {
-        setDataTopo();
         const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-25.59&longitude=-49.41&current_weather=true&hourly=relativehumidity_2m,apparent_temperature&forecast_days=1');
         const data = await response.json();
         const clima = data.current_weather || {};
@@ -380,39 +322,77 @@ window.buscarClimaAraucaria = async function() {
 
         let desc = "Céu Limpo";
         let icon = "ri-sun-fill";
-        let status = "Estável";
+        let status = "Agradável";
 
-        if (clima.weathercode >= 1 && clima.weathercode <= 3) { desc = "Parcialmente Nublado"; icon = "ri-sun-cloudy-fill"; status = "Estável"; }
-        if (clima.weathercode === 45 || clima.weathercode === 48) { desc = "Neblina"; icon = "ri-foggy-fill"; status = "Neblina"; }
-        if (clima.weathercode >= 51 && clima.weathercode <= 67) { desc = "Chuva Leve"; icon = "ri-drizzle-fill"; status = "Úmido"; }
-        if (clima.weathercode >= 71 && clima.weathercode <= 77) { desc = "Chuva/Neve"; icon = "ri-snowy-line"; status = "Instável"; }
-        if (clima.weathercode >= 80 && clima.weathercode <= 82) { desc = "Pancadas de Chuva"; icon = "ri-showers-fill"; status = "Chuvoso"; }
-        if (clima.weathercode >= 95) { desc = "Tempestade"; icon = "ri-thunderstorms-fill"; status = "Atenção"; }
+        if (clima.weathercode >= 1 && clima.weathercode <= 3) {
+            desc = "Parcialmente Nublado";
+            icon = "ri-sun-cloudy-fill";
+            status = "Estável";
+        }
+        if (clima.weathercode === 45 || clima.weathercode === 48) {
+            desc = "Neblina";
+            icon = "ri-foggy-fill";
+            status = "Neblina";
+        }
+        if (clima.weathercode >= 51 && clima.weathercode <= 67) {
+            desc = "Chuva Leve";
+            icon = "ri-drizzle-fill";
+            status = "Úmido";
+        }
+        if (clima.weathercode >= 71 && clima.weathercode <= 77) {
+            desc = "Chuva/Neve";
+            icon = "ri-snowy-line";
+            status = "Instável";
+        }
+        if (clima.weathercode >= 80 && clima.weathercode <= 82) {
+            desc = "Pancadas de Chuva";
+            icon = "ri-showers-fill";
+            status = "Chuvoso";
+        }
+        if (clima.weathercode >= 95) {
+            desc = "Tempestade";
+            icon = "ri-thunderstorms-fill";
+            status = "Atenção";
+        }
 
         if (wDesc) wDesc.textContent = desc;
         if (wIcon) wIcon.className = icon;
         if (wStatus) wStatus.textContent = status;
-        if (wWind) wWind.textContent = `${Math.round(clima.windspeed ?? 0)} km/h`;
+
+        if (wWind) {
+            const vento = Math.round(clima.windspeed ?? 0);
+            wWind.textContent = `${vento} km/h`;
+        }
 
         const hourlyTimes = data.hourly?.time || [];
         const humidityValues = data.hourly?.relativehumidity_2m || [];
         const apparentValues = data.hourly?.apparent_temperature || [];
-        const idx = hourlyTimes.indexOf(clima.time);
 
-        if (wHumidity) wHumidity.textContent = `${idx >= 0 ? humidityValues[idx] : '--'}%`;
-        if (wFeel) wFeel.textContent = `${idx >= 0 ? Math.round(apparentValues[idx]) : Math.round(clima.temperature ?? 0)} °C`;
-    } catch(e) {
-        setDataTopo();
+        const currentTime = clima.time;
+        const idx = hourlyTimes.indexOf(currentTime);
+
+        if (wHumidity) {
+            const humidity = idx >= 0 ? humidityValues[idx] : '--';
+            wHumidity.textContent = `${humidity}%`;
+        }
+
+        if (wFeel) {
+            const feel = idx >= 0 ? Math.round(apparentValues[idx]) : Math.round(clima.temperature ?? 0);
+            wFeel.textContent = `${feel} °C`;
+        }
+
+    } catch (e) {
         const wDesc = document.getElementById('weather-desc');
         const wHumidity = document.getElementById('weather-humidity');
         const wWind = document.getElementById('weather-wind');
         const wFeel = document.getElementById('weather-feel');
         const wStatus = document.getElementById('weather-status');
-        if(wDesc) wDesc.textContent = "Clima indisponível";
-        if(wHumidity) wHumidity.textContent = "--%";
-        if(wWind) wWind.textContent = "-- km/h";
-        if(wFeel) wFeel.textContent = "-- °C";
-        if(wStatus) wStatus.textContent = "Offline";
+
+        if (wDesc) wDesc.textContent = "Clima indisponível";
+        if (wHumidity) wHumidity.textContent = "--%";
+        if (wWind) wWind.textContent = "-- km/h";
+        if (wFeel) wFeel.textContent = "-- °C";
+        if (wStatus) wStatus.textContent = "Offline";
     }
 };
 
@@ -472,8 +452,6 @@ window.atualizarGrafico = function(canvasId, refInstancia, dados, labelGrafico) 
 };
 
 window.renderizarGraficoHome = function() {
-    const canvas = document.getElementById('chart-home');
-    if(!canvas) return;
     const dtInicio = document.getElementById('home-data-inicio') ? document.getElementById('home-data-inicio').value : ''; const dtFim = document.getElementById('home-data-fim') ? document.getElementById('home-data-fim').value : '';
     let dadosFiltrados = window.todosBoletinsData;
     if (dtInicio || dtFim) dadosFiltrados = window.todosBoletinsData.filter(item => { const d = item.data['Data de Publicação']; if (!d) return false; if (dtInicio && d < dtInicio) return false; if (dtFim && d > dtFim) return false; return true; });
@@ -605,44 +583,6 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
 
 window.gerarHTMLCard = function(colecaoNome, docId, data) {
     const config = configuracaoAbas[colecaoNome]; if(!config) return '';
-    if(colecaoNome === 'corpo-clinico') {
-        const especialidade = data['Especialidade'] || data['Segmento'] || 'Especialidade';
-        const nomeMedico = data['Nome do Médico'] || 'Profissional';
-        const descricao = data['Observações da Especialidade'] || data['Segmento'] || 'Sem observações cadastradas.';
-        const crm = data['CRM'] || 'Não informado';
-        const cb = data['CBO'] || data['URA'] || '—';
-        const exames = String(data['Exames que Realiza'] || '').trim();
-        const convenios = String(data['Convênios Atendidos'] || data['Unimed'] || '').trim();
-        return `<div class="medical-bat-card" id="card-${docId}">
-            <div class="top-section">
-                <div class="border"></div>
-                <div class="icons">
-                    <div class="logo"><i class="ri-heart-pulse-line"></i></div>
-                    <div class="social-media">
-                        ${exames ? `<button type="button" title="Exames" onclick="window.verExamesMedico('${docId}')"><i class="ri-microscope-line"></i></button>` : ''}
-                        ${convenios ? `<button type="button" title="Convênios" onclick="window.verConveniosMedico('${docId}')"><i class="ri-shield-cross-line"></i></button>` : ''}
-                    </div>
-                </div>
-                <div class="doctor-chip">${window.escapeHTML(nomeMedico)}</div>
-            </div>
-            <div class="bottom-section">
-                <div>
-                    <div class="title">${window.escapeHTML(especialidade)}</div>
-                    <div class="doctor-name">${window.escapeHTML(nomeMedico)}</div>
-                </div>
-                <div class="doctor-desc">${window.escapeHTML(descricao)}</div>
-                <div class="row">
-                    <div class="item"><div class="big-text">${window.escapeHTML(crm)}</div><div class="regular-text">CRM</div></div>
-                    <div class="item"><div class="big-text">${window.escapeHTML(cb)}</div><div class="regular-text">CBO / URA</div></div>
-                </div>
-                <div class="bat-actions">
-                    <button class="bat-btn exams" type="button" onclick="window.verExamesMedico('${docId}')"><i class="ri-microscope-line"></i> Exames</button>
-                    <button class="bat-btn convenios" type="button" onclick="window.verConveniosMedico('${docId}')"><i class="ri-shield-cross-line"></i> Convênios</button>
-                </div>
-                ${isAdmin ? `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>` : ''}
-            </div>
-        </div>`;
-    }
     let campoTitulo = config.campos[0]; if(config.campoAgrupador) campoTitulo = config.campos.find(c => c !== config.campoAgrupador) || config.campos[0];
     
     const tituloDesteCard = data[campoTitulo] || data['Nome/Médico'] || data['Nome'] || 'Detalhes do Cadastro';
@@ -724,22 +664,9 @@ window.renderizarPastasGenericas = function(colecao) {
     pastasUnicas.forEach(nomePasta => {
         const itensPasta = dadosAtuais.filter(i => obterNomePasta(i) === nomePasta);
         const qtd = itensPasta.length;
-        const primeiro = itensPasta[0]?.data || {};
-        if(colecao === 'corpo-clinico') {
-            const observ = primeiro['Observações da Especialidade'] || primeiro['Segmento'] || 'Clique para ver os profissionais disponíveis nesta especialidade.';
-            grid.innerHTML += `<div class="medical-folder-card" onclick="window.abrirPastaGenerica('${colecao}', '${nomePasta.replace(/'/g, "\'")}')">
-                <div class="folder-head"><i class="${config.icone || 'ri-team-fill'}"></i></div>
-                <div class="folder-body">
-                    <h3>${window.escapeHTML(nomePasta)}</h3>
-                    <p>${window.escapeHTML(observ)}</p>
-                    <div class="folder-meta"><span>${qtd} profissional(is)</span><span><i class="ri-arrow-right-up-line"></i> Abrir</span></div>
-                </div>
-            </div>`;
-            return;
-        }
-        const corIcone = primeiro.corCard && primeiro.corCard !== "transparent" ? primeiro.corCard : "var(--primary-color)";
+        const corIcone = itensPasta[0].data.corCard && itensPasta[0].data.corCard !== "transparent" ? itensPasta[0].data.corCard : "var(--primary-color)";
         let iconeHtml = `<div style="background: var(--bg-color); padding: 15px; border-radius: 12px; color: ${corIcone}; font-size: 24px;"><i class="${config.icone}"></i></div>`;
-        grid.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaGenerica('${colecao}', '${nomePasta.replace(/'/g, "\'")}')" style="text-align: left; padding: 20px; border-left: 6px solid ${corIcone};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">${iconeHtml}<div style="font-size: 16px; font-weight: 600;">${nomePasta}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;">Itens na pasta: <b style="color:var(--text-main);">${qtd}</b></div></div>`;
+        grid.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaGenerica('${colecao}', '${nomePasta.replace(/'/g, "\\'")}')" style="text-align: left; padding: 20px; border-left: 6px solid ${corIcone};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">${iconeHtml}<div style="font-size: 16px; font-weight: 600;">${nomePasta}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;">Itens na pasta: <b style="color:var(--text-main);">${qtd}</b></div></div>`;
     });
 };
 window.renderizarPastasBoletins = function() {
@@ -747,9 +674,10 @@ window.renderizarPastasBoletins = function() {
     if (window.todosBoletinsData.length === 0) { gridFolders.innerHTML = '<div style="grid-column: 1/-1; background: #fff5f5; color: #c53030; padding: 15px; border-radius: 8px; border-left: 4px solid #e53e3e; font-size:14px; text-align:center;">Nenhum Boletim cadastrado ou regras de segurança bloqueando o acesso.</div>'; return; }
     let todosOsSetores = new Set(['Geral', ...setoresGlobais]);
     window.todosBoletinsData.forEach(b => { let setoresDoBoletim = b.data['Para quais Setores?']; if(setoresDoBoletim) { String(setoresDoBoletim).split(',').forEach(s => todosOsSetores.add(s.trim())); } });
+    let desenhouAlgum = false;
     Array.from(todosOsSetores).sort().forEach(pasta => {
-        const boletinsDaPasta = window.todosBoletinsData.filter(item => String(item.data['Para quais Setores?'] || 'Geral').includes(pasta));
-        if(!boletinsDaPasta.length) return;
+        const boletinsDaPasta = window.todosBoletinsData.filter(item => { return String(item.data['Para quais Setores?'] || 'Geral').includes(pasta); });
+        if(boletinsDaPasta.length === 0) return;  desenhouAlgum = true;
         let totalLidos = 0; let totalFaltam = 0;
         boletinsDaPasta.forEach(b => {
             const publicoDaqui = window.obterPublicoAlvo(pasta);
@@ -757,66 +685,60 @@ window.renderizarPastasBoletins = function() {
             const leram = publicoDaqui.filter(n => lidosNames.includes(n)).length;
             totalLidos += leram; totalFaltam += Math.max(0, publicoDaqui.length - leram);
         });
+        const icone = pasta === 'Geral' ? 'ri-global-line' : 'ri-folder-user-line';
         const corStatusPasta = totalFaltam > 0 ? window.corStatusPendente : window.corStatusConcluido;
-        const pastaSegura = pasta.replace(/'/g, "\'");
-        gridFolders.innerHTML += `<div class="bulletin-stage-card" onclick="window.abrirPastaBoletim('${pastaSegura}')">
-            <div class="bulletin-stage-outline" style="border-left:6px solid ${corStatusPasta};">
-                <span class="bulletin-stage-badge"><i class="ri-folder-line"></i> ${window.escapeHTML(pasta)}</span>
-                <h3 class="bulletin-stage-title">${window.escapeHTML(pasta)}</h3>
-                <div class="bulletin-stage-meta">
-                    <div><strong>Boletins ativos:</strong> ${boletinsDaPasta.length}</div>
-                    <div><strong>Pendências:</strong> ${totalFaltam}</div>
-                </div>
-            </div>
-            <div class="bulletin-stage-detail">
-                <div class="bulletin-stage-summary">Abra esta pasta para visualizar os boletins, materiais e assinaturas relacionados ao setor ${window.escapeHTML(pasta)}.</div>
-                <div class="bulletin-stage-footer"><span>Lidos: <b style="color:#15803d">${totalLidos}</b></span><span>Faltam: <b style="color:#dc2626">${totalFaltam}</b></span></div>
-            </div>
-        </div>`;
+        const pastaSegura = pasta.replace(/'/g, "\\'"); 
+        gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaBoletim('${pastaSegura}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; border-left: 6px solid ${corStatusPasta};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: var(--bg-color); padding: 15px; border-radius: 12px; color: var(--primary-color); font-size: 24px; flex-shrink:0;"><i class="${icone}"></i></div><div style="font-size: 16px; font-weight: 600; line-height:1.2; word-wrap:break-word;">${pasta}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Boletins Ativos: <b style="color: var(--text-main);">${boletinsDaPasta.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos Acumulados: <b>${totalLidos}</b></div><div style="color: #e53e3e;">Pendências: <b>${totalFaltam}</b></div></div></div>`;
     });
+    if (!desenhouAlgum) gridFolders.innerHTML = '<div style="grid-column: 1/-1; padding: 15px; color: var(--text-muted); text-align:center;">Nenhuma pasta com boletins encontrada.</div>';
 };
 window.renderizarListaBoletins = function() {
     const grid = document.getElementById('grid-boletins'); if(!grid) return; grid.innerHTML = '';
     const pasta = window.pastaBoletimAtual;
-    const boletinsExibir = window.todosBoletinsData.filter(item => String(item.data['Para quais Setores?'] || 'Geral').includes(pasta));
+    const boletinsExibir = window.todosBoletinsData.filter(item => { return String(item.data['Para quais Setores?'] || 'Geral').includes(pasta); });
+    if(typeof window.atualizarGrafico === 'function') chartBoletinsInst = window.atualizarGrafico('chart-boletins', chartBoletinsInst, boletinsExibir, `Motivos em ${pasta}`);
     const camposOrdem = configuracaoAbas['boletins'].campos; const campoTitulo = camposOrdem[0];
     boletinsExibir.forEach(item => {
         const data = item.data; const docId = item.id; window.dadosBoletins[docId] = data;
         const titulo = data[campoTitulo] || 'Boletim';
+        const isUrgente = data['Tipo (Urgente, Norma, Regra, etc)'] && String(data['Tipo (Urgente, Norma, Regra, etc)']).toLowerCase().includes('urgente');
+        const corSalva = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
+        const configCor = paletaGradientes.find(p => p.valor === corSalva); const gradientClass = (configCor ? configCor.dark : false) ? 'has-gradient' : ''; 
         const publicoAlvoNomes = window.obterPublicoAlvo(pasta);
         const lidosNomes = (data.leituras || []).map(txt => txt.split(' (')[0]);
         const faltamAssinar = publicoAlvoNomes.filter(n => !lidosNomes.includes(n));
         const qtdLidos = publicoAlvoNomes.filter(n => lidosNomes.includes(n)).length;
         const qtdFaltam = faltamAssinar.length;
-        const materiais = String(data['Links dos Materiais (1 por linha)'] || '').split('
-').map(v => v.trim()).filter(Boolean);
-        const resumo = [data['Tipo (Urgente, Norma, Regra, etc)'], data['Motivo'], data['Data de Publicação']].filter(Boolean).join(' • ');
-        grid.innerHTML += `<div class="bulletin-stage-card" id="card-${docId}">
-            <div class="bulletin-stage-outline" style="border-left:6px solid ${qtdFaltam > 0 ? window.corStatusPendente : window.corStatusConcluido};">
-                <span class="bulletin-stage-badge"><i class="ri-megaphone-line"></i> ${window.escapeHTML(data['Tipo (Urgente, Norma, Regra, etc)'] || 'Boletim')}</span>
-                <h3 class="bulletin-stage-title">${window.escapeHTML(titulo)}</h3>
-                <div class="bulletin-stage-meta">
-                    <div><strong>Resumo:</strong> ${window.escapeHTML(resumo || 'Sem resumo')}</div>
-                    <div><strong>Setor:</strong> ${window.escapeHTML(pasta)}</div>
-                </div>
-            </div>
-            <div class="bulletin-stage-detail">
-                <div class="bulletin-stage-summary">${window.escapeHTML(data['Motivo'] || 'Clique em visualizar para abrir os materiais deste boletim.')}</div>
-                <div class="bulletin-stage-actions">
-                    ${materiais.length ? `<button class="btn-hover color-8" onclick="window.abrirMidiaFlutuante('${materiais[0].replace(/'/g, "\'")}', '${titulo.replace(/'/g, "\'")}')"><i class="ri-eye-line"></i> Visualizar</button>` : `<button class="ghost-btn" type="button"><i class="ri-file-line"></i> Sem anexo</button>`}
-                    <button class="btn-hover color-5" onclick="window.abrirListaLeituras('${docId}', 'boletins')"><i class="ri-team-line"></i> Assinaturas</button>
-                    ${isAdmin ? `<button class="ghost-btn" onclick="window.abrirListaLeituras('${docId}', 'boletins')"><i class="ri-quill-pen-line"></i> Assinar</button>` : ''}
-                    ${isAdmin ? `<button class="ghost-btn" onclick="document.querySelector('.btn-edit[data-id=&quot;${docId}&quot;]')?.click()"><i class="ri-pencil-line"></i> Editar</button>` : ''}
-                </div>
-                <div class="bulletin-stage-footer">
-                    <span>Lidos: <b style="color:#15803d">${qtdLidos}</b></span>
-                    <span>Faltam: <b style="color:#dc2626">${qtdFaltam}</b></span>
-                </div>
-                ${isAdmin ? `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="boletins" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="boletins" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>` : ''}
-            </div>
-        </div>`;
+        const corStatus = qtdFaltam > 0 ? window.corStatusPendente : window.corStatusConcluido;
+        const classeUrgente = (isUrgente && qtdFaltam > 0) ? 'card-urgente' : ''; 
+        let cardHtml = `<div class="card ${classeUrgente} ${gradientClass}" id="card-${docId}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border: 3px solid ${corStatus};"><div class="card-title" style="margin-bottom:15px; font-size:18px; font-weight:600; line-height:1.2;">${titulo}</div>`;
+        let botaoLinkHtml = '';
+        camposOrdem.forEach(chave => {
+            const valor = data[chave];
+            if (valor && chave !== campoTitulo) {
+                if(chave === 'Links dos Materiais (1 por linha)') {
+                    const links = String(valor).split('\n').filter(l => l.trim() !== '');
+                    if(links.length > 0) {
+                        botaoLinkHtml += `<div class="boletim-media" style="margin-top: 15px; display:flex; flex-direction:column; gap:5px;">`;
+                        links.forEach((lk, i) => { botaoLinkHtml += `<button onclick="window.abrirMidiaFlutuante('${lk.trim()}')" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px;"><i class="ri-eye-line"></i> Acessar Material ${links.length > 1 ? i+1 : ''}</button>`; });
+                        botaoLinkHtml += `</div>`;
+                    }
+                } else { cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4; color: ${(isUrgente && String(chave).includes('Tipo')) ? '#e53e3e' : ''};"><strong>${chave}:</strong> <span style="font-weight: ${(isUrgente && String(chave).includes('Tipo')) ? '700' : '500'};">${valor}</span></div>`; }
+            }
+        });
+        cardHtml += botaoLinkHtml;
+        cardHtml += `<div class="leituras-lista" style="margin-top: auto; padding-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); font-size: 13px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(255,255,255,0.7); padding: 8px 10px; border-radius: 8px;"><div style="font-size: 11px;">Lidos: <b style="color:#38a169; font-size:13px;">${qtdLidos}</b> | Faltam: <b style="color:#e53e3e; font-size:13px;">${qtdFaltam}</b></div><button onclick="window.abrirListaLeituras('${docId}', 'boletins')" style="background: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; cursor:pointer; font-size: 12px; font-weight: 500; color: var(--primary-color);"><i class="ri-team-line"></i> Detalhes</button></div>`;
+        if(isAdmin) {
+            cardHtml += `<div class="add-leitura-box" style="display: flex; gap: 8px; margin-top: 5px;"><select id="leitor-${docId}" style="flex:1; padding:8px; border-radius:8px; border:none; font-size:12px; background:rgba(255,255,255,0.9); outline:none;">`;
+            if(faltamAssinar.length === 0) cardHtml += `<option value="">Todos da pasta j leram!</option>`; else { cardHtml += `<option value="">Selecionar Pendente...</option>`; faltamAssinar.forEach(nome => { cardHtml += `<option value="${nome}">${nome}</option>`; }); }
+            cardHtml += `</select><button class="btn-action btn-assinar" data-id="${docId}" data-colecao="boletins" style="background:#38a169; color:white; padding:8px 12px; border-radius:8px; cursor:pointer;"><i class="ri-check-line"></i></button></div>`;
+        }
+        cardHtml += `</div>`;
+        if (isAdmin) cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="boletins" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="boletins" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
+        grid.innerHTML += cardHtml + `</div>`;
     });
 };
+
 window.renderizarPastasPrivados = function() {
     const gridFolders = document.getElementById('grid-privados-folders'); if(!gridFolders) return; gridFolders.innerHTML = '';
     if (window.todosPrivadosData.length === 0) { gridFolders.innerHTML = '<div style="grid-column: 1/-1; background: #fff5f5; color: #c53030; padding: 15px; border-radius: 8px; border-left: 4px solid #e53e3e; font-size:14px; text-align:center;">Nenhum documento privado encontrado.</div>'; return; }
@@ -932,21 +854,15 @@ window.aplicarImagemClimaHome = function(imageUrl = '') {
 
 window.carregarConfiguracoes = function() {
     onSnapshot(doc(db, "configuracoes", "gerais"), (docSnap) => {
-        try {
-            if (!docSnap.exists()) return;
+        if (docSnap.exists()) {
             const data = docSnap.data();
             const area = document.getElementById('banner-content');
-            if(area) {
-                if(data.banner_texto && String(data.banner_texto).trim() !== '') area.innerHTML = `<h2>${String(data.banner_texto).replace(/
-/g, '<br>')}</h2>`;
-                else area.innerHTML = `<h2>Bem-vindo ao Painel Clínico</h2>`;
-            }
-
+            if(area) { if(data.banner_texto && data.banner_texto.trim() !== '') area.innerHTML = `<h2>${data.banner_texto.replace(/\n/g, '<br>')}</h2>`; else area.innerHTML = `<h2>Bem-vindo ao Painel Clínico</h2>`; }
+            
             const mapIds = {
                 'tab-input-banner': 'banner_texto', 'tab-input-locais': 'locais', 'tab-input-setores': 'setores',
                 'tab-input-especialidades': 'especialidades', 'tab-input-motivos': 'motivos', 'tab-input-imagem-pastas': 'imagem_padrao_pastas',
-                'tab-input-chat-logo': 'chat_logo', 'tab-color-chat': 'chat_cor', 'tab-color-pendente': 'cor_pendente',
-                'tab-color-concluido': 'cor_concluido', 'tab-input-weather-image': 'weather_image'
+                'tab-input-chat-logo': 'chat_logo', 'tab-color-chat': 'chat_cor', 'tab-color-pendente': 'cor_pendente', 'tab-color-concluido': 'cor_concluido', 'tab-input-weather-image': 'weather_image'
             };
 
             Object.keys(mapIds).forEach(id => {
@@ -957,51 +873,72 @@ window.carregarConfiguracoes = function() {
             const chatLogo = data.chat_logo || "https://cdn-icons-png.flaticon.com/512/8943/8943377.png";
             const chatCor = data.chat_cor || "#0ba360";
             document.documentElement.style.setProperty('--chat-primary', chatCor);
+            
+            const fabImg = document.getElementById('chat-fab-img'); const headerImg = document.getElementById('chat-header-img');
+            const _chatLogoFinal = window.formatarLinkImagem(chatLogo) || chatLogo || './logo.png';
+            if(fabImg){ fabImg.src = _chatLogoFinal; fabImg.onerror = () => { fabImg.src = './logo.png'; }; }
+            if(headerImg){ headerImg.src = _chatLogoFinal; headerImg.onerror = () => { headerImg.src = './logo.png'; }; }
+            window.aplicarImagemClimaHome(data.weather_image || '');
 
-            const fabImg = document.getElementById('chat-fab-img');
-            const headerImg = document.getElementById('chat-header-img');
-            const logoFinal = window.formatarLinkImagem(chatLogo) || chatLogo || './logo.png';
-            if(fabImg) { fabImg.src = logoFinal; fabImg.onerror = () => fabImg.src = './logo.png'; }
-            if(headerImg) { headerImg.src = logoFinal; headerImg.onerror = () => headerImg.src = './logo.png'; }
-            if (typeof window.aplicarImagemClimaHome === 'function') window.aplicarImagemClimaHome(data.weather_image || '');
-
-            window.corStatusPendente = data.cor_pendente || '#e53e3e';
-            window.corStatusConcluido = data.cor_concluido || '#38a169';
-
-            locaisGlobais = data.locais ? String(data.locais).split('
-').filter(l => l.trim() !== '') : [];
-            setoresGlobais = data.setores ? String(data.setores).split('
-').filter(s => s.trim() !== '') : [];
-            especialidadesGlobais = data.especialidades ? String(data.especialidades).split('
-').filter(s => s.trim() !== '') : [];
-            motivosGlobais = data.motivos ? String(data.motivos).split('
-').filter(m => m.trim() !== '') : [];
-            imagemPadraoPastas = data.imagem_padrao_pastas || '';
-
-            if(abaAtual === 'boletins' && !window.pastaBoletimAtual && typeof window.renderizarPastasBoletins === 'function') window.renderizarPastasBoletins();
-            if(abaAtual === 'boletins-privados' && !window.pastaPrivadoAtual && typeof window.renderizarPastasPrivados === 'function') window.renderizarPastasPrivados();
-            if(abaAtual === 'pacotes') {
-                if(window.pasta_pacotes_Atual) window.renderizarListaGenerica?.('pacotes');
-                else window.renderizarPastasGenericas?.('pacotes');
-            }
-        } catch(e) {
-            console.error('Erro ao carregar configurações:', e);
+            window.corStatusPendente = data.cor_pendente || '#e53e3e'; window.corStatusConcluido = data.cor_concluido || '#38a169';
+            
+            locaisGlobais = data.locais ? data.locais.split('\n').filter(l => l.trim() !== '') : [];
+            setoresGlobais = data.setores ? data.setores.split('\n').filter(s => s.trim() !== '') : [];
+            especialidadesGlobais = data.especialidades ? data.especialidades.split('\n').filter(s => s.trim() !== '') : [];
+            motivosGlobais = data.motivos ? data.motivos.split('\n').filter(m => m.trim() !== '') : [];
+            
+            if(abaAtual === 'boletins' && !window.pastaBoletimAtual) window.renderizarPastasBoletins();
+            if(abaAtual === 'boletins-privados' && !window.pastaPrivadoAtual) window.renderizarPastasPrivados();
         }
-    }, (err) => console.warn('Falha ao ouvir configurações:', err?.message || err));
+    });
 };
 
 window.toggleChat = function() {
-    const win = document.getElementById('chat-window'); const fab = document.getElementById('chat-fab'); if(!win || !fab) return;
-    if (win.style.display === 'none' || win.style.display === '') {
-        win.style.display = 'flex'; const tooltip = fab.querySelector('.chatbot-tooltip'); if(tooltip) tooltip.style.display = 'none';
-        const termosPopulares = ['Cardiologia', 'Ultrassom', 'Unimed', 'Raio-X', 'Pediatria', 'Ortopedia', 'Consulta', 'Boletim'];
-        termosPopulares.sort(() => 0.5 - Math.random());
-        const top3 = termosPopulares.slice(0, 3);
-        const quickRepliesDiv = document.querySelector('.chat-quick-replies');
-        if(quickRepliesDiv) { quickRepliesDiv.innerHTML = ''; top3.forEach(termo => { quickRepliesDiv.innerHTML += `<button onclick="window.sendQuickMsg('${termo}')">${termo}</button>`; }); }
-        setTimeout(() => { document.getElementById('chat-input').focus(); }, 100);
-    } else { win.style.display = 'none'; }
-};
+    const win = document.getElementById('chat-window');
+    const fab = document.getElementById('chat-fab');
+    const input = document.getElementById('chat-input');
+    if (!win || !fab) return;
+
+    const abrindo = (win.style.display === 'none' || win.style.display === '');
+    if (abrindo) {
+        win.style.display = 'flex';
+        window.ocultarTooltipChatbot();
+
+        if (!window.chatJaInicializado) {
+            window.abrirSaudacaoChat();
+            window.chatJaInicializado = true;
+        } else {
+            const body = document.getElementById('chat-body');
+            if (body && body.innerHTML.trim() === '') {
+                window.abrirSaudacaoChat();
+            }
+        }
+
+        window.renderizarSugestoesChat = function() {
+    const quickRepliesDiv = document.querySelector('.chat-quick-replies');
+    if (!quickRepliesDiv) return;
+
+    const termosPopulares = [
+        { label: 'Cardiologia', icon: 'ri-heart-pulse-line' },
+        { label: 'Ultrassom', icon: 'ri-pulse-line' },
+        { label: 'Unimed', icon: 'ri-shield-cross-line' },
+        { label: 'Raio-X', icon: 'ri-scan-2-line' },
+        { label: 'Pediatria', icon: 'ri-user-heart-line' },
+        { label: 'Ortopedia', icon: 'ri-wheelchair-line' },
+        { label: 'Consulta', icon: 'ri-stethoscope-line' },
+        { label: 'Boletim', icon: 'ri-newspaper-line' }
+    ];
+
+    termosPopulares.sort(() => 0.5 - Math.random());
+    const top4 = termosPopulares.slice(0, 4);
+
+    quickRepliesDiv.innerHTML = top4.map(item =>
+        `<button type="button" onclick="window.sendQuickMsg('${item.label.replace(/'/g, "\\'")}')">
+            <i class="${item.icon}"></i>
+            <span>${item.label}</span>
+        </button>`
+    ).join('');
+};;
 
 window.sendQuickMsg = function(texto) { const input = document.getElementById('chat-input'); if(input) { input.value = texto; window.sendChat(); } };
 window.sendChat = function() {
@@ -1487,28 +1424,25 @@ window.renderizarDashboardRH = function() {
     const grid = document.getElementById('rh-grid-colaboradores');
     if(grid) {
         const nomes = Object.keys(resumo.colabStats).filter(nome => !search || nome.toLowerCase().includes(search)).sort((a,b) => a.localeCompare(b));
-        grid.innerHTML = nomes.length ? nomes.map((nome, idx) => {
+        grid.innerHTML = nomes.length ? nomes.map(nome => {
             const stat = resumo.colabStats[nome];
             let statusClass = 'neutro';
             let statusText = 'Em Desenvolvimento';
             if(stat.xp > 0 && stat.xp >= resumo.mediaGeral) { statusClass = 'destaque'; statusText = 'Alta Performance'; }
             else if(stat.xp === 0) { statusClass = 'risco'; statusText = 'Em Atenção'; }
-            const ranking = idx + 1;
-            const sufixo = ranking === 1 ? 'st' : ranking === 2 ? 'nd' : ranking === 3 ? 'rd' : 'th';
+            const ativo = window.rhFiltroAtual.colaborador === nome ? ' box-shadow:0 0 0 3px rgba(139,37,44,.15); transform:translateY(-2px);' : '';
             const nomeEscapado = String(nome).replace(/'/g, "\'");
-            return `<div class="rh-rank-card" onclick="window.selecionarColaboradorRH('${nomeEscapado}')" style="cursor:pointer;">
-                <div class="rh-rank-outline">
-                    <div class="rh-rank-chip ${statusClass}">${statusText}</div>
-                    <p class="rh-rank-number">${ranking}<span class="rh-rank-word">${sufixo}</span></p>
-                    <div class="rh-rank-split"></div>
-                    <div class="rh-rank-avatar">${nome.substring(0,1).toUpperCase()}</div>
-                    <p class="rh-rank-name">${window.escapeHTML(nome)}</p>
+            return `<div class="rh-collab-card ${statusClass}" onclick="window.selecionarColaboradorRH('${nomeEscapado}')" style="cursor:pointer;${ativo}">
+                <div class="rh-collab-header">
+                    <div class="rh-avatar">${nome.substring(0,2).toUpperCase()}</div>
+                    <div class="rh-collab-meta"><h4>${window.escapeHTML(nome)}</h4><p>${window.escapeHTML(stat.setor || 'Geral')}</p></div>
+                    <div class="rh-score-badge">${stat.xp} XP</div>
                 </div>
-                <div class="rh-rank-detail">
-                    <div class="rh-rank-stat"><label>XP</label><strong>${stat.xp}</strong></div>
-                    <div class="rh-rank-stat"><label>Treinamentos</label><strong>${stat.treinamentos}</strong></div>
-                    <div class="rh-rank-stat"><label>Média</label><strong>${stat.mediaNota || 0}</strong></div>
-                    <div class="rh-rank-stat"><label>Setor</label><strong style="font-size:14px;">${window.escapeHTML(stat.setor || 'Geral')}</strong></div>
+                <div class="rh-collab-grid">
+                    <div><span>Treinamentos Concluídos</span><strong>${stat.treinamentos}</strong></div>
+                    <div><span>Status RH</span><span class="rh-chip ${statusClass}" style="margin:0; padding:4px 8px;">${statusText}</span></div>
+                    <div><span>Média Individual</span><strong>${stat.mediaNota || 0}</strong></div>
+                    <div><span>Setor</span><strong>${window.escapeHTML(stat.setor || 'Geral')}</strong></div>
                 </div>
             </div>`;
         }).join('') : '<p style="padding:20px; color:var(--text-muted);">Nenhum colaborador encontrado para o filtro selecionado.</p>';
@@ -2462,26 +2396,5 @@ window.fecharModalImpressao = function() {
 
 window.atualizarBottomQuickbar = function() {
   const bar = document.getElementById('colaboradores-quickbar');
-  if (!bar) return;
-  bar.style.display = (abaAtual === 'colaboradores' || abaAtual === 'ensino' || abaAtual === 'rh') ? 'flex' : 'none';
+  if (bar) bar.style.display = 'none';
 };
-
-
-
-/* ===== Patch UI v3.2 ===== */
-window.renderizarTabsVisuaisWorkspace = function() {
-    const ensureTabs = (sectionId, activeLabel) => {
-        const section = document.getElementById(sectionId);
-        if(!section || section.querySelector('.section-top-tabs')) return;
-        const wrap = document.createElement('div');
-        wrap.className = 'section-top-tabs';
-        const labels = ['Equipe','Ensino','Boletins','RH'];
-        wrap.innerHTML = labels.map(label => `<div class="section-top-tab ${label===activeLabel?'active':''}"><i class="ri-${label==='Equipe'?'group-line':label==='Ensino'?'graduation-cap-line':label==='Boletins'?'newspaper-line':'pie-chart-2-line'}"></i><span>${label}</span></div>`).join('');
-        section.insertBefore(wrap, section.firstChild);
-    };
-    ensureTabs('tab-ensino', 'Ensino');
-    ensureTabs('tab-rh', 'RH');
-};
-document.addEventListener('DOMContentLoaded', () => {
-    window.renderizarTabsVisuaisWorkspace();
-});
