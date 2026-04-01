@@ -616,18 +616,34 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
                 cardHtml += `<div style="margin: 8px 0;"><span class="${badgeClass}"><i class="${iconClass}"></i> ${text}</span></div>`;
             } 
             // Lógica do Mapa de Remoções e Quebra de Linhas
-            else if(chave === 'Local e Link Maps') {
-                if(String(valor).includes('<iframe')) {
-                    cardHtml += `<div class="card-info" style="font-size:13px; margin-top: 10px;"><strong>${chave}:</strong><div style="margin-top:5px; border-radius:10px; overflow:hidden;">${valor}</div></div>`;
-                } else if(String(valor).includes('http')) {
-                    const urlMatch = String(valor).match(/https?:\/\/[^\s]+/);
-                    const url = urlMatch ? urlMatch[0] : valor;
-                    const textoSemUrl = String(valor).replace(url, '').trim();
-                    cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${textoSemUrl}</span><br><button onclick="window.open('${url}', '_blank')" class="btn-hover color-5" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 5px;"><i class="ri-map-pin-user-fill"></i> Abrir Mapa</button></div>`;
-                } else {
-                    cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${valor}</span></div>`; 
+            // Lógica para Links (Navegador Interno, Maps, Acessos)
+            else if(String(valor).includes('http')) {
+                const urlMatch = String(valor).match(/https?:\/\/[^\s]+/);
+                const url = urlMatch ? urlMatch[0] : valor;
+                const textoSemUrl = String(valor).replace(url, '').trim();
+                
+                let btnTexto = "Acessar Link Externo";
+                let btnIcone = "ri-external-link-line";
+                let btnAcao = `window.open('${url}', '_blank')`;
+                let colorClass = "color-9";
+
+                // Se for Link de Acesso ou Senhas (abre no Navegador Interno)
+                if (chave.includes('Acesso') || chave.includes('Link') || colecaoNome === 'senhas') {
+                    btnTexto = "Navegador Interno"; 
+                    btnIcone = "ri-layout-window-line"; 
+                    colorClass = "color-11";
+                    btnAcao = `window.abrirJanelaFlutuante('${url}', '${tituloDesteCard.replace(/'/g, "\\'")}')`;
+                } 
+                // Se for Maps
+                else if (chave.includes('Maps') || chave.includes('Local e Link')) {
+                    btnTexto = "Abrir Mapa"; btnIcone = "ri-map-pin-user-fill"; colorClass = "color-5";
                 }
+
+                cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${textoSemUrl}</span><br><button onclick="${btnAcao}" class="btn-hover ${colorClass}" style="height: 32px; font-size: 11px; padding: 0 15px; margin-top: 5px; border-radius: 8px; width: 100%;"><i class="${btnIcone}"></i> ${btnTexto}</button></div>`;
             } else {
+                // AQUI APLICAMOS A QUEBRA DE LINHA GERAL 
+                cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${valor}</span></div>`; 
+            }
                 //  AQUI APLICAMOS A QUEBRA DE LINHA GERAL 
                 cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${valor}</span></div>`; 
             }
@@ -2396,6 +2412,47 @@ window.gerarImpressaoBoletim = function() {
 window.fecharModalImpressao = function() {
     const modal = document.getElementById('modal-imprimir-boletim');
     if (modal) modal.style.display = 'none';
+};
+
+// ==========================================
+// JANELA FLUTUANTE (NAVEGADOR INTERNO)
+// ==========================================
+window.abrirJanelaFlutuante = function(url, titulo) {
+    const win = document.getElementById('floating-window-persistent');
+    const iframe = document.getElementById('fw-iframe');
+    const titleEl = document.getElementById('fw-title');
+    if(!win || !iframe) return;
+    
+    iframe.src = url;
+    if(titleEl) titleEl.innerHTML = `<i class="ri-global-line"></i> ${titulo || 'Navegador Interno'}`;
+    
+    win.classList.remove('minimized');
+    win.style.display = 'flex';
+};
+
+window.minimizarJanelaFlutuante = function() {
+    const win = document.getElementById('floating-window-persistent');
+    if(win) win.classList.add('minimized');
+};
+
+window.restaurarJanelaFlutuante = function() {
+    const win = document.getElementById('floating-window-persistent');
+    if(win) win.classList.remove('minimized');
+};
+
+window.fecharJanelaFlutuante = function() {
+    const win = document.getElementById('floating-window-persistent');
+    const iframe = document.getElementById('fw-iframe');
+    if(win) win.style.display = 'none';
+    if(iframe) iframe.src = 'about:blank';
+};
+
+window.abrirJanelaFlutuanteNovaGuia = function() {
+    const iframe = document.getElementById('fw-iframe');
+    if(iframe && iframe.src && iframe.src !== 'about:blank') {
+        window.open(iframe.src, '_blank');
+        window.fecharJanelaFlutuante();
+    }
 };
 
 window.atualizarBottomQuickbar = function() {
