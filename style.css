@@ -20,7 +20,7 @@ body.is-auth-loading { cursor: progress; }
 ::-webkit-scrollbar-thumb { background-color: #cbd5e0; border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background-color: var(--primary-color); }
 
-/* BOTES ESTILO SAAS (Performance Melhorada) */
+/* BOTOES ESTILO SAAS (Performance Melhorada) */
 .btn-hover { 
     padding: 0 25px; font-size: 14px; font-weight: 600; color: #fff; cursor: pointer; 
     height: 45px; text-align:center; border: none; border-radius: 50px;
@@ -30,7 +30,7 @@ body.is-auth-loading { cursor: progress; }
 .btn-hover:hover { transform: translateY(-2px); filter: brightness(1.1); }
 .btn-hover:focus { outline: none; }
 
-/* Cores Slidas ou Gradientes Leves (SaaS) */
+/* Cores Solidas ou Gradientes Leves (SaaS) */
 .btn-hover.color-1 { background: #25aae1; }
 .btn-hover.color-5 { background: #0ba360; }
 .btn-hover.color-8 { background: #2d3748; }
@@ -135,7 +135,7 @@ body.is-auth-loading { cursor: progress; }
 .rh-panel { padding:18px; border-radius:20px; }
 .rh-collab-card { background:#fff; border-radius:22px; padding:18px; box-shadow:var(--shadow-soft); border-left:6px solid #cbd5e1; }
 
-/* REGRAS DE IMPRESSO (Ocultar menus e focar no contedo A4) */
+/* REGRAS DE IMPRESSAO */
 @media print {
     body { background: white; color: black; }
     .sidebar, .top-header, .search-container, .home-top-bar, .weather-widget, 
@@ -144,8 +144,6 @@ body.is-auth-loading { cursor: progress; }
     }
     .main-content { padding: 0 !important; margin: 0 !important; overflow: visible !important; width: 100% !important; }
     .card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
-    
-    /* Regras especficas se estivermos imprimindo o modal de relatrio */
     .modal-overlay { position: static !important; background: transparent !important; }
     .modal-box { box-shadow: none !important; width: 100% !important; max-width: none !important; padding: 0 !important; }
 }
@@ -159,240 +157,18 @@ body.is-auth-loading { cursor: progress; }
     .main-content { padding: 20px 15px; }
     #chat-window { width: 90vw; right: 5vw; bottom: 100px; height: 60vh;}
     #floating-window-persistent { width: 90vw !important; right: 5vw !important; bottom: 10vh !important; height: 50vh !important;}
+    .home-top-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .relogio-digital { font-size: 28px; }
 }
 
-
-.frase-motivacional {
-    font-size: 14px;
-    opacity: 0.92;
-    margin-top: 8px;
-    font-weight: 500;
-}
-
-.weather-desc {
-    font-size: 13px;
-    opacity: 0.92;
-    margin-top: 8px;
-}
-
-.screen[hidden],
-.tab-content[hidden] {
-    display: none !important;
-}
-
-.nav-btn:disabled,
-.btn-hover:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-    transform: none !important;
-}
-
-@media (max-width: 768px) {
-    .home-top-bar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-
-    .relogio-digital {
-        font-size: 28px;
-    }
-}
-window.abrirModalImpressao = function(tipo = 'boletins') {
-    const modal = document.getElementById('modal-imprimir-boletim');
-    const inputTipo = document.getElementById('print-boletim-id');
-
-    if (!modal) {
-        alert('Modal de impressão não encontrado.');
-        return;
-    }
-
-    if (inputTipo) inputTipo.value = tipo;
-    modal.style.display = 'flex';
-};
-
-window.gerarImpressaoBoletim = function() {
-    const incluirNome = document.getElementById('print-chk-nome')?.checked;
-    const incluirData = document.getElementById('print-chk-data')?.checked;
-    const incluirTema = document.getElementById('print-chk-tema')?.checked;
-    const incluirMotivo = document.getElementById('print-chk-motivo')?.checked;
-    const incluirPublicacao = document.getElementById('print-chk-publicacao')?.checked;
-
-    let boletins = Array.isArray(window.todosBoletinsData) ? [...window.todosBoletinsData] : [];
-
-    if (window.pastaBoletimAtual) {
-        boletins = boletins.filter(item => {
-            const setor = String(item?.data?.['Para quais Setores?'] || 'Geral');
-            return setor.includes(window.pastaBoletimAtual);
-        });
-    }
-
-    if (!boletins.length) {
-        alert('Não há dados de boletins carregados para gerar o relatório.');
-        return;
-    }
-
-    const linhas = [];
-
-    boletins.forEach(item => {
-        const data = item.data || {};
-        const leituras = Array.isArray(data.leituras) ? data.leituras : [];
-        const titulo = data['Título do Documento'] || data['Título do Informativo'] || 'Sem título';
-        const motivo = data['Motivo do Informativo'] || data['Motivo'] || '-';
-        const dataPublicacao = data['Data de Publicação'] || data['Publicado em'] || '-';
-
-        if (!leituras.length) {
-            linhas.push({
-                nome: 'Nenhuma assinatura registrada',
-                dataHora: '-',
-                tema: titulo,
-                motivo,
-                publicacao: dataPublicacao
-            });
-            return;
-        }
-
-        leituras.forEach(registro => {
-            const texto = String(registro || '').trim();
-
-            let nomeColaborador = texto;
-            let dataHora = '-';
-
-            const match = texto.match(/^(.*?)\s*-\s*(\d{2}\/\d{2}\/\d{4}.*)$/);
-            if (match) {
-                nomeColaborador = match[1].trim();
-                dataHora = match[2].trim();
-            }
-
-            linhas.push({
-                nome: nomeColaborador || '-',
-                dataHora,
-                tema: titulo,
-                motivo,
-                publicacao: dataPublicacao
-            });
-        });
-    });
-
-    const ths = [];
-    if (incluirNome) ths.push('<th>Nome do Colaborador</th>');
-    if (incluirData) ths.push('<th>Data/Hora da Assinatura</th>');
-    if (incluirTema) ths.push('<th>Tema</th>');
-    if (incluirMotivo) ths.push('<th>Motivo</th>');
-    if (incluirPublicacao) ths.push('<th>Data de Publicação</th>');
-
-    const escape = (valor) => {
-        const texto = String(valor ?? '');
-        return texto
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#39;');
-    };
-
-    const trs = linhas.map(linha => {
-        const cols = [];
-        if (incluirNome) cols.push(`<td>${escape(linha.nome)}</td>`);
-        if (incluirData) cols.push(`<td>${escape(linha.dataHora)}</td>`);
-        if (incluirTema) cols.push(`<td>${escape(linha.tema)}</td>`);
-        if (incluirMotivo) cols.push(`<td>${escape(linha.motivo)}</td>`);
-        if (incluirPublicacao) cols.push(`<td>${escape(linha.publicacao)}</td>`);
-        return `<tr>${cols.join('')}</tr>`;
-    }).join('');
-
-    const totalColunas = Math.max(ths.length, 1);
-
-    const janela = window.open('', '_blank', 'width=1200,height=800');
-
-    if (!janela) {
-        alert('O navegador bloqueou a janela de impressão. Libere pop-ups para este site.');
-        return;
-    }
-
-    const html = `
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Relatório de Assinaturas</title>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 24px;
-        color: #1f2937;
-    }
-    h1 {
-        color: #8B252C;
-        margin-bottom: 8px;
-    }
-    p {
-        margin: 0 0 18px;
-        color: #6b7280;
-        font-size: 14px;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 14px;
-    }
-    th, td {
-        border: 1px solid #d1d5db;
-        padding: 10px;
-        text-align: left;
-        font-size: 13px;
-        vertical-align: top;
-    }
-    th {
-        background: #8B252C;
-        color: white;
-    }
-    tr:nth-child(even) td {
-        background: #f9fafb;
-    }
-    @media print {
-        @page {
-            size: A4 portrait;
-            margin: 12mm;
-        }
-        body {
-            margin: 0;
-        }
-    }
-</style>
-</head>
-<body>
-    <h1>Relatório de Assinaturas</h1>
-    <p>Gerado em ${new Date().toLocaleString('pt-BR')}</p>
-    <table>
-        <thead>
-            <tr>${ths.join('')}</tr>
-        </thead>
-        <tbody>
-            ${trs || `<tr><td colspan="${totalColunas}">Nenhum registro encontrado.</td></tr>`}
-        </tbody>
-    </table>
-</body>
-</html>
-`;
-
-    janela.document.open();
-    janela.document.write(html);
-    janela.document.close();
-
-    setTimeout(() => {
-        janela.focus();
-        janela.print();
-    }, 500);
-
-    const modal = document.getElementById('modal-imprimir-boletim');
-    if (modal) modal.style.display = 'none';
-};
-
-
+.frase-motivacional { font-size: 14px; opacity: 0.92; margin-top: 8px; font-weight: 500; }
+.weather-desc { font-size: 13px; opacity: 0.92; margin-top: 8px; }
+.screen[hidden], .tab-content[hidden] { display: none !important; }
+.nav-btn:disabled, .btn-hover:disabled { opacity: 0.65; cursor: not-allowed; transform: none !important; }
 #modal-imprimir-boletim { z-index: 10001; }
 #modal-media .modal-box { overflow: hidden; }
 #chat-fab img, #chat-header-img { display:block; }
+
 .bottom-quickbar {
   position: sticky; bottom: 16px; z-index: 50; margin-top: 20px;
   background: rgba(255,255,255,0.96); backdrop-filter: blur(8px);
@@ -407,11 +183,16 @@ window.gerarImpressaoBoletim = function() {
 #tab-rh p, #tab-rh span, #tab-rh label, #tab-rh li { line-height:1.6; }
 #tab-ensino .atividade-resposta-box textarea { min-height: 120px; }
 #modal-media iframe { border-radius: 12px; }
-@media (max-width: 900px) { #floating-window-persistent { width: calc(100vw - 24px) !important; right: 12px !important; left: 12px !important; bottom: 12px !important; height: 70vh !important; } .bottom-quickbar { position: fixed; left: 12px; right:12px; bottom:12px; } }
 
+@media (max-width: 900px) { 
+  #floating-window-persistent { width: calc(100vw - 24px) !important; right: 12px !important; left: 12px !important; bottom: 12px !important; height: 70vh !important; } 
+  .bottom-quickbar { position: fixed; left: 12px; right:12px; bottom:12px; } 
+  .home-hero-stack{grid-template-columns:1fr}
+  .floating-workspace{right:12px;left:12px;width:auto;height:72vh;bottom:12px}
+  #chat-window{width:calc(100vw - 24px);right:12px;left:12px;bottom:92px;height:72vh}
+}
 
 /* ====== UI PATCH v3.2.2 ====== */
-
 .home-hero-stack{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;align-items:stretch;margin-bottom:24px}
 .home-top-bar{margin-bottom:0;min-height:160px;display:flex;flex-direction:column;justify-content:center;gap:12px;background:linear-gradient(135deg,#8B252C,#b33a42)}
 .frase-motivacional{font-size:18px;font-weight:500;opacity:.95}
@@ -463,9 +244,6 @@ window.gerarImpressaoBoletim = function() {
 .chat-quick-replies button:hover{background:#dcfce7}
 .chat-msg.bot{box-shadow:0 8px 18px rgba(15,23,42,.06)}
 .chat-input-area input{border-radius:999px}
-.chatbot-tooltip{position:absolute;right:78px;bottom:12px;max-width:230px;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:12px 14px;font-size:13px;box-shadow:0 18px 38px rgba(15,23,42,.15);display:none}
-.chatbot-tooltip strong{display:block;color:var(--primary-color);margin-bottom:4px}
-.chatbot-tooltip::after{content:"";position:absolute;right:-8px;bottom:18px;width:16px;height:16px;background:#fff;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;transform:rotate(-45deg)}
 
 /* floating workspace for convenios */
 .floating-workspace{position:fixed;right:120px;bottom:22px;width:min(860px,calc(100vw - 160px));height:min(78vh,760px);background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(15,23,42,.25);z-index:9998;border:1px solid rgba(148,163,184,.18);overflow:hidden;display:flex;flex-direction:column}
@@ -481,8 +259,76 @@ window.gerarImpressaoBoletim = function() {
 .bottom-quickbar{display:none!important}
 #ensino-dashboard-area .section-top-tabs, #ensino-login-area .section-top-tabs{display:none!important}
 
-@media (max-width: 900px){
-  .home-hero-stack{grid-template-columns:1fr}
-  .floating-workspace{right:12px;left:12px;width:auto;height:72vh;bottom:12px}
-  #chat-window{width:calc(100vw - 24px);right:12px;left:12px;bottom:92px;height:72vh}
-}
+/* ==========================================
+   UTILITY CLASSES & COMPONENTES (Limpeza HTML)
+   ========================================== */
+.w-100 { width: 100%; }
+.text-primary { color: var(--primary-color); }
+.text-muted { color: var(--text-muted); }
+.text-danger { color: #e53e3e; }
+.text-success { color: #38a169; }
+.text-blue { color: #2563eb; }
+.mb-5 { margin-bottom: 5px; }
+.mb-10 { margin-bottom: 10px; }
+.mb-15 { margin-bottom: 15px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-25 { margin-bottom: 25px; }
+.mt-10 { margin-top: 10px; }
+.mt-15 { margin-top: 15px; }
+.mt-20 { margin-top: 20px; }
+.mt-25 { margin-top: 25px; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-start { display: flex; justify-content: flex-start; align-items: center; gap: 15px; }
+.flex-gap-8 { display: flex; gap: 8px; align-items: center; }
+.flex-gap-10 { display: flex; gap: 10px; }
+.flex-gap-15 { display: flex; gap: 15px; flex-wrap: wrap; }
+.flex-1 { flex: 1; }
+.text-center { text-align: center; }
+.cursor-pointer { cursor: pointer; }
+
+/* Componentes Especificos do HTML Limpo */
+.sidebar-title-logo { font-weight: 800; font-size: 24px; margin-top: 10px; color: var(--primary-color); }
+.nav-separator { margin-top: 15px; border-top: 1px solid #eee; border-radius: 0; padding-top: 15px; }
+.nav-btn-rh-style { background: #eefbf4; color: #166534; border-left: 4px solid #166534; }
+.search-box-header { flex: 1; max-width: 400px; margin: 0 20px; }
+.search-icon-global { color: var(--primary-color); font-size: 20px; }
+.search-input-global { border: 2px solid var(--primary-color); }
+.resultados-globais-box { margin-bottom: 30px; padding: 15px; background: #fff; border-radius: 15px; box-shadow: var(--shadow-soft); }
+.section-subtitle { margin-bottom: 20px; font-weight: 500; color: var(--text-muted); margin-top: 10px; }
+.settings-card { max-width: 600px; margin: 0 auto; }
+.settings-title { margin-bottom: 20px; color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+.form-label { font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; }
+.form-label-sm { font-weight: 600; font-size: 13px; display: block; margin-bottom: 5px; }
+.textarea-md { height: 80px; resize: vertical; }
+.textarea-lg { height: 100px; resize: vertical; }
+.settings-group { background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color); }
+.settings-group-title { color: var(--primary-color); margin-bottom: 10px; margin-top: 0; }
+.color-picker-input { height: 50px; padding: 5px; cursor: pointer; }
+.chart-box { background: white; padding: 20px; border-radius: 15px; box-shadow: var(--shadow-soft); margin-bottom: 25px; height: 300px; }
+
+.portal-aluno-box { max-width: 400px; margin: 50px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: var(--shadow-soft); text-align: center; }
+.portal-aluno-icon { font-size: 40px; color: var(--primary-color); margin-bottom: 10px; }
+.portal-aluno-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+
+.aluno-stat-card { flex: 1; min-width: 150px; text-align: center; color: white; border: none; }
+.aluno-stat-green { background: linear-gradient(to right, #0ba360, #3cba92); }
+.aluno-stat-blue { background: linear-gradient(to right, #3182ce, #63b3ed); }
+.aluno-stat-num { margin: 0; font-size: 32px; }
+.aluno-stat-label { margin: 0; font-size: 14px; opacity: 0.9; }
+
+.pesquisa-pendente-box { margin-bottom: 25px; }
+.lista-pendente { display: flex; flex-direction: column; gap: 10px; }
+
+.modal-scroll-y { max-height: 95vh; overflow-y: auto; overflow-x: hidden;}
+.modal-leituras-box { max-width: 650px; }
+.modal-leituras-col { flex: 1; }
+.modal-leituras-title { margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid; }
+.modal-leituras-title.success { color: #38a169; border-color: #c6f6d5; }
+.modal-leituras-title.danger { color: #e53e3e; border-color: #fed7d7; }
+.modal-leituras-content { font-size: 13px; max-height: 400px; overflow-y: auto; }
+
+.modal-media-wrapper { width: 95vw; height: 90vh; max-width: 1200px; padding: 20px; }
+.modal-media-iframe { width: 100%; height: 100%; border: none; background-color: #e2e8f0; border-radius: 12px;}
+
+.checkbox-group-box { display: grid; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
+.checkbox-label { display: flex; align-items: center; gap: 8px; }
