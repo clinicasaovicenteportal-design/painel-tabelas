@@ -333,3 +333,47 @@ body.is-auth-loading { cursor: progress; }
 .checkbox-group-box { display: grid; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
 .checkbox-label { display: flex; align-items: center; gap: 8px; }
 .card-info span { word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; }
+
+/* ==========================================
+   MODERNIZAÇÃO ABA ENSINO & TREINAMENTO
+   ========================================== */
+#ensino-login-area {
+    background: linear-gradient(145deg, #ffffff, #f4f7fa);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    transition: transform 0.3s ease;
+}
+#ensino-login-area:hover {
+    transform: translateY(-5px);
+}
+#ensino-login-area input {
+    border-radius: 50px;
+    padding-left: 20px;
+}
+#ensino-login-area button {
+    border-radius: 50px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.aluno-stat-card {
+    border-radius: 20px !important;
+    padding: 25px !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+}
+.aluno-stat-card::after {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+    transform: rotate(45deg); pointer-events: none;
+}
+#grid-trilha-aluno .card {
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    border-width: 1px !important;
+    border-left-width: 5px !important;
+}
+#grid-trilha-aluno .card:hover {
+    box-shadow: 0 12px 25px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
+}
