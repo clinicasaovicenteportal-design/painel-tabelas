@@ -1,5 +1,5 @@
 // ==========================================
-// 1. CONFIGURAES E VARIÁVEIS GLOBAIS
+// 1. CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
 // ==========================================
 const configuracaoAbas = {
     'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da Clínica', 'PIN de Acesso (Treinamentos)'] },
@@ -14,12 +14,11 @@ const configuracaoAbas = {
     'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' }, 
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'], campoAgrupador: 'Convênio', icone: 'ri-shield-cross-fill' },
     
-    //  NOVOS CAMPOS DE PROFISSIONAIS AQUI 
     'ultrassom': { titulo: 'Exame de Ultrassom', campos: ['Exame', 'Código', 'Profissionais que realizam (Opcional)', 'Restrição de Idade', 'Observação'], campoAgrupador: 'Exame', icone: 'ri-pulse-line' },
     'consultas': { titulo: 'Consulta / Procedimento', campos: ['Tipo', 'Código', 'Descrição', 'Valor', 'Profissionais que realizam (Opcional)', 'Observações'], campoAgrupador: 'Tipo', icone: 'ri-stethoscope-line' },
     'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Categoria do Exame', 'Código', 'Descrição', 'Valor', 'Prazo de Laudo', 'Profissionais que realizam (Opcional)', 'Onde encontrar resultado', 'Observações', 'Convênios'], campoAgrupador: 'Categoria do Exame', icone: 'ri-body-scan-line' },
     
-    'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor ou Informacao', 'O que est incluso', 'Observações', 'Pacotes', 'Kit'], campoAgrupador: 'Pacotes', icone: 'ri-first-aid-kit-line' },
+    'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor ou Informacao', 'O que está incluso', 'Observações', 'Pacotes', 'Kit'], campoAgrupador: 'Pacotes', icone: 'ri-first-aid-kit-line' },
     'institutos': { titulo: 'Instituto Tabela', campos: ['Número da Tabela', 'Valor da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'], campoAgrupador: 'Número da Tabela', icone: 'ri-building-line' },
     'remocoes': { titulo: 'Remoção', campos: ['Nome do Lugar', 'Números (Separe por vírgula)', 'Local e Link Maps', 'Observações Importantes'] },
     'ramais': { titulo: 'Ramal', campos: ['Local ou Prédio', 'Setor', 'Número do Ramal', 'Observações'] },
@@ -68,11 +67,10 @@ window.corStatusPendente = "#e53e3e"; window.corStatusConcluido = "#38a169";
 window.safeParseJSON = function(raw, fallback = null) {
     if (raw === undefined || raw === null || raw === '' || raw === 'undefined' || raw === 'null') return fallback;
     if (typeof raw === 'object') return raw;
-    try { return JSON.parse(raw); } catch(e) { console.warn('JSON invlido ignorado:', raw, e); return fallback; }
+    try { return JSON.parse(raw); } catch(e) { return fallback; }
 };
 window.escapeHTML = function(value = '') { return String(value).replace(/[&<>"']/g, chr => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[chr])); };
 window.extrairNomeRegistro = function(registro = '') { return String(registro).split(' (')[0].trim(); };
-
 
 window.confirmarAssinaturaLeitura = async function(docId, colecao) {
     try {
@@ -86,7 +84,7 @@ window.confirmarAssinaturaLeitura = async function(docId, colecao) {
 
         const leituras = Array.isArray(item.data?.leituras) ? item.data.leituras : [];
         const jaExiste = leituras.some(reg => window.extrairNomeRegistro(reg) === nomeLeitor);
-        if (jaExiste) { alert('Essa leitura j foi registrada.'); return; }
+        if (jaExiste) { alert('Essa leitura já foi registrada.'); return; }
 
         const registro = `${nomeLeitor} (${new Date().toLocaleString('pt-BR')})`;
         await window.updateDoc(window.doc(window.db, colecao, docId), { leituras: window.arrayUnion(registro) });
@@ -96,8 +94,7 @@ window.confirmarAssinaturaLeitura = async function(docId, colecao) {
         if (typeof window.verificarUrgentesHome === 'function') window.verificarUrgentesHome();
         alert('Assinatura registrada com sucesso!');
     } catch (e) {
-        console.error('Erro ao registrar assinatura:', e);
-        alert('Erro ao registrar assinatura: ' + (e?.message || 'falha desconhecida'));
+        alert('Erro ao registrar assinatura.');
     }
 };
 
@@ -158,9 +155,7 @@ if ('serviceWorker' in navigator) {
         try {
             const regs = await navigator.serviceWorker.getRegistrations();
             for (const reg of regs) await reg.unregister();
-        } catch (err) {
-            console.warn('Falha ao limpar service workers antigos:', err);
-        }
+        } catch (err) {}
     });
 }
 
@@ -198,7 +193,6 @@ window.efetuarLogin = async function(e) {
     try {
         await signInWithEmailAndPassword(auth, email, senha);
     } catch (err) {
-        console.error(err);
         alert('Erro ao entrar: e-mail ou senha incorretos.');
     } finally {
         loginEmAndamento = false;
@@ -210,15 +204,15 @@ window.efetuarLogin = async function(e) {
     }
 }
 
-const btnLoginInit = document.getElementById('btn-login'); const formLoginInit = document.getElementById('form-login');
-if(btnLoginInit) btnLoginInit.onclick = window.efetuarLogin; if(formLoginInit) formLoginInit.onsubmit = window.efetuarLogin;
+const btnLoginInit = document.getElementById('btn-login'); if(btnLoginInit) btnLoginInit.onclick = window.efetuarLogin; 
+const formLoginInit = document.getElementById('form-login'); if(formLoginInit) formLoginInit.onsubmit = window.efetuarLogin;
 
 const btnLogout = document.getElementById('btn-logout'); if(btnLogout) btnLogout.addEventListener('click', () => signOut(auth));
 
 onAuthStateChanged(auth, (user) => {
     const loginScreen = document.getElementById('login-screen'); const dashboardScreen = document.getElementById('dashboard-screen');
     const chatFab = document.getElementById('chat-fab');
-    if (user) { if (typeof window.inicializarTooltipChatbot === 'function') window.inicializarTooltipChatbot();
+    if (user) { 
         if(loginScreen) loginScreen.style.display = 'none'; if(dashboardScreen) dashboardScreen.style.display = 'flex';
         if(chatFab) chatFab.style.display = 'flex';
         isAdmin = (user.email === EMAIL_GESTAO);
@@ -231,7 +225,6 @@ onAuthStateChanged(auth, (user) => {
         }
         Object.keys(configuracaoAbas).forEach(idColecao => window.renderizarCards(idColecao));
         window.carregarConfiguracoes(); window.buscarClimaAraucaria();
-        if (typeof window.aplicarFraseMotivacional === 'function') window.aplicarFraseMotivacional();
         if(window.escutarRH) window.escutarRH();
         if (window.atualizarBottomQuickbar) window.atualizarBottomQuickbar();
     } else {
@@ -249,6 +242,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 setInterval(() => { const rl = document.getElementById('relogio'); if(rl) rl.innerText = new Date().toLocaleTimeString('pt-BR'); }, 1000);
+
 window.formatarLinkImagem = function(link) {
     const raw = String(link || '').trim();
     if (!raw || raw.includes('file:///')) return null;
@@ -269,6 +263,7 @@ window.obterUrlEmbedMaterial = function(link = '') {
     if (/\.(doc|docx|ppt|pptx|xls|xlsx)(\?|#|$)/i.test(raw)) return `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(raw)}`;
     return raw;
 };
+
 window.fecharMidiaFlutuante = function() {
     const modal = document.getElementById('modal-media');
     const iframe = document.getElementById('iframe-media');
@@ -292,7 +287,6 @@ window.abrirMidiaFlutuante = function(url = '', titulo = 'Visualização de Mate
     if (titleEl) titleEl.textContent = titulo;
     modal.style.display = 'flex';
 };
-window.abrirMidaFlutuante = window.abrirMidiaFlutuante;
 window.imprimirMidiaAtual = function() {
     const iframe = document.getElementById('iframe-media');
     if (!iframe || !iframe.src || iframe.src === 'about:blank') return;
@@ -320,80 +314,29 @@ window.buscarClimaAraucaria = async function() {
 
         if (wDeg) wDeg.textContent = Math.round(clima.temperature ?? 0);
 
-        let desc = "Céu Limpo";
-        let icon = "ri-sun-fill";
-        let status = "Agradável";
-
-        if (clima.weathercode >= 1 && clima.weathercode <= 3) {
-            desc = "Parcialmente Nublado";
-            icon = "ri-sun-cloudy-fill";
-            status = "Estável";
-        }
-        if (clima.weathercode === 45 || clima.weathercode === 48) {
-            desc = "Neblina";
-            icon = "ri-foggy-fill";
-            status = "Neblina";
-        }
-        if (clima.weathercode >= 51 && clima.weathercode <= 67) {
-            desc = "Chuva Leve";
-            icon = "ri-drizzle-fill";
-            status = "Úmido";
-        }
-        if (clima.weathercode >= 71 && clima.weathercode <= 77) {
-            desc = "Chuva/Neve";
-            icon = "ri-snowy-line";
-            status = "Instável";
-        }
-        if (clima.weathercode >= 80 && clima.weathercode <= 82) {
-            desc = "Pancadas de Chuva";
-            icon = "ri-showers-fill";
-            status = "Chuvoso";
-        }
-        if (clima.weathercode >= 95) {
-            desc = "Tempestade";
-            icon = "ri-thunderstorms-fill";
-            status = "Atenção";
-        }
+        let desc = "Céu Limpo"; let icon = "ri-sun-fill"; let status = "Agradável";
+        if (clima.weathercode >= 1 && clima.weathercode <= 3) { desc = "Parcialmente Nublado"; icon = "ri-sun-cloudy-fill"; status = "Estável"; }
+        if (clima.weathercode === 45 || clima.weathercode === 48) { desc = "Neblina"; icon = "ri-foggy-fill"; status = "Neblina"; }
+        if (clima.weathercode >= 51 && clima.weathercode <= 67) { desc = "Chuva Leve"; icon = "ri-drizzle-fill"; status = "Úmido"; }
+        if (clima.weathercode >= 71 && clima.weathercode <= 77) { desc = "Chuva/Neve"; icon = "ri-snowy-line"; status = "Instável"; }
+        if (clima.weathercode >= 80 && clima.weathercode <= 82) { desc = "Pancadas de Chuva"; icon = "ri-showers-fill"; status = "Chuvoso"; }
+        if (clima.weathercode >= 95) { desc = "Tempestade"; icon = "ri-thunderstorms-fill"; status = "Atenção"; }
 
         if (wDesc) wDesc.textContent = desc;
         if (wIcon) wIcon.className = icon;
         if (wStatus) wStatus.textContent = status;
 
-        if (wWind) {
-            const vento = Math.round(clima.windspeed ?? 0);
-            wWind.textContent = `${vento} km/h`;
-        }
+        if (wWind) wWind.textContent = `${Math.round(clima.windspeed ?? 0)} km/h`;
 
         const hourlyTimes = data.hourly?.time || [];
         const humidityValues = data.hourly?.relativehumidity_2m || [];
         const apparentValues = data.hourly?.apparent_temperature || [];
+        const idx = hourlyTimes.indexOf(clima.time);
 
-        const currentTime = clima.time;
-        const idx = hourlyTimes.indexOf(currentTime);
+        if (wHumidity) wHumidity.textContent = idx >= 0 ? `${humidityValues[idx]}%` : '--%';
+        if (wFeel) wFeel.textContent = idx >= 0 ? `${Math.round(apparentValues[idx])} °C` : `${Math.round(clima.temperature ?? 0)} °C`;
 
-        if (wHumidity) {
-            const humidity = idx >= 0 ? humidityValues[idx] : '--';
-            wHumidity.textContent = `${humidity}%`;
-        }
-
-        if (wFeel) {
-            const feel = idx >= 0 ? Math.round(apparentValues[idx]) : Math.round(clima.temperature ?? 0);
-            wFeel.textContent = `${feel} °C`;
-        }
-
-    } catch (e) {
-        const wDesc = document.getElementById('weather-desc');
-        const wHumidity = document.getElementById('weather-humidity');
-        const wWind = document.getElementById('weather-wind');
-        const wFeel = document.getElementById('weather-feel');
-        const wStatus = document.getElementById('weather-status');
-
-        if (wDesc) wDesc.textContent = "Clima indisponível";
-        if (wHumidity) wHumidity.textContent = "--%";
-        if (wWind) wWind.textContent = "-- km/h";
-        if (wFeel) wFeel.textContent = "-- °C";
-        if (wStatus) wStatus.textContent = "Offline";
-    }
+    } catch (e) { }
 };
 
 window.obterPublicoAlvo = function(setoresAlvoString, colabEsp = '') {
@@ -420,7 +363,6 @@ window.verificarUrgentesHome = function() {
     if(totalUrgentesPendentes > 0) area.innerHTML = `<div class="alerta-urgente-home" onclick="window.irParaAba('boletins')"><i class="ri-alarm-warning-fill"></i><div><strong>Atenção! Informativos Urgentes</strong><span>Existem <b>${totalUrgentesPendentes}</b> pendentes.</span></div></div>`;
 };
 
-//  DESTAQUE DE CARD (PISCAR)
 window.destacarCard = function(docId) {
     setTimeout(() => {
         const card = document.getElementById(`card-${docId}`);
@@ -493,7 +435,7 @@ window.carregarPerguntasBuilder = function() {
         const jsonStr = inputOculto.value.replace(/&quot;/g, '"').replace(/&apos;/g, "'");
         const arr = window.safeParseJSON(jsonStr, []);
         arr.forEach(q => window.adicionarPerguntaBuilder(q.tipo, q));
-    } catch(e) { console.error("Erro ao ler JSON de provas:", e); }
+    } catch(e) {}
 };
 
 window.sincronizarQuizJSON = function() {
@@ -529,7 +471,6 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
     }
     document.getElementById('modal-doc-id').value = docId || "";
 
-    // Geração dinâmica dos inputs e listas suspensas (Inclui os exames dinâmicos)
     let htmlCampos = '';
     config.campos.forEach(campo => {
         const valorAntigo = (dadosAntigos && dadosAntigos[campo]) ? dadosAntigos[campo] : '';
@@ -538,7 +479,7 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
             htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Geral">Setor Padrão (Geral)</option>`; setoresGlobais.forEach(s => { htmlCampos += `<option value="${s}" ${valorAntigo === s ? 'selected' : ''}>${s}</option>`; }); htmlCampos += `</select>`;
         }
         else if(colecao === 'treinamentos' && campo === 'Tipo (Vídeo, PDF, Tarefa, Prova)') {
-            htmlCampos += `<select id="input-${campo}" class="form-input">`; ['Vídeo', 'PDF/Documento', 'Tarefa Prtica', 'Prova Múltipla Escolha'].forEach(op => { htmlCampos += `<option value="${op}" ${valorAntigo === op ? 'selected' : ''}>${op}</option>`; }); htmlCampos += `</select>`;
+            htmlCampos += `<select id="input-${campo}" class="form-input">`; ['Vídeo', 'PDF/Documento', 'Tarefa Prática', 'Prova Múltipla Escolha'].forEach(op => { htmlCampos += `<option value="${op}" ${valorAntigo === op ? 'selected' : ''}>${op}</option>`; }); htmlCampos += `</select>`;
         }
         else if(colecao === 'treinamentos' && campo === 'Colaborador Específico (Opcional)') {
             htmlCampos += `<select id="input-${campo}" class="form-input"><option value="">Nenhum (Vai para todo o Setor marcado)</option>`; listaColaboradoresGlobal.forEach(c => { htmlCampos += `<option value="${c.nome}" ${valorAntigo === c.nome ? 'selected' : ''}>${c.nome}</option>`; }); htmlCampos += `</select>`;
@@ -567,8 +508,6 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
         else if(campo === 'Local ou Prédio') { htmlCampos += `<select id="input-${campo}" class="form-input"><option value="">Selecione o Local...</option>`; locaisGlobais.forEach(loc => { const l = loc.trim(); if(l) htmlCampos += `<option value="${l}" ${valorAntigo === l ? 'selected' : ''}>${l}</option>`; }); htmlCampos += `<option value="Outros" ${valorAntigo === 'Outros' ? 'selected' : ''}>Outros</option></select>`; }
         else if (campo.includes('Data')) { htmlCampos += `<input type="date" id="input-${campo}" value="${valorAntigo}" class="form-input">`; } 
         else if (campo.includes('Link') || campo.includes('URL')) { htmlCampos += `<input type="url" id="input-${campo}" placeholder="Link ou URL" value="${valorAntigo}" class="form-input">`; } 
-        
-        //  A MÁGICA DOS EXAMES/MDICOS AQUI 
         else if (campo === 'Profissionais que realizam (Opcional)') {
             htmlCampos += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px; color:var(--text-muted);">Quais médicos realizam isso?</label>`;
             htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:80px; resize:vertical;" placeholder="Ex: Dr. João, Dra. Maria...">${valorAntigo}</textarea>`;
@@ -592,7 +531,7 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
 
     let cardHtml = `<div class="card ${cardClass}" id="card-${docId}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border-left: 6px solid var(--primary-color);">`;
     
-    if(config.campoAgrupador) cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--text-main);"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA/MDULO: ${data[config.campoAgrupador] || 'Geral'}</div>`;
+    if(config.campoAgrupador) cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--text-main);"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA/MÓDULO: ${data[config.campoAgrupador] || 'Geral'}</div>`;
     cardHtml += `<div style="font-size:18px; font-weight:600; line-height:1.2; margin-bottom:15px;">${tituloDesteCard}</div>`;
     
     let hasFlexLayout = (colecaoNome === 'corpo-clinico' && data['Link da Foto do Profissional']);
@@ -615,8 +554,6 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
                 const text = valor === 'Não' ? 'Serviço Não Coberto' : 'Serviço Coberto';
                 cardHtml += `<div style="margin: 8px 0;"><span class="${badgeClass}"><i class="${iconClass}"></i> ${text}</span></div>`;
             } 
-            // Lógica do Mapa de Remoções e Quebra de Linhas
-            // Lógica para Links (Navegador Interno, Maps, Acessos)
             else if(String(valor).includes('http')) {
                 const urlMatch = String(valor).match(/https?:\/\/[^\s]+/);
                 const url = urlMatch ? urlMatch[0] : valor;
@@ -627,24 +564,19 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
                 let btnAcao = `window.open('${url}', '_blank')`;
                 let colorClass = "color-9";
 
-                // Se for Link de Acesso ou Senhas (abre no Navegador Interno)
                 if (chave.includes('Acesso') || chave.includes('Link') || colecaoNome === 'senhas') {
                     btnTexto = "Navegador Interno"; 
                     btnIcone = "ri-layout-window-line"; 
                     colorClass = "color-11";
-                    btnAcao = `window.abrirJanelaFlutuante('${url}', '${tituloDesteCard.replace(/'/g, "\\'")}')`;
+                    const safeTitle = String(tituloDesteCard).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                    btnAcao = `window.abrirJanelaFlutuante('${url}', '${safeTitle}')`;
                 } 
-                // Se for Maps
                 else if (chave.includes('Maps') || chave.includes('Local e Link')) {
                     btnTexto = "Abrir Mapa"; btnIcone = "ri-map-pin-user-fill"; colorClass = "color-5";
                 }
 
-                cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${textoSemUrl}</span><br><button onclick="${btnAcao}" class="btn-hover ${colorClass}" style="height: 32px; font-size: 11px; padding: 0 15px; margin-top: 5px; border-radius: 8px; width: 100%;"><i class="${btnIcone}"></i> ${btnTexto}</button></div>`;
+                cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${textoSemUrl}</span><br><button type="button" onclick="${btnAcao}" class="btn-hover ${colorClass}" style="height: 32px; font-size: 11px; padding: 0 15px; margin-top: 5px; border-radius: 8px; width: 100%;"><i class="${btnIcone}"></i> ${btnTexto}</button></div>`;
             } else {
-                // AQUI APLICAMOS A QUEBRA DE LINHA GERAL 
-                cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${valor}</span></div>`; 
-            }
-                //  AQUI APLICAMOS A QUEBRA DE LINHA GERAL 
                 cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${valor}</span></div>`; 
             }
         }
@@ -668,7 +600,6 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
     if (isAdmin) cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
     cardHtml += `</div>`; return cardHtml;
 };
-
 
 window.renderizarListaGenerica = function(colecao) { const grid = document.getElementById(`grid-${colecao}-list`); if(!grid) return; grid.innerHTML = ''; const nomePasta = window[`pasta_${colecao}_Atual`]; const itensExibir = (window.dadosGlobaisAbas[colecao] || []).filter(i => (i.data[configuracaoAbas[colecao].campoAgrupador] || 'Geral') === nomePasta); itensExibir.forEach(item => { grid.innerHTML += window.gerarHTMLCard(colecao, item.id, item.data); }); };
 window.renderizarPastasGenericas = function(colecao) {
@@ -746,7 +677,7 @@ window.renderizarListaBoletins = function() {
         cardHtml += `<div class="leituras-lista" style="margin-top: auto; padding-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); font-size: 13px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(255,255,255,0.7); padding: 8px 10px; border-radius: 8px;"><div style="font-size: 11px;">Lidos: <b style="color:#38a169; font-size:13px;">${qtdLidos}</b> | Faltam: <b style="color:#e53e3e; font-size:13px;">${qtdFaltam}</b></div><button onclick="window.abrirListaLeituras('${docId}', 'boletins')" style="background: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; cursor:pointer; font-size: 12px; font-weight: 500; color: var(--primary-color);"><i class="ri-team-line"></i> Detalhes</button></div>`;
         if(isAdmin) {
             cardHtml += `<div class="add-leitura-box" style="display: flex; gap: 8px; margin-top: 5px;"><select id="leitor-${docId}" style="flex:1; padding:8px; border-radius:8px; border:none; font-size:12px; background:rgba(255,255,255,0.9); outline:none;">`;
-            if(faltamAssinar.length === 0) cardHtml += `<option value="">Todos da pasta j leram!</option>`; else { cardHtml += `<option value="">Selecionar Pendente...</option>`; faltamAssinar.forEach(nome => { cardHtml += `<option value="${nome}">${nome}</option>`; }); }
+            if(faltamAssinar.length === 0) cardHtml += `<option value="">Todos da pasta já leram!</option>`; else { cardHtml += `<option value="">Selecionar Pendente...</option>`; faltamAssinar.forEach(nome => { cardHtml += `<option value="${nome}">${nome}</option>`; }); }
             cardHtml += `</select><button class="btn-action btn-assinar" data-id="${docId}" data-colecao="boletins" style="background:#38a169; color:white; padding:8px 12px; border-radius:8px; cursor:pointer;"><i class="ri-check-line"></i></button></div>`;
         }
         cardHtml += `</div>`;
@@ -878,7 +809,7 @@ window.carregarConfiguracoes = function() {
             const mapIds = {
                 'tab-input-banner': 'banner_texto', 'tab-input-locais': 'locais', 'tab-input-setores': 'setores',
                 'tab-input-especialidades': 'especialidades', 'tab-input-motivos': 'motivos', 'tab-input-imagem-pastas': 'imagem_padrao_pastas',
-                'tab-input-chat-logo': 'chat_logo', 'tab-color-chat': 'chat_cor', 'tab-color-pendente': 'cor_pendente', 'tab-color-concluido': 'cor_concluido', 'tab-input-weather-image': 'weather_image'
+                'tab-input-chat-logo': 'chat_logo', 'tab-color-chat': 'chat_cor', 'tab-color-pendente': 'cor_pendente', 'tab-color-concluido': 'cor_concluido'
             };
 
             Object.keys(mapIds).forEach(id => {
@@ -912,7 +843,6 @@ window.carregarConfiguracoes = function() {
 window.toggleChat = function() {
     const win = document.getElementById('chat-window');
     const fab = document.getElementById('chat-fab');
-    const input = document.getElementById('chat-input');
     if (!win || !fab) return;
 
     const abrindo = (win.style.display === 'none' || win.style.display === '');
@@ -953,7 +883,7 @@ window.renderizarSugestoesChat = function() {
     const top4 = termosPopulares.slice(0, 4);
 
     quickRepliesDiv.innerHTML = top4.map(item =>
-        `<button type="button" onclick="window.sendQuickMsg('${item.label.replace(/'/g, "\\'")}')">
+        `<button type="button" onclick="window.sendQuickMsg('${item.label}')">
             <i class="${item.icon}"></i>
             <span>${item.label}</span>
         </button>`
@@ -971,15 +901,15 @@ window.sendChat = function() {
 window.addChatBubble = function(text, sender) { const chatArea = document.getElementById('chat-body'); if(!chatArea) return; const div = document.createElement('div'); div.className = `chat-msg ${sender}`; div.innerHTML = text; chatArea.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight; };
 window.handleChatFollowUp = function(resposta, btnElement) {
     if(btnElement && btnElement.parentElement) { btnElement.parentElement.innerHTML = `<span style="color: var(--text-muted); font-size: 11px;">Opção selecionada: ${resposta === 'sim' ? 'Sim' : 'Não'}</span>`; }
-    if (resposta === 'sim') { window.addChatBubble("Pode escrever aqui abaixo que estou aqui para te ajudar! ", 'bot'); } else {
-        const frasesMotivacionais = ["Ter uma inteligência artificial para ajudar é ótimo, mas lembre-se: conte sempre com o seu colega ao lado. O trabalho em equipe nos leva mais longe! ", "Que você tenha um excelente turno! A tecnologia agiliza, mas é o calor humano da nossa equipe que faz a clínica brilhar. ", "Agradeço a consulta! Juntos somos mais fortes. O sucesso é a soma do esforço de toda a equipe. Um abraço virtual! "];
+    if (resposta === 'sim') { window.addChatBubble("Pode escrever aqui abaixo que estou aqui para te ajudar!", 'bot'); } else {
+        const frasesMotivacionais = ["Conte sempre com o seu colega ao lado. O trabalho em equipe nos leva mais longe!", "A tecnologia agiliza, mas é o calor humano da equipe que faz a clínica brilhar.", "Agradeço a consulta! Juntos somos mais fortes."];
         window.addChatBubble(frasesMotivacionais[Math.floor(Math.random() * frasesMotivacionais.length)], 'bot');
     }
 };
 
 window.processarLogicaDoBot = function(mensagemUser) {
     const texto = mensagemUser.toLowerCase().trim();
-    if (texto === 'oi' || texto === 'ol' || texto === 'ola' || texto.includes('bom dia') || texto.includes('boa tarde')) return "Ol! Sou a assistente virtual da clínica. Como posso ajudar? Busque por especialidades, médicos ou exames!";
+    if (texto === 'oi' || texto === 'ola' || texto.includes('bom dia') || texto.includes('boa tarde')) return "Olá! Sou a assistente virtual da clínica. Como posso ajudar?";
     let resultadosUnicos = {};
     ['corpo-clinico', 'ultrassom', 'exames-imagem', 'consultas', 'convenios', 'ramais', 'pacotes', 'institutos', 'boletins'].forEach(colecao => {
         const itens = window.todosOsDadosDoSistema[colecao] || window.dadosGlobaisAbas[colecao] || [];
@@ -987,20 +917,19 @@ window.processarLogicaDoBot = function(mensagemUser) {
             let textoItem = ""; Object.entries(item.data).forEach(([key, val]) => { textoItem += `${key} ${val} `; }); textoItem = textoItem.toLowerCase();
             let matches = false;
             if (texto === 'unimed' || texto === 'convênio' || texto === 'convenio') {
-                if ((item.data['Unimed'] && item.data['Unimed'].toString().toLowerCase() !== 'não' && item.data['Unimed'].toString().toLowerCase() !== 'nao') || (item.data['Convênios Aceitos'] && String(item.data['Convênios Aceitos']).toLowerCase().includes('unimed')) || (item.data['Convênios'] && String(item.data['Convênios']).toLowerCase().includes('unimed')) || colecao === 'convenios') matches = true;
+                if ((item.data['Unimed'] && item.data['Unimed'].toString().toLowerCase() !== 'não') || (item.data['Convênios Aceitos'] && String(item.data['Convênios Aceitos']).toLowerCase().includes('unimed')) || colecao === 'convenios') matches = true;
             } else if (textoItem.includes(texto)) { matches = true; }
 
-            if(colecao === 'boletins' && (String(item.data['Título do Informativo'] || '').toLowerCase().includes(texto) || String(item.data['Motivo'] || '').toLowerCase().includes(texto) || String(item.data['Para quais Setores?'] || '').toLowerCase().includes(texto))) matches = true;
+            if(colecao === 'boletins' && (String(item.data['Título do Informativo'] || '').toLowerCase().includes(texto) || String(item.data['Motivo'] || '').toLowerCase().includes(texto))) matches = true;
 
             if (matches) {
                 const config = configuracaoAbas[colecao];
                 let tituloItem = item.data[config.campos[0]] || 'Detalhes'; let detalhesStr = '';
                 if(colecao === 'boletins') tituloItem = `Boletim: ${item.data['Título do Informativo']}`;
                 
-                //  A MÁGICA: O BOT PROCURA QUEM FAZ O EXAME 
                 let profissionais = item.data['Profissionais que realizam (Opcional)'];
                 if(profissionais && profissionais.trim() !== '') {
-                    detalhesStr += `<div style="background:#eefbf4; padding:8px; border-radius:8px; margin-bottom:8px; border-left:3px solid #38a169;"><b>️ Quem realiza:</b> ${profissionais}</div>`;
+                    detalhesStr += `<div style="background:#eefbf4; padding:8px; border-radius:8px; margin-bottom:8px; border-left:3px solid #38a169;"><b>🧑‍⚕️ Quem realiza:</b> ${profissionais}</div>`;
                 }
 
                 let cont = 0;
@@ -1029,14 +958,15 @@ window.processarLogicaDoBot = function(mensagemUser) {
         let respostaFormatada = `Encontrei isso no sistema para <b>"${mensagemUser}"</b>:<br><br>`;
         const limite = resultadosEncontrados.slice(0, 3); respostaFormatada += limite.join('');
         if (resultadosEncontrados.length > 3) { respostaFormatada += `<div style="text-align:center; font-size:11px; color:var(--text-muted); margin-top:5px;">+${resultadosEncontrados.length - 3} resultados ocultos.</div><br>`; }
-        const dicas = ["Dica: Se o paciente precisar de exames, pesquise o nome do exame que eu te digo qual médico faz! ", "Você também pode pesquisar por Convênios para ver as regras de atendimento!", "Na dúvida? Pesquise pelo setor e eu te mostro os ramais."];
+        const dicas = ["Se o paciente precisar de exames, pesquise o nome do exame!", "Você também pode pesquisar por Convênios para ver as regras de atendimento!", "Na dúvida? Pesquise pelo setor e eu te mostro os ramais."];
         respostaFormatada += `<div style="background: #e2e8f0; padding: 10px; border-radius: 8px; font-size: 11px; margin-top: 10px; border-left: 3px solid var(--primary-color);"> <b>Dica:</b> ${dicas[Math.floor(Math.random() * dicas.length)]}</div>`;
         return respostaFormatada;
     }
     return "Desculpe, não localizei nenhuma informação no sistema sobre isso. <br><br>Tente pesquisar por uma palavra-chave mais simples, como o nome de um exame ou especialidade!";
 };
-    // ==========================================
-// 6. LGICA DA JORNADA DE APRENDIZADO E CORREO ADMIN
+
+// ==========================================
+// 6. LÓGICA DA JORNADA DE APRENDIZADO E CORREÇÃO ADMIN
 // ==========================================
 if (!document.getElementById('modal-resposta-aluno')) {
     const m = document.createElement('div'); m.id = 'modal-resposta-aluno'; m.className = 'modal-overlay'; m.style.display = 'none'; m.style.zIndex = '10001';
@@ -1056,7 +986,6 @@ if (!document.getElementById('modal-feedback-aluno')) {
     document.body.appendChild(fb);
 }
 
-
 window.abrirListaLeituras = function(docId, colecao) {
     const modal = document.getElementById('modal-leituras');
     const titulo = document.getElementById('modal-leitura-titulo');
@@ -1073,8 +1002,7 @@ window.abrirListaLeituras = function(docId, colecao) {
     const renderEmpty = (texto) => `<div style="padding:12px; border:1px dashed var(--border-color); border-radius:12px; color:var(--text-muted); background:#f8fafc;">${texto}</div>`;
     const cardBase = (conteudo, cor='#cbd5e1') => `<div style="padding:12px; border-radius:12px; background:#fff; border-left:4px solid ${cor}; margin-bottom:10px; box-shadow:var(--shadow-soft);">${conteudo}</div>`;
 
-    areaOk.innerHTML = '';
-    areaPend.innerHTML = '';
+    areaOk.innerHTML = ''; areaPend.innerHTML = '';
 
     if(colecao === 'treinamentos') {
         titulo.textContent = `Respostas da atividade: ${data['Título da Atividade'] || 'Treinamento'}`;
@@ -1089,15 +1017,9 @@ window.abrirListaLeituras = function(docId, colecao) {
             const btnCorrigir = isAdmin ? `<button onclick="window.abrirCorrecaoAdmin('${docId}', '${nomeEscapado}')" class="btn-hover color-8" style="height:32px; font-size:11px; padding:0 14px; margin-top:10px;"><i class="ri-edit-2-line"></i> ${resp.nota !== '' ? 'Revisar correção' : 'Corrigir resposta'}</button>` : '';
             areaOk.innerHTML += cardBase(`
                 <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;">
-                    <div>
-                        <strong style="display:block; color:var(--text-main);">${window.escapeHTML(resp.nome || 'Colaborador')}</strong>
-                        <span style="font-size:12px; color:var(--text-muted);">Enviado em: ${window.escapeHTML(resp.data || '-')}</span>
-                    </div>
-                    ${nota}
-                </div>
+                    <div><strong style="display:block; color:var(--text-main);">${window.escapeHTML(resp.nome || 'Colaborador')}</strong><span style="font-size:12px; color:var(--text-muted);">Enviado em: ${window.escapeHTML(resp.data || '-')}</span></div>${nota}</div>
                 <div style="margin-top:10px; font-size:12px; color:var(--text-muted);">${(resp.respostas || []).length} resposta(s) enviada(s).</div>
-                ${btnCorrigir}
-            `, '#38a169');
+                ${btnCorrigir}`, '#38a169');
         });
 
         if(!respostas.length) areaOk.innerHTML = renderEmpty('Nenhuma resposta enviada ainda.');
@@ -1105,11 +1027,9 @@ window.abrirListaLeituras = function(docId, colecao) {
         const faltantes = publico.filter(nome => !respondidos.has(nome));
         areaPend.innerHTML = faltantes.length
             ? faltantes.map(nome => cardBase(`<strong style="display:block; color:var(--text-main);">${window.escapeHTML(nome)}</strong><span style="font-size:12px; color:var(--text-muted);">Ainda não enviou a atividade.</span>`, '#e53e3e')).join('')
-            : renderEmpty('Todos os colaboradores do público-alvo j responderam.');
+            : renderEmpty('Todos os colaboradores do público-alvo já responderam.');
     } else {
-        const publico = colecao === 'boletins-privados'
-            ? [String(data['Para qual Colaborador?'] || '').trim()].filter(Boolean)
-            : window.obterPublicoAlvo(data['Para quais Setores?']);
+        const publico = colecao === 'boletins-privados' ? [String(data['Para qual Colaborador?'] || '').trim()].filter(Boolean) : window.obterPublicoAlvo(data['Para quais Setores?']);
         titulo.textContent = `${colecao === 'boletins-privados' ? 'Leitura do informativo direto' : 'Leitura do boletim'}: ${data['Título do Documento'] || data['Título do Informativo'] || 'Documento'}`;
         const leituras = (data.leituras || []).filter(Boolean);
         const lidosMap = new Map();
@@ -1146,7 +1066,7 @@ window.renderizarTrilhaAluno = function() {
         return setorAlvo.includes('Geral') || setorAlvo.includes(setorAluno);
     });
 
-    if(treinamentosAluno.length === 0) { grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:var(--text-muted); background: white; padding: 20px; border-radius: 10px;">Sem treinamentos pendentes. Parabéns! </p>'; }
+    if(treinamentosAluno.length === 0) { grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:var(--text-muted); background: white; padding: 20px; border-radius: 10px;">Sem treinamentos pendentes. Parabéns! 🚀</p>'; }
 
     treinamentosAluno.forEach(item => {
         const d = item.data; const docId = item.id;
@@ -1182,10 +1102,10 @@ window.renderizarTrilhaAluno = function() {
                 btnAcao += `<button onclick="window.concluirTreinamento('${docId}')" class="btn-hover color-11" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; background: #38a169; color:white; border:none;"><i class="ri-check-double-line"></i> Marcar como LIDO</button>`;
             }
         } else if (precisaResponder && minhaResposta && minhaResposta.nota !== "") {
-            btnAcao += `<button onclick="window.verFeedback('${minhaResposta.nota}', \`${(minhaResposta.feedback || 'Sem comentrios.').replace(/'/g, "&apos;")}\`)" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-top:8px;"><i class="ri-message-3-line"></i> Ver Correção</button>`;
+            btnAcao += `<button onclick="window.verFeedback('${minhaResposta.nota}', \`${(minhaResposta.feedback || 'Sem comentários.').replace(/'/g, "&apos;")}\`)" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-top:8px;"><i class="ri-message-3-line"></i> Ver Correção</button>`;
         }
 
-        grid.innerHTML += `<div class="card" style="border: 2px solid ${corStatus}; display:flex; flex-direction:column; background: white; border-radius: 10px; padding: 15px;"><div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--primary-color);"><i class="ri-book-open-line"></i> MDULO: ${d['Pasta / Módulo']} | TIPO: ${tipo}</div><div style="font-size:16px; font-weight:600; margin-bottom:10px; line-height: 1.2;">${d['Título da Atividade']}</div><div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; flex:1;"><b>Pontos Base:</b> <span style="color:#e75516; font-weight:700;">+${pontosItem} XP</span><br><b>Status:</b> <span style="color:${corStatus}; font-weight:600;"><i class="${iconeStatus}"></i> ${statusTexto}</span></div>${btnAcao}</div>`;
+        grid.innerHTML += `<div class="card" style="border: 2px solid ${corStatus}; display:flex; flex-direction:column; background: white; border-radius: 10px; padding: 15px;"><div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--primary-color);"><i class="ri-book-open-line"></i> MÓDULO: ${d['Pasta / Módulo']} | TIPO: ${tipo}</div><div style="font-size:16px; font-weight:600; margin-bottom:10px; line-height: 1.2;">${d['Título da Atividade']}</div><div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; flex:1;"><b>Pontos Base:</b> <span style="color:#e75516; font-weight:700;">+${pontosItem} XP</span><br><b>Status:</b> <span style="color:${corStatus}; font-weight:600;"><i class="${iconeStatus}"></i> ${statusTexto}</span></div>${btnAcao}</div>`;
     });
 
     const ptsEl = document.getElementById('aluno-pontos'); const pendEl = document.getElementById('aluno-tarefas-pendentes');
@@ -1199,7 +1119,7 @@ window.concluirTreinamento = async function(docId) {
     const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'];
     if(!confirm(`Você realmente assistiu/leu este material, ${nomeAluno}?\nAo confirmar, os pontos serão computados na sua jornada.`)) return;
     const registro = `${nomeAluno} (Concluído em: ${new Date().toLocaleString('pt-BR')})`;
-    try { await window.updateDoc(window.doc(window.db, 'treinamentos', docId), { leituras: window.arrayUnion(registro) }); alert("Concluído com sucesso! +XP "); } catch(e) { alert("Erro ao salvar: " + e.message); }
+    try { await window.updateDoc(window.doc(window.db, 'treinamentos', docId), { leituras: window.arrayUnion(registro) }); alert("Concluído com sucesso! +XP 🚀"); } catch(e) { alert("Erro ao salvar: " + e.message); }
 };
 
 window.abrirModalResposta = function(docId, configJSON) {
@@ -1243,7 +1163,7 @@ window.enviarRespostaTreinamento = async function() {
     const respostaObj = { nome: nomeAluno, data: new Date().toLocaleString('pt-BR'), respostas: respostasFinais, nota: "", feedback: "" };
     try {
         await window.updateDoc(window.doc(window.db, 'treinamentos', docId), { respostas_alunos: window.arrayUnion(JSON.stringify(respostaObj)) });
-        alert("Sua resposta foi enviada para correção do supervisor! ");
+        alert("Sua resposta foi enviada para correção do supervisor! 🎉");
         document.getElementById('modal-resposta-aluno').style.display = 'none';
         window.renderizarTrilhaAluno(); 
     } catch(e) { alert("Erro ao enviar resposta: " + e.message); }
@@ -1295,7 +1215,7 @@ window.salvarCorrecaoAdmin = async function() {
         await window.updateDoc(ref, { respostas_alunos: window.arrayUnion(respStrNova) });
         alert("Correção salva com sucesso!");
         document.getElementById('modal-correcao-admin').style.display = 'none';
-        document.getElementById('modal-leituras').style.display = 'flex'; // Volta pra lista
+        document.getElementById('modal-leituras').style.display = 'flex';
     } catch(e) { alert("Erro ao salvar: "+e.message); }
 };
 
@@ -1314,7 +1234,7 @@ window.entrarPortalAluno = function() {
 };
 
 // ==========================================
-// MDULO: RH & PEOPLE ANALYTICS
+// MÓDULO: RH & PEOPLE ANALYTICS
 // ==========================================
 window.escutarRH = function() {
     if(!isAdmin) return;
@@ -1581,7 +1501,7 @@ window.salvarPesquisaRH = async function() {
     if(alvoTipo !== 'Geral' && !alvoValor) return alert('Selecione o alvo da pesquisa.');
 
     const perguntas = Array.from(blocos).map(b => ({ tipo: b.querySelector('.rh-p-tipo').value, texto: b.querySelector('.rh-p-texto').value.trim() })).filter(item => item.texto);
-    if(!perguntas.length) return alert('Adicione pelo menos uma pergunta vlida.');
+    if(!perguntas.length) return alert('Adicione pelo menos uma pergunta válida.');
 
     const payload = {
         titulo, categoria, perguntas,
@@ -1658,20 +1578,14 @@ window.renderizarPesquisasAluno = function() {
 
 window.responderPesquisaRH = function(pesquisaId) {
     const p = (window.todosPesquisasRH || []).find(x => x.id === pesquisaId);
-    if (!p || !p.data) {
-        alert('Pesquisa não encontrada.');
-        return;
-    }
+    if (!p || !p.data) { return; }
 
     const tituloEl = document.getElementById('rh-resp-titulo');
     const idEl = document.getElementById('rh-resp-id');
     const areaEl = document.getElementById('rh-resp-area');
     const modalEl = document.getElementById('modal-responder-pesquisa');
 
-    if (!tituloEl || !idEl || !areaEl || !modalEl) {
-        alert('Estrutura do modal de respostas não encontrada.');
-        return;
-    }
+    if (!tituloEl || !idEl || !areaEl || !modalEl) { return; }
 
     tituloEl.textContent = p.data.titulo || 'Responder Pesquisa';
     idEl.value = pesquisaId;
@@ -1705,10 +1619,7 @@ window.responderPesquisaRH = function(pesquisaId) {
             html += `</div>`;
         } else {
             html += `
-                <textarea
-                    class="form-input resp-q-val"
-                    style="height:90px; resize:vertical; margin:0;"
-                    placeholder="Sua resposta franca e sincera."></textarea>
+                <textarea class="form-input resp-q-val" style="height:90px; resize:vertical; margin:0;" placeholder="Sua resposta franca e sincera."></textarea>
             `;
         }
 
@@ -1721,28 +1632,15 @@ window.responderPesquisaRH = function(pesquisaId) {
 
 window.enviarRespostaRH = async function() {
     try {
-        if (!window.alunoLogado) {
-            alert('Colaborador não identificado.');
-            return;
-        }
+        if (!window.alunoLogado) { return; }
 
         const pesquisaId = document.getElementById('rh-resp-id')?.value?.trim();
-        if (!pesquisaId) {
-            alert('Pesquisa não identificada.');
-            return;
-        }
+        if (!pesquisaId) { return; }
 
-        const nomeAluno =
-            window.alunoLogado['Nome Completo do Colaborador'] ||
-            window.alunoLogado.nome ||
-            window.alunoLogado.Nome ||
-            'Colaborador';
+        const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'] || window.alunoLogado.nome || window.alunoLogado.Nome || 'Colaborador';
 
         const blocos = Array.from(document.querySelectorAll('#rh-resp-area .rh-resp-bloco'));
-        if (!blocos.length) {
-            alert('Nenhuma pergunta encontrada para envio.');
-            return;
-        }
+        if (!blocos.length) { return; }
 
         const respostas = [];
         let ok = true;
@@ -1758,29 +1656,16 @@ window.enviarRespostaRH = async function() {
 
             if (tipo === 'escala') {
                 const checked = b.querySelector('input[type="radio"]:checked');
-                if (!checked) {
-                    ok = false;
-                    return;
-                }
+                if (!checked) { ok = false; return; }
                 val = checked.value;
             } else {
                 const textarea = b.querySelector('textarea');
-                if (!textarea) {
-                    ok = false;
-                    return;
-                }
+                if (!textarea) { ok = false; return; }
                 val = textarea.value.trim();
-                if (!val) {
-                    ok = false;
-                    return;
-                }
+                if (!val) { ok = false; return; }
             }
 
-            respostas.push({
-                pergunta: textoP,
-                resposta: val,
-                tipo
-            });
+            respostas.push({ pergunta: textoP, resposta: val, tipo });
         });
 
         if (!ok || respostas.length !== blocos.length) {
@@ -1788,42 +1673,19 @@ window.enviarRespostaRH = async function() {
             return;
         }
 
-        const antiga = (window.todosRespostasRH || []).find(
-            item =>
-                item?.data?.pesquisaId === pesquisaId &&
-                item?.data?.nome === nomeAluno
-        );
+        const antiga = (window.todosRespostasRH || []).find(item => item?.data?.pesquisaId === pesquisaId && item?.data?.nome === nomeAluno);
 
-        const payload = {
-            pesquisaId,
-            nome: nomeAluno,
-            respostas,
-            data: new Date().toISOString()
-        };
+        const payload = { pesquisaId, nome: nomeAluno, respostas, data: new Date().toISOString() };
 
-        if (antiga?.id) {
-            await window.updateDoc(
-                window.doc(window.db, 'rh-respostas-pesquisa', antiga.id),
-                payload
-            );
-        } else {
-            await window.addDoc(
-                window.collection(window.db, 'rh-respostas-pesquisa'),
-                payload
-            );
-        }
+        if (antiga?.id) { await window.updateDoc(window.doc(window.db, 'rh-respostas-pesquisa', antiga.id), payload); } 
+        else { await window.addDoc(window.collection(window.db, 'rh-respostas-pesquisa'), payload); }
 
         alert('Muito obrigado pelas suas respostas! Isso nos ajuda a crescer juntos.');
         const modal = document.getElementById('modal-responder-pesquisa');
         if (modal) modal.style.display = 'none';
 
-        if (typeof window.renderizarPesquisasAluno === 'function') {
-            window.renderizarPesquisasAluno();
-        }
-    } catch (e) {
-        console.error('Erro real ao enviar respostas RH:', e);
-        alert('Erro ao enviar: ' + (e?.message || 'falha desconhecida'));
-    }
+        if (typeof window.renderizarPesquisasAluno === 'function') { window.renderizarPesquisasAluno(); }
+    } catch (e) { alert('Erro ao enviar: ' + (e?.message || 'falha desconhecida')); }
 };
 
 window.verResultadosPesquisaRH = function(pesquisaId) {
@@ -1851,9 +1713,7 @@ window.verResultadosPesquisaRH = function(pesquisaId) {
             if(resps.length === 0) html += `<span style="color:var(--text-muted);">Nenhuma resposta ainda.</span>`;
             resps.forEach(r => {
                 const ans = r.data.respostas.find(x => x.pergunta === q.texto);
-                if(ans && ans.resposta) {
-                    html += `<div style="margin-bottom:10px; border-bottom:1px dashed #cbd5e1; padding-bottom:8px;"><b>${r.data.nome}:</b> <span style="color:var(--text-muted);">${ans.resposta}</span></div>`;
-                }
+                if(ans && ans.resposta) { html += `<div style="margin-bottom:10px; border-bottom:1px dashed #cbd5e1; padding-bottom:8px;"><b>${r.data.nome}:</b> <span style="color:var(--text-muted);">${ans.resposta}</span></div>`; }
             });
             html += `</div>`;
         }
@@ -1863,7 +1723,6 @@ window.verResultadosPesquisaRH = function(pesquisaId) {
     document.getElementById('rh-resultados-area').innerHTML = html;
     document.getElementById('modal-ver-respostas-rh').style.display = 'flex';
 };
-
 
 window.abrirModalCriarPerfil = function(avaliacaoId = '') {
     const editId = document.getElementById('rh-perfil-edit-id');
@@ -2055,14 +1914,14 @@ window.renderizarGraficoPerfilProfissional = function(nome) {
     const mediaGeral = data.filter(v => v > 0).length ? (data.reduce((a,b)=>a+b,0) / data.filter(v => v > 0).length).toFixed(1) : '0.0';
     info.innerHTML = `
         <div class="rh-profile-summary-card"><span>Colaborador</span><strong>${window.escapeHTML(nome)}</strong><small>${window.escapeHTML(colaborador?.setor || 'Geral')}</small></div>
-        <div class="rh-profile-summary-card"><span>Avaliações Respondidas</span><strong>${resumo.totalAvaliacoes}</strong><small>coletas vlidas</small></div>
+        <div class="rh-profile-summary-card"><span>Avaliações Respondidas</span><strong>${resumo.totalAvaliacoes}</strong><small>coletas válidas</small></div>
         <div class="rh-profile-summary-card"><span>Média Global do Perfil</span><strong>${mediaGeral}</strong><small>escala 0 a 5</small></div>
         <div class="rh-profile-summary-card"><span>Qualidades / Skills</span><strong>${(resumo.medias['Qualidades'] || 0).toFixed(1)} / ${(resumo.medias['Skills'] || 0).toFixed(1)}</strong><small>forças-chave</small></div>
     `;
 };
 
 // ==========================================
-// 8. ATRIBUIO DE EVENTOS DE CLIQUES E INICIALIZAO
+// 8. ATRIBUIÇÃO DE EVENTOS DE CLIQUES E INICIALIZAÇÃO
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
     
@@ -2143,7 +2002,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     cor_pendente: corPend, cor_concluido: corConc, imagem_padrao_pastas: imgPastasTexto, chat_logo: chatLogoTexto, chat_cor: chatCorVal
                 }, { merge: true });
                 alert("Configurações salvas com sucesso!");
-            } catch(e) { console.error('Erro ao salvar configurações:', e); alert("Erro ao salvar configurações: " + e.message); }
+            } catch(e) { alert("Erro ao salvar configurações: " + e.message); }
             btnSalvarAjustes.innerHTML = 'Salvar Alterações';
         });
     }
@@ -2179,7 +2038,6 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
     const inputPesqAba = document.getElementById('input-pesquisa');
     if(inputPesqAba) {
         inputPesqAba.addEventListener('keyup', (e) => {
@@ -2192,7 +2050,6 @@ window.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-
 
     ['privado-lista-data-inicio', 'privado-lista-data-fim'].forEach(id => {
         const el = document.getElementById(id);
@@ -2232,7 +2089,6 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Garantia final de exposio das funes globais usadas no HTML
 window.efetuarLogin = window.efetuarLogin;
 window.safeParseJSON = window.safeParseJSON;
 window.aplicarImagemClimaHome = window.aplicarImagemClimaHome;
@@ -2247,172 +2103,6 @@ if ('serviceWorker' in navigator) {
         console.info('Novo service worker ativo.');
     });
 }
-window.abrirModalImpressao = function(tipo = 'boletins') {
-    const modal = document.getElementById('modal-imprimir-boletim');
-    const inputTipo = document.getElementById('print-boletim-id');
-
-    if (!modal) {
-        alert('Modal de impressão não encontrado.');
-        return;
-    }
-
-    if (inputTipo) inputTipo.value = tipo;
-    modal.style.display = 'flex';
-};
-
-window.gerarImpressaoBoletim = function() {
-    const incluirNome = document.getElementById('print-chk-nome')?.checked;
-    const incluirData = document.getElementById('print-chk-data')?.checked;
-    const incluirTema = document.getElementById('print-chk-tema')?.checked;
-    const incluirMotivo = document.getElementById('print-chk-motivo')?.checked;
-    const incluirPublicacao = document.getElementById('print-chk-publicacao')?.checked;
-
-    let boletins = Array.isArray(window.todosBoletinsData) ? [...window.todosBoletinsData] : [];
-
-    if (window.pastaBoletimAtual) {
-        boletins = boletins.filter(item => {
-            const setor = String(item?.data?.['Para quais Setores?'] || 'Geral');
-            return setor.includes(window.pastaBoletimAtual);
-        });
-    }
-
-    if (!boletins.length) {
-        alert('Não há dados de boletins carregados para gerar o relatório.');
-        return;
-    }
-
-    const linhas = [];
-
-    boletins.forEach(item => {
-        const data = item.data || {};
-        const leituras = Array.isArray(data.leituras) ? data.leituras : [];
-        const titulo = data['Título do Documento'] || data['Título do Informativo'] || 'Sem título';
-        const motivo = data['Motivo do Informativo'] || data['Motivo'] || '-';
-        const dataPublicacao = data['Data de Publicação'] || data['Publicado em'] || '-';
-
-        if (!leituras.length) {
-            linhas.push({
-                nome: 'Nenhuma assinatura registrada',
-                dataHora: '-',
-                tema: titulo,
-                motivo,
-                publicacao: dataPublicacao
-            });
-            return;
-        }
-
-        leituras.forEach(registro => {
-            const texto = String(registro || '').trim();
-
-            let nomeColaborador = texto;
-            let dataHora = '-';
-
-            const matchParenteses = texto.match(/^(.*?)\s*\((.*?)\)$/);
-            const matchHifen = texto.match(/^(.*?)\s*-\s*(\d{2}\/\d{2}\/\d{4}.*)$/);
-            if (matchParenteses) {
-                nomeColaborador = matchParenteses[1].trim();
-                dataHora = matchParenteses[2].trim();
-            } else if (matchHifen) {
-                nomeColaborador = matchHifen[1].trim();
-                dataHora = matchHifen[2].trim();
-            }
-
-            linhas.push({
-                nome: nomeColaborador || '-',
-                dataHora,
-                tema: titulo,
-                motivo,
-                publicacao: dataPublicacao
-            });
-        });
-    });
-
-    const ths = [];
-    if (incluirNome) ths.push('<th>Nome do Colaborador</th>');
-    if (incluirData) ths.push('<th>Data/Hora da Assinatura</th>');
-    if (incluirTema) ths.push('<th>Tema</th>');
-    if (incluirMotivo) ths.push('<th>Motivo</th>');
-    if (incluirPublicacao) ths.push('<th>Data de Publicação</th>');
-
-    const escape = (valor) => {
-        const texto = String(valor ?? '');
-        return texto
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#39;');
-    };
-
-    const trs = linhas.map(linha => {
-        const cols = [];
-        if (incluirNome) cols.push(`<td>${escape(linha.nome)}</td>`);
-        if (incluirData) cols.push(`<td>${escape(linha.dataHora)}</td>`);
-        if (incluirTema) cols.push(`<td>${escape(linha.tema)}</td>`);
-        if (incluirMotivo) cols.push(`<td>${escape(linha.motivo)}</td>`);
-        if (incluirPublicacao) cols.push(`<td>${escape(linha.publicacao)}</td>`);
-        return `<tr>${cols.join('')}</tr>`;
-    }).join('');
-
-    const totalColunas = Math.max(ths.length, 1);
-
-    const janela = window.open('', '_blank', 'width=1200,height=800');
-
-    if (!janela) {
-        alert('O navegador bloqueou a janela de impressão. Libere pop-ups para este site.');
-        return;
-    }
-
-    const html = `
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Relatório de Assinaturas</title>
-<style>
-    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2937; }
-    h1 { color: #8B252C; margin-bottom: 8px; }
-    p { margin: 0 0 18px; color: #6b7280; font-size: 14px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 14px; }
-    th, td { border: 1px solid #d1d5db; padding: 10px; text-align: left; font-size: 13px; vertical-align: top; }
-    th { background: #8B252C; color: white; }
-    tr:nth-child(even) td { background: #f9fafb; }
-    @media print {
-        @page { size: A4 portrait; margin: 12mm; }
-        body { margin: 0; }
-    }
-</style>
-</head>
-<body>
-    <h1>Relatório de Assinaturas</h1>
-    <p>Gerado em ${new Date().toLocaleString('pt-BR')}</p>
-    <table>
-        <thead>
-            <tr>${ths.join('')}</tr>
-        </thead>
-        <tbody>
-            ${trs || `<tr><td colspan="${totalColunas}">Nenhum registro encontrado.</td></tr>`}
-        </tbody>
-    </table>
-</body>
-</html>
-`;
-
-    janela.document.open();
-    janela.document.write(html);
-    janela.document.close();
-
-    setTimeout(() => {
-        janela.focus();
-        janela.print();
-    }, 500);
-
-    window.fecharModalImpressao();
-};
-window.fecharModalImpressao = function() {
-    const modal = document.getElementById('modal-imprimir-boletim');
-    if (modal) modal.style.display = 'none';
-};
 
 // ==========================================
 // JANELA FLUTUANTE (NAVEGADOR INTERNO)
