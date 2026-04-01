@@ -33,7 +33,7 @@ const configuracaoAbas = {
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { initializeFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCVphiwmF-SBFyYYkjV-QvTvSFIigzIsoc",
@@ -45,7 +45,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+const db = initializeFirestore(app, {});
 const auth = getAuth(app);
 
 window.db = db; window.updateDoc = updateDoc; window.doc = doc; window.arrayUnion = arrayUnion; window.arrayRemove = arrayRemove; window.addDoc = addDoc; window.collection = collection; window.deleteDoc = deleteDoc; window.onSnapshot = onSnapshot; window.setDoc = setDoc;
@@ -150,16 +150,16 @@ window.obterAvaliacoesPerfilDisponiveis = function(nomeColaborador = '', setorCo
 };
 
 let chartBoletinsInst = null; let chartPrivadosInst = null; let chartHomeInst = null; let chartPrivadosGeralInst = null;
-const APP_VERSION = '3.1.0';
+const APP_VERSION = '3.2.3';
 let loginEmAndamento = false;
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {
-            const registration = await navigator.serviceWorker.register(`./sw.js?v=${APP_VERSION}`);
-            if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const reg of regs) await reg.unregister();
         } catch (err) {
-            console.warn('SW não registrado:', err);
+            console.warn('Falha ao limpar service workers antigos:', err);
         }
     });
 }
@@ -218,7 +218,7 @@ const btnLogout = document.getElementById('btn-logout'); if(btnLogout) btnLogout
 onAuthStateChanged(auth, (user) => {
     const loginScreen = document.getElementById('login-screen'); const dashboardScreen = document.getElementById('dashboard-screen');
     const chatFab = document.getElementById('chat-fab');
-    if (user) {window.inicializarTooltipChatbot();
+    if (user) { if (typeof window.inicializarTooltipChatbot === 'function') window.inicializarTooltipChatbot();
         if(loginScreen) loginScreen.style.display = 'none'; if(dashboardScreen) dashboardScreen.style.display = 'flex';
         if(chatFab) chatFab.style.display = 'flex';
         isAdmin = (user.email === EMAIL_GESTAO);
