@@ -919,8 +919,6 @@ window.toggleChat = function() {
 };
 
 window.renderizarSugestoesChat = function() {
-    const quickRepliesDiv = document.querySelector('.chat-quick-replies');
-    if (!quickRepliesDiv) return;
     
     // (O resto da função continua igualzinho...)
 
