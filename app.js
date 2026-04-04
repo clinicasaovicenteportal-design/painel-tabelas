@@ -2009,6 +2009,47 @@ window.addEventListener('DOMContentLoaded', () => {
             const btnAssinar = e.target.closest('.btn-assinar');
 
             if (btnAssinar) {
+                const id = btnAssinar.getAttribute('data-id');
+                const colecao = btnAssinar.getAttribute('data-colecao');
+                if(id && colecao) await window.confirmarAssinaturaLeitura(id, colecao);
+                return;
+            }
+            
+            if (btnExcluir && isAdmin) {
+                const colecao = btnExcluir.getAttribute('data-colecao');
+                const id = btnExcluir.getAttribute('data-id');
+                
+                // Trava de segurança: Ignora botões de excluir de outras áreas (como RH)
+                if (!colecao || !id) return; 
+
+                if (confirm("Tem certeza que deseja excluir permanentemente este item?")) {
+                    try {
+                        await window.deleteDoc(window.doc(window.db, colecao, id));
+                    } catch(err) {
+                        alert("Erro ao tentar excluir: " + err.message);
+                    }
+                }
+                return;
+            }
+            
+            if (btnEditar && isAdmin) {
+                const colecao = btnEditar.getAttribute('data-colecao');
+                const id = btnEditar.getAttribute('data-id');
+                const info = btnEditar.getAttribute('data-info');
+                if (colecao && id && info) {
+                    window.abrirModal(colecao, id, window.safeParseJSON(info, {}));
+                }
+            }
+        });
+    }
+
+    const btnSalvar = document.getElementById('btn-salvar-dados');
+    if(btnSalvar) {
+            const btnExcluir = e.target.closest('.btn-delete');
+            const btnEditar = e.target.closest('.btn-edit');
+            const btnAssinar = e.target.closest('.btn-assinar');
+
+            if (btnAssinar) {
                 await window.confirmarAssinaturaLeitura(btnAssinar.dataset.id, btnAssinar.dataset.colecao);
                 return;
             }
