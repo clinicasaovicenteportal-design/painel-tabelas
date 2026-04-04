@@ -49,7 +49,7 @@ const auth = getAuth(app);
 
 window.db = db; window.updateDoc = updateDoc; window.doc = doc; window.arrayUnion = arrayUnion; window.arrayRemove = arrayRemove; window.addDoc = addDoc; window.collection = collection; window.deleteDoc = deleteDoc; window.onSnapshot = onSnapshot; window.setDoc = setDoc;
 
-let isAdmin = false; let abaAtual = 'home'; const EMAIL_GESTAO = "gestao@clinica.com";
+let isAdmin = false; let abaAtual = 'home'; let emailLogado = ""; 
 
 let listaColaboradoresGlobal = []; let locaisGlobais = []; let setoresGlobais = []; let especialidadesGlobais = []; let motivosGlobais = []; let imagemPadraoPastas = ""; 
 
@@ -86,7 +86,7 @@ window.confirmarAssinaturaLeitura = async function(docId, colecao) {
         const jaExiste = leituras.some(reg => window.extrairNomeRegistro(reg) === nomeLeitor);
         if (jaExiste) { alert('Essa leitura já foi registrada.'); return; }
 
-        const registro = `${nomeLeitor} (${new Date().toLocaleString('pt-BR')})`;
+        const registro = `${nomeLeitor} (${new Date().toLocaleString('pt-BR')} | Por: ${emailLogado})`;
         await window.updateDoc(window.doc(window.db, colecao, docId), { leituras: window.arrayUnion(registro) });
 
         if (colecao === 'boletins') window.renderizarListaBoletins();
@@ -94,6 +94,22 @@ window.confirmarAssinaturaLeitura = async function(docId, colecao) {
         if (typeof window.verificarUrgentesHome === 'function') window.verificarUrgentesHome();
         alert('Assinatura registrada com sucesso!');
     } catch (e) { alert('Erro ao registrar assinatura: ' + (e?.message || 'falha desconhecida')); }
+};
+
+window.removerAssinaturaLeitura = async function(docId, colecao, registroExato) {
+    if(!confirm('Tem certeza que deseja DESFAZER esta assinatura?')) return;
+    try {
+        await window.updateDoc(window.doc(window.db, colecao, docId), {
+            leituras: window.arrayRemove(registroExato)
+        });
+        alert('Assinatura desfeita com sucesso!');
+        window.abrirListaLeituras(docId, colecao);
+        if (colecao === 'boletins') window.renderizarListaBoletins();
+        if (colecao === 'boletins-privados') window.renderizarListaPrivados();
+        if (typeof window.verificarUrgentesHome === 'function') window.verificarUrgentesHome();
+    } catch (e) {
+        alert('Erro ao remover assinatura: ' + e.message);
+    }
 };
 
 window.filtrarPorDataPublicacao = function(lista = [], dtInicio = '', dtFim = '') {
@@ -143,7 +159,7 @@ window.obterAvaliacoesPerfilDisponiveis = function(nomeColaborador = '', setorCo
 };
 
 let chartBoletinsInst = null; let chartPrivadosInst = null; let chartHomeInst = null; let chartPrivadosGeralInst = null;
-const APP_VERSION = '3.2.7';
+const APP_VERSION = '3.3.0';
 let loginEmAndamento = false;
 
 if ('serviceWorker' in navigator) {
@@ -194,7 +210,10 @@ onAuthStateChanged(auth, (user) => {
     if (user) { 
         if(loginScreen) loginScreen.style.display = 'none'; if(dashboardScreen) dashboardScreen.style.display = 'flex';
         if(chatFab) chatFab.style.display = 'flex';
-        isAdmin = (user.email === EMAIL_GESTAO);
+        
+        emailLogado = user.email || "";
+        isAdmin = emailLogado.includes('@clinica');
+        
         const badge = document.getElementById('user-role-badge');
         if(badge) badge.textContent = isAdmin ? "Gestão Administrador" : "Acesso Geral";
         if(isAdmin) { if(badge) badge.classList.add('admin'); document.querySelectorAll('.admin-only').forEach(el => el.style.display = ''); } 
@@ -204,6 +223,7 @@ onAuthStateChanged(auth, (user) => {
         if(window.escutarRH) window.escutarRH();
         if (window.atualizarBottomQuickbar) window.atualizarBottomQuickbar();
     } else {
+        emailLogado = ""; isAdmin = false;
         if(loginScreen) loginScreen.style.display = 'flex'; if(dashboardScreen) dashboardScreen.style.display = 'none';
         if(chatFab) chatFab.style.display = 'none';
         const chatWindow = document.getElementById('chat-window'); const floatingWindow = document.getElementById('floating-window-persistent');
@@ -519,11 +539,9 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
             htmlCampos += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px; color:var(--text-muted);">Quais médicos realizam isso?</label>`;
             htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:80px; resize:vertical;" placeholder="Ex: Dr. João, Dra. Maria...">${valorAntigo}</textarea>`;
         }
-        // ===== MÁGICA AQUI: MUDAMOS ESSES CAMPOS PARA TEXTAREA =====
         else if (campo.includes('Descrição') || campo.includes('Observação') || campo.includes('Observações') || campo.includes('O que está incluso') || campo.includes('Informacao') || campo.includes('Informações')) {
             htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:100px; resize:vertical;" placeholder="${campo}">${valorAntigo}</textarea>`;
         }
-        // ============================================================
         else { htmlCampos += `<input type="text" id="input-${campo}" placeholder="${campo}" value="${valorAntigo}" class="form-input">`; }
     });
     
@@ -627,10 +645,7 @@ window.renderizarListaGenerica = function(colecao) {
     grid.innerHTML = ''; 
     const nomePasta = window[`pasta_${colecao}_Atual`]; 
     const itensExibir = (window.dadosGlobaisAbas[colecao] || []).filter(i => (i.data[configuracaoAbas[colecao].campoAgrupador] || 'Geral') === nomePasta); 
-    
-    // MÁGICA AQUI: Ordenação alfabética inteligente para os cards DENTRO da pasta
     itensExibir.sort((a, b) => String(a.data[configuracaoAbas[colecao].campos[0]] || '').toLowerCase().localeCompare(String(b.data[configuracaoAbas[colecao].campos[0]] || '').toLowerCase()));
-
     itensExibir.forEach(item => { grid.innerHTML += window.gerarHTMLCard(colecao, item.id, item.data); }); 
 };
 
@@ -639,10 +654,7 @@ window.renderizarPastasGenericas = function(colecao) {
     const config = configuracaoAbas[colecao]; const dadosAtuais = window.dadosGlobaisAbas[colecao] || [];
     if (dadosAtuais.length === 0) { grid.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">Nenhuma pasta/módulo encontrado. Clique em "Novo" para criar.</p>'; return; }
     const obterNomePasta = (item) => { const bruto = item?.data?.[config.campoAgrupador] || item?.data?.Pacotes || item?.data?.['Pasta / Módulo'] || item?.data?.Especialidade || item?.data?.Convênio || item?.data?.Exame || item?.data?.Tipo || item?.data?.['Categoria do Exame'] || item?.data?.['Número da Tabela'] || 'Geral'; return String(bruto || 'Geral').trim() || 'Geral'; };
-    
-    // MÁGICA AQUI: Ordenação alfabética inteligente para as PASTAS
     const pastasUnicas = [...new Set(dadosAtuais.map(obterNomePasta))].sort((a,b)=>String(a).toLowerCase().localeCompare(String(b).toLowerCase())); 
-    
     pastasUnicas.forEach(nomePasta => {
         const itensPasta = dadosAtuais.filter(i => obterNomePasta(i) === nomePasta);
         const qtd = itensPasta.length;
@@ -1100,7 +1112,11 @@ window.abrirListaLeituras = function(docId, colecao) {
         const faltantes = publico.filter(nome => !lidosMap.has(nome));
 
         areaOk.innerHTML = lidos.length
-            ? lidos.map(nome => cardBase(`<strong style="display:block; color:var(--text-main);">${window.escapeHTML(nome)}</strong><span style="font-size:12px; color:var(--text-muted);">${window.escapeHTML(lidosMap.get(nome) || '')}</span>`, '#38a169')).join('')
+            ? lidos.map(nome => {
+                const registroCompleto = lidosMap.get(nome) || '';
+                const btnDesfazer = isAdmin ? `<button onclick="window.removerAssinaturaLeitura('${docId}', '${colecao}', '${registroCompleto.replace(/'/g, "\\'")}')" style="margin-top:5px; background:none; border:none; color:#e53e3e; cursor:pointer; font-size:11px; text-decoration:underline;"><i class="ri-arrow-go-back-line"></i> Desfazer assinatura</button>` : '';
+                return cardBase(`<strong style="display:block; color:var(--text-main);">${window.escapeHTML(nome)}</strong><span style="font-size:12px; color:var(--text-muted);">${window.escapeHTML(registroCompleto)}</span><br>${btnDesfazer}`, '#38a169');
+            }).join('')
             : renderEmpty('Nenhuma leitura registrada até o momento.');
 
         areaPend.innerHTML = faltantes.length
@@ -1157,13 +1173,12 @@ window.renderizarTrilhaAluno = function() {
 
         if(!jaFez) {
             if(precisaResponder) {
-                const confJSON = (d['Configuração da Avaliação'] || '[]').replace(/'/g, "&apos;").replace(/"/g, "&quot;");
-                btnAcao += `<button onclick="window.abrirModalResposta('${docId}', '${confJSON}')" class="btn-hover color-11" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; background: #3182ce; color:white; border:none;"><i class="ri-pencil-fill"></i> Responder Atividade</button>`;
+                btnAcao += `<button onclick="window.abrirModalResposta('${docId}')" class="btn-hover color-11" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; background: #3182ce; color:white; border:none;"><i class="ri-pencil-fill"></i> Responder Atividade</button>`;
             } else {
                 btnAcao += `<button onclick="window.concluirTreinamento('${docId}')" class="btn-hover color-11" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; background: #38a169; color:white; border:none;"><i class="ri-check-double-line"></i> Marcar como LIDO</button>`;
             }
         } else if (precisaResponder && minhaResposta && minhaResposta.nota !== "") {
-            btnAcao += `<button onclick="window.verFeedback('${minhaResposta.nota}', \`${(minhaResposta.feedback || 'Sem comentrios.').replace(/'/g, "&apos;")}\`)" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-top:8px;"><i class="ri-message-3-line"></i> Ver Correção</button>`;
+            btnAcao += `<button onclick="window.verFeedback('${minhaResposta.nota}', \`${(minhaResposta.feedback || 'Sem comentários.').replace(/'/g, "&apos;")}\`)" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-top:8px;"><i class="ri-message-3-line"></i> Ver Correção</button>`;
         }
 
         grid.innerHTML += `<div class="card" style="border: 2px solid ${corStatus}; display:flex; flex-direction:column; background: white; border-radius: 10px; padding: 15px;"><div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--primary-color);"><i class="ri-book-open-line"></i> MÓDULO: ${d['Pasta / Módulo']} | TIPO: ${tipo}</div><div style="font-size:16px; font-weight:600; margin-bottom:10px; line-height: 1.2;">${d['Título da Atividade']}</div><div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; flex:1;"><b>Pontos Base:</b> <span style="color:#e75516; font-weight:700;">+${pontosItem} XP</span><br><b>Status:</b> <span style="color:${corStatus}; font-weight:600;"><i class="${iconeStatus}"></i> ${statusTexto}</span></div>${btnAcao}</div>`;
@@ -1182,12 +1197,17 @@ window.concluirTreinamento = async function(docId) {
     const registro = `${nomeAluno} (Concluído em: ${new Date().toLocaleString('pt-BR')})`;
     try { await window.updateDoc(window.doc(window.db, 'treinamentos', docId), { leituras: window.arrayUnion(registro) }); alert("Concluído com sucesso! +XP "); } catch(e) { alert("Erro ao salvar: " + e.message); }
 };
-
-window.abrirModalResposta = function(docId, configJSON) {
+window.abrirModalResposta = function(docId) {
     document.getElementById('resposta-docid').value = docId;
     const area = document.getElementById('area-perguntas-dinamicas'); area.innerHTML = '';
+    
+    const item = window.todosTreinamentosData.find(i => i.id === docId);
+    if(!item) { area.innerHTML = '<p>Treinamento não encontrado.</p>'; return; }
+    
+    const configJSON = item.data['Configuração da Avaliação'] || '[]';
+    
     try {
-        const jsonStr = String(configJSON).replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+        const jsonStr = typeof configJSON === 'string' ? configJSON : JSON.stringify(configJSON);
         const perguntas = window.safeParseJSON(jsonStr, []);
         perguntas.forEach((q, idx) => {
             let html = `<div class="pergunta-aluno-bloco" style="margin-bottom:15px; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">`;
@@ -1276,7 +1296,7 @@ window.salvarCorrecaoAdmin = async function() {
         await window.updateDoc(ref, { respostas_alunos: window.arrayUnion(respStrNova) });
         alert("Correção salva com sucesso!");
         document.getElementById('modal-correcao-admin').style.display = 'none';
-        document.getElementById('modal-leituras').style.display = 'flex'; // Volta pra lista
+        document.getElementById('modal-leituras').style.display = 'flex'; 
     } catch(e) { alert("Erro ao salvar: "+e.message); }
 };
 
@@ -2371,3 +2391,28 @@ window.atualizarBottomQuickbar = function() {
   const bar = document.getElementById('colaboradores-quickbar');
   if (bar) bar.style.display = 'none';
 };
+
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal-overlay')) {
+        event.target.style.display = 'none';
+        if (event.target.id === 'modal-media') {
+            const iframe = document.getElementById('iframe-media');
+            if(iframe) iframe.src = 'about:blank';
+        }
+    }
+};
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === "Escape") {
+        const modais = document.querySelectorAll('.modal-overlay');
+        modais.forEach(modal => {
+            if(modal.style.display === 'flex' || modal.style.display === 'block') {
+                modal.style.display = 'none';
+            }
+        });
+        const chatWindow = document.getElementById('chat-window');
+        if (chatWindow && chatWindow.style.display === 'flex') {
+            window.toggleChat();
+        }
+    }
+});
