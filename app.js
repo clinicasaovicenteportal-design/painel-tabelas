@@ -2250,6 +2250,25 @@ window.gerarImpressaoBoletim = function() {
         const motivo = data['Motivo do Informativo'] || data['Motivo'] || '-';
         const dataPublicacao = data['Data de Publicação'] || data['Publicado em'] || '-';
 
+<div style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+    <div>
+        <label style="font-size: 12px; font-weight: 600;">Filtrar por Colaborador (Opcional):</label>
+        <select id="print-colaborador" class="form-input" style="width: 100%; margin-top: 5px;">
+            <option value="">Todos os Colaboradores</option>
+        </select>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <div style="flex: 1;">
+            <label style="font-size: 12px; font-weight: 600;">Data Início:</label>
+            <input type="date" id="print-data-inicio" class="form-input" style="width: 100%; margin-top: 5px;">
+        </div>
+        <div style="flex: 1;">
+            <label style="font-size: 12px; font-weight: 600;">Data Fim:</label>
+            <input type="date" id="print-data-fim" class="form-input" style="width: 100%; margin-top: 5px;">
+        </div>
+    </div>
+</div>
+        
         if (!leituras.length) {
             linhas.push({
                 nome: 'Nenhuma assinatura registrada',
