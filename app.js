@@ -2011,7 +2011,9 @@ window.addEventListener('DOMContentLoaded', () => {
             if (btnAssinar) {
                 const id = btnAssinar.getAttribute('data-id');
                 const colecao = btnAssinar.getAttribute('data-colecao');
-                if(id && colecao) await window.confirmarAssinaturaLeitura(id, colecao);
+                if (id && colecao) {
+                    await window.confirmarAssinaturaLeitura(id, colecao);
+                }
                 return;
             }
             
@@ -2019,7 +2021,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 const colecao = btnExcluir.getAttribute('data-colecao');
                 const id = btnExcluir.getAttribute('data-id');
                 
-                // Trava de segurança: Ignora botões de excluir de outras áreas (como RH)
+                // Trava de segurança: Ignora botões de excluir de outras áreas (como RH) para não dar erro
                 if (!colecao || !id) return; 
 
                 if (confirm("Tem certeza que deseja excluir permanentemente este item?")) {
@@ -2036,6 +2038,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 const colecao = btnEditar.getAttribute('data-colecao');
                 const id = btnEditar.getAttribute('data-id');
                 const info = btnEditar.getAttribute('data-info');
+                
                 if (colecao && id && info) {
                     window.abrirModal(colecao, id, window.safeParseJSON(info, {}));
                 }
