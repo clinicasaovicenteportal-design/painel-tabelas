@@ -2210,6 +2210,7 @@ window.fecharModalImpressao = function() {
 window.abrirModalImpressao = function(tipo = 'boletins') {
     const modal = document.getElementById('modal-imprimir-boletim');
     const inputTipo = document.getElementById('print-boletim-id');
+    const selectColab = document.getElementById('print-colaborador');
 
     if (!modal) {
         alert('Modal de impressão não encontrado.');
@@ -2217,6 +2218,13 @@ window.abrirModalImpressao = function(tipo = 'boletins') {
     }
 
     if (inputTipo) inputTipo.value = tipo;
+
+    // Popula a lista de colaboradores no formulário de impressão
+    if (selectColab) {
+        selectColab.innerHTML = '<option value="">Todos os Colaboradores</option>' + 
+            listaColaboradoresGlobal.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+    }
+
     modal.style.display = 'flex';
 };
 
@@ -2226,19 +2234,32 @@ window.gerarImpressaoBoletim = function() {
     const incluirTema = document.getElementById('print-chk-tema')?.checked;
     const incluirMotivo = document.getElementById('print-chk-motivo')?.checked;
     const incluirPublicacao = document.getElementById('print-chk-publicacao')?.checked;
+    
+    const tipo = document.getElementById('print-boletim-id')?.value || 'boletins';
+    
+    // Captura os novos filtros
+    const dataInicio = document.getElementById('print-data-inicio')?.value;
+    const dataFim = document.getElementById('print-data-fim')?.value;
+    const colabFiltro = document.getElementById('print-colaborador')?.value;
 
-    let boletins = Array.isArray(window.todosBoletinsData) ? [...window.todosBoletinsData] : [];
-
-    if (window.pastaBoletimAtual) {
-        boletins = boletins.filter(item => {
-            const setor = String(item?.data?.['Para quais Setores?'] || 'Geral');
-            return setor.includes(window.pastaBoletimAtual);
-        });
-    }
+    let boletins = tipo === 'boletins-privados' 
+        ? (Array.isArray(window.todosPrivadosData) ? [...window.todosPrivadosData] : [])
+        : (Array.isArray(window.todosBoletinsData) ? [...window.todosBoletinsData] : []);
 
     if (!boletins.length) {
-        alert('Não há dados de boletins carregados para gerar o relatório.');
+        alert('Não há dados carregados para gerar o relatório.');
         return;
+    }
+
+    // Filtra pelo período de publicação, se informado
+    if (dataInicio || dataFim) {
+        boletins = boletins.filter(item => {
+            const d = item.data['Data de Publicação'] || item.data['Publicado em'];
+            if (!d) return false;
+            if (dataInicio && d < dataInicio) return false;
+            if (dataFim && d > dataFim) return false;
+            return true;
+        });
     }
 
     const linhas = [];
@@ -2250,39 +2271,22 @@ window.gerarImpressaoBoletim = function() {
         const motivo = data['Motivo do Informativo'] || data['Motivo'] || '-';
         const dataPublicacao = data['Data de Publicação'] || data['Publicado em'] || '-';
 
-<div style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
-    <div>
-        <label style="font-size: 12px; font-weight: 600;">Filtrar por Colaborador (Opcional):</label>
-        <select id="print-colaborador" class="form-input" style="width: 100%; margin-top: 5px;">
-            <option value="">Todos os Colaboradores</option>
-        </select>
-    </div>
-    <div style="display: flex; gap: 10px;">
-        <div style="flex: 1;">
-            <label style="font-size: 12px; font-weight: 600;">Data Início:</label>
-            <input type="date" id="print-data-inicio" class="form-input" style="width: 100%; margin-top: 5px;">
-        </div>
-        <div style="flex: 1;">
-            <label style="font-size: 12px; font-weight: 600;">Data Fim:</label>
-            <input type="date" id="print-data-fim" class="form-input" style="width: 100%; margin-top: 5px;">
-        </div>
-    </div>
-</div>
-        
+        // Se for privado e não for para o colaborador selecionado no filtro, ignora o documento
+        if (tipo === 'boletins-privados' && colabFiltro) {
+            if (data['Para qual Colaborador?'] !== colabFiltro) return;
+        }
+
         if (!leituras.length) {
-            linhas.push({
-                nome: 'Nenhuma assinatura registrada',
-                dataHora: '-',
-                tema: titulo,
-                motivo,
-                publicacao: dataPublicacao
-            });
+            if (!colabFiltro) { // Só mostra documento vazio se não estiver procurando uma pessoa específica
+                linhas.push({
+                    nome: 'Nenhuma assinatura registrada', dataHora: '-', tema: titulo, motivo, publicacao: dataPublicacao
+                });
+            }
             return;
         }
 
         leituras.forEach(registro => {
             const texto = String(registro || '').trim();
-
             let nomeColaborador = texto;
             let dataHora = '-';
 
@@ -2296,6 +2300,9 @@ window.gerarImpressaoBoletim = function() {
                 dataHora = matchHifen[2].trim();
             }
 
+            // Se tem filtro de colaborador, pula as assinaturas que não são dele
+            if (colabFiltro && nomeColaborador !== colabFiltro) return;
+
             linhas.push({
                 nome: nomeColaborador || '-',
                 dataHora,
@@ -2306,6 +2313,11 @@ window.gerarImpressaoBoletim = function() {
         });
     });
 
+    if (linhas.length === 0) {
+        alert('Nenhuma assinatura encontrada para os filtros selecionados.');
+        return;
+    }
+
     const ths = [];
     if (incluirNome) ths.push('<th>Nome do Colaborador</th>');
     if (incluirData) ths.push('<th>Data/Hora da Assinatura</th>');
@@ -2313,15 +2325,7 @@ window.gerarImpressaoBoletim = function() {
     if (incluirMotivo) ths.push('<th>Motivo</th>');
     if (incluirPublicacao) ths.push('<th>Data de Publicação</th>');
 
-    const escape = (valor) => {
-        const texto = String(valor ?? '');
-        return texto
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#39;');
-    };
+    const escape = (valor) => String(valor ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 
     const trs = linhas.map(linha => {
         const cols = [];
@@ -2333,14 +2337,11 @@ window.gerarImpressaoBoletim = function() {
         return `<tr>${cols.join('')}</tr>`;
     }).join('');
 
-    const totalColunas = Math.max(ths.length, 1);
-
     const janela = window.open('', '_blank', 'width=1200,height=800');
+    if (!janela) { alert('O navegador bloqueou a janela de impressão. Libere pop-ups para este site.'); return; }
 
-    if (!janela) {
-        alert('O navegador bloqueou a janela de impressão. Libere pop-ups para este site.');
-        return;
-    }
+    const subtituloFiltro = colabFiltro ? `<p>Filtrado por Colaborador: <b>${colabFiltro}</b></p>` : '';
+    const periodoFiltro = (dataInicio || dataFim) ? `<p>Período: <b>${dataInicio ? dataInicio.split('-').reverse().join('/') : 'Início'} até ${dataFim ? dataFim.split('-').reverse().join('/') : 'Hoje'}</b></p>` : '';
 
     const html = `
 <!DOCTYPE html>
@@ -2351,45 +2352,31 @@ window.gerarImpressaoBoletim = function() {
 <style>
     body { font-family: Arial, sans-serif; margin: 24px; color: #1f2937; }
     h1 { color: #8B252C; margin-bottom: 8px; }
-    p { margin: 0 0 18px; color: #6b7280; font-size: 14px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+    p { margin: 0 0 5px; color: #6b7280; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { border: 1px solid #d1d5db; padding: 10px; text-align: left; font-size: 13px; vertical-align: top; }
     th { background-color: #f3f4f6; font-weight: 600; color: #374151; }
-            tr:nth-child(even) { background-color: #f9fafb; }
-            @media print {
-                @page { margin: 1.5cm; }
-                body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            }
-        </style>
-        </head>
-        <body>
-            <h1>Relatório de Assinaturas e Leituras</h1>
-            <p>Gerado em: <b>${new Date().toLocaleString('pt-BR')}</b></p>
-            
-            <table>
-                <thead>
-                    <tr>
-                        ${ths.join('')}
-                    </tr>
-                </thead>
-                <tbody>
-                    ${trs}
-                </tbody>
-            </table>
+    tr:nth-child(even) { background-color: #f9fafb; }
+    @media print { @page { margin: 1.5cm; } body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+</style>
+</head>
+<body>
+    <h1>Relatório de Assinaturas e Leituras</h1>
+    <p>Gerado em: <b>${new Date().toLocaleString('pt-BR')}</b></p>
+    ${subtituloFiltro}
+    ${periodoFiltro}
+    
+    <table>
+        <thead><tr>${ths.join('')}</tr></thead>
+        <tbody>${trs}</tbody>
+    </table>
 
-            <script>
-                // Aguarda o carregamento completo do DOM da nova janela antes de acionar a impressão
-                window.onload = function() {
-                    setTimeout(function() {
-                        window.print();
-                    }, 300);
-                };
-            </script>
-        </body>
-        </html>
-    `;
+    <script>
+        window.onload = function() { setTimeout(function() { window.print(); }, 300); };
+    </script>
+</body>
+</html>`;
 
-    // Escreve o HTML na nova janela e fecha o fluxo do documento para disparar o onload
     janela.document.write(html);
     janela.document.close();
     janela.focus();
