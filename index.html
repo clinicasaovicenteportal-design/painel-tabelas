@@ -55,11 +55,8 @@
                 <button class="nav-btn admin-only nav-btn-rh-style" id="btn-nav-rh" data-tab="rh" style="display: none;"><i class="ri-pie-chart-2-fill"></i> RH & Analytics</button>
                 <button class="nav-btn admin-only" id="btn-nav-colaboradores" data-tab="colaboradores" style="display: none;"><i class="ri-group-line"></i> Gerenciar Equipe</button>
                 <button class="nav-btn admin-only" id="btn-nav-ajustes" data-tab="ajustes" style="display: none;"><i class="ri-settings-4-line"></i> Ajustes Globais</button>
-                <button class="nav-btn admin-only" id="btn-nav-colaboradores" data-tab="colaboradores" style="display: none;"><i class="ri-group-line"></i> Gerenciar Equipe</button>
-                <button class="nav-btn admin-only" id="btn-nav-ajustes" data-tab="ajustes" style="display: none;"><i class="ri-settings-4-line"></i> Ajustes Globais</button>  
+                
                 <button class="nav-btn admin-only" id="btn-nav-ativos" data-tab="ativos" style="display: none;"><i class="ri-qr-code-line"></i> Controle de Ativos</button>
-            <div class="sidebar-footer"><button id="btn-logout" class="nav-btn logout-btn"><i class="ri-logout-box-r-line"></i> Sair do Painel</button></div>
-        </aside>
             </nav>
             <div class="sidebar-footer"><button id="btn-logout" class="nav-btn logout-btn"><i class="ri-logout-box-r-line"></i> Sair do Painel</button></div>
         </aside>
@@ -209,9 +206,6 @@
                     <div class="cards-grid" id="grid-ativos-list"></div>
                 </div>
             </section>
-
-        </main>
-    </div>
 
             <section id="tab-corpo-clinico" class="tab-content" style="display: none;">
                 <div id="corpo-clinico-view-folders">
@@ -638,23 +632,23 @@
                 <p class="fs-14 text-muted mb-15">Selecione os dados que deseja incluir no relatório físico:</p>
                 <input type="hidden" id="print-boletim-id">
                 <div style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
-    <div>
-        <label style="font-size: 12px; font-weight: 600;">Filtrar por Colaborador (Opcional):</label>
-        <select id="print-colaborador" class="form-input" style="width: 100%; margin-top: 5px;">
-            <option value="">Todos os Colaboradores</option>
-        </select>
-    </div>
-    <div style="display: flex; gap: 10px;">
-        <div style="flex: 1;">
-            <label style="font-size: 12px; font-weight: 600;">Data Início:</label>
-            <input type="date" id="print-data-inicio" class="form-input" style="width: 100%; margin-top: 5px;">
-        </div>
-        <div style="flex: 1;">
-            <label style="font-size: 12px; font-weight: 600;">Data Fim:</label>
-            <input type="date" id="print-data-fim" class="form-input" style="width: 100%; margin-top: 5px;">
-        </div>
-    </div>
-</div>
+                    <div>
+                        <label style="font-size: 12px; font-weight: 600;">Filtrar por Colaborador (Opcional):</label>
+                        <select id="print-colaborador" class="form-input" style="width: 100%; margin-top: 5px;">
+                            <option value="">Todos os Colaboradores</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 12px; font-weight: 600;">Data Início:</label>
+                            <input type="date" id="print-data-inicio" class="form-input" style="width: 100%; margin-top: 5px;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 12px; font-weight: 600;">Data Fim:</label>
+                            <input type="date" id="print-data-fim" class="form-input" style="width: 100%; margin-top: 5px;">
+                        </div>
+                    </div>
+                </div>
                 <div class="checkbox-group checkbox-group-box">
                     <label class="checkbox-label"><input type="checkbox" id="print-chk-nome" checked disabled> Nome do Colaborador (Obrigatório)</label>
                     <label class="checkbox-label"><input type="checkbox" id="print-chk-data" checked> Data/Hora da Assinatura</label>
