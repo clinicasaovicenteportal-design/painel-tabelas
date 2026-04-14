@@ -634,7 +634,7 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
          cardHtml += `<div style="margin-top:10px; background:rgba(0,0,0,0.05); padding:8px; border-radius:6px; font-size:12px; border: 1px dashed var(--border-color);"><strong> PIN de Acesso:</strong> ${data['PIN de Acesso (Treinamentos)']}</div>`;
     }
 
-    if(colecaoNome === 'treinamentos' && isAdmin) {
+if(colecaoNome === 'treinamentos' && isAdmin) {
         const precisaResponder = data['Tipo (Vídeo, PDF, Tarefa, Prova)'] && (data['Tipo (Vídeo, PDF, Tarefa, Prova)'].includes('Tarefa') || data['Tipo (Vídeo, PDF, Tarefa, Prova)'].includes('Prova'));
         const count = precisaResponder ? (data.respostas_alunos || []).length : (data.leituras || []).length;
         cardHtml += `<div style="margin-top:15px; padding-top:15px; border-top: 1px dashed rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
@@ -643,6 +643,7 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
                      </div>`;
     }
 
+    // COLE AQUI -> Injetar Botão de QR Code apenas para a coleção de ativos
     if (colecaoNome === 'ativos' && isAdmin) {
         cardHtml += `<button type="button" onclick="window.imprimirEtiquetaAtivo('${docId}')" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 12px; margin-top: 12px; border: 1px solid var(--border-color);"><i class="ri-qr-code-line"></i> Imprimir Etiqueta QR</button>`;
     }
