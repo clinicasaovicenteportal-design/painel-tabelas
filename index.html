@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <link rel="stylesheet" href="style.css?v=3.1.0">
     <style>
         .sidebar-nav { overflow-y: auto; max-height: 65vh; }
@@ -185,11 +187,20 @@
                 <div class="cards-grid" id="grid-remocoes"></div>
             </section>
 
-            <section id="tab-ativos" class="tab-content" style="display: none;">
+<section id="tab-ativos" class="tab-content" style="display: none;">
                 <div id="ativos-view-folders">
+                    <div class="chart-box" style="height: auto; margin-bottom: 20px;">
+                        <h3 class="text-primary mt-0 mb-15"><i class="ri-pie-chart-2-fill"></i> Painel de Patrimônio (Status)</h3>
+                        <div style="height: 220px; display: flex; justify-content: center;">
+                            <canvas id="chart-ativos-status"></canvas>
+                        </div>
+                    </div>
                     <div class="flex-between mb-20">
-                        <p class="text-muted">Selecione a Categoria do Equipamento (Ex: TI, Móveis, Frota).</p>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('ativos')" style="display:none;"><i class="ri-add-line"></i> Novo Ativo</button>
+                        <p class="text-muted">Selecione a Categoria do Equipamento.</p>
+                        <div class="flex-gap-10">
+                            <button class="btn-hover color-5 admin-only" onclick="window.iniciarLeitorQR()" style="display:none;"><i class="ri-qr-scan-2-line"></i> Ler Etiqueta (Câmera)</button>
+                            <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('ativos')" style="display:none;"><i class="ri-add-line"></i> Novo Ativo</button>
+                        </div>
                     </div>
                     <div class="home-grid" id="grid-ativos-folders"></div>
                 </div>
@@ -202,6 +213,19 @@
                         <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('ativos')" style="display:none;"><i class="ri-add-line"></i> Novo Ativo</button>
                     </div>
                     <div class="cards-grid" id="grid-ativos-list"></div>
+                </div>
+
+                <div id="modal-camera-qr" class="modal-overlay" style="display: none; z-index: 10010;">
+                    <div class="modal-box glass-effect">
+                        <header class="modal-header">
+                            <h3><i class="ri-camera-lens-line"></i> Escanear Etiqueta</h3>
+                            <button class="btn-icon" onclick="window.fecharLeitorQR()"><i class="ri-close-line"></i></button>
+                        </header>
+                        <div class="modal-body" style="text-align: center;">
+                            <p class="fs-13 text-muted mb-15">Aponte a câmera para o QR Code do equipamento.</p>
+                            <div id="qr-reader" style="width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid var(--primary-color);"></div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
