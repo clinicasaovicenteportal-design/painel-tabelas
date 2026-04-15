@@ -1630,6 +1630,74 @@ if (!document.getElementById('modal-feedback-aluno')) {
     document.body.appendChild(fb);
 }
 
+
+window.verFeedback = function(nota, feedback) {
+    const notaEl = document.getElementById('feedback-nota');
+    const textoEl = document.getElementById('feedback-texto');
+    const modal = document.getElementById('modal-feedback-aluno');
+
+    if (!notaEl || !textoEl || !modal) {
+        alert('Modal de feedback não encontrado.');
+        return;
+    }
+
+    notaEl.textContent = nota ?? '-';
+    textoEl.innerHTML = String(feedback || 'Sem comentários.').replace(/\n/g, '<br>');
+    modal.style.display = 'flex';
+};
+
+window.verCorrecaoAluno = function(docId) {
+    if (!window.alunoLogado) return;
+
+    const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'];
+    const atividade = window.todosTreinamentosData.find(i => i.id === docId)?.data;
+    if (!atividade) return alert('Atividade não encontrada.');
+
+    let minhaResposta = null;
+    (atividade.respostas_alunos || []).forEach(raw => {
+        const obj = window.safeParseJSON(raw, null);
+        if (obj && obj.nome === nomeAluno) minhaResposta = obj;
+    });
+
+    if (!minhaResposta) return alert('Correção não encontrada.');
+
+    const notaEl = document.getElementById('feedback-nota');
+    const textoEl = document.getElementById('feedback-texto');
+    const modal = document.getElementById('modal-feedback-aluno');
+
+    if (!notaEl || !textoEl || !modal) {
+        alert('Modal de feedback não encontrado.');
+        return;
+    }
+
+    notaEl.textContent = minhaResposta.nota ?? '-';
+
+    let html = `
+        <div style="margin-bottom:12px;">
+            <strong>Nota final:</strong> ${minhaResposta.nota ?? '-'}<br>
+            <strong>Feedback:</strong><br>${window.escapeHTML(minhaResposta.feedback || 'Sem comentários.').replace(/\n/g, '<br>')}
+        </div>
+    `;
+
+    (minhaResposta.respostas || []).forEach((r, i) => {
+        const detalhe = (minhaResposta.correcao_detalhes || [])[i] || {};
+        html += `
+            <div style="margin-top:10px; padding:10px; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc;">
+                <div><strong>Questão ${i + 1}:</strong> ${window.escapeHTML(r.pergunta || '-')}</div>
+                <div style="margin-top:6px;"><strong>Sua resposta:</strong> ${window.escapeHTML(r.resposta || '-')}</div>
+                ${
+                    detalhe.tipo === 'multipla'
+                        ? `<div style="margin-top:6px;"><strong>Gabarito:</strong> ${window.escapeHTML(detalhe.correta || '-')} | <strong>Resultado:</strong> ${detalhe.acertou ? 'Correta' : 'Incorreta'}</div>`
+                        : ''
+                }
+            </div>
+        `;
+    });
+
+    textoEl.innerHTML = html;
+    modal.style.display = 'flex';
+};
+
 window.sessaoTreinamentoAtiva = null;
 window._timerAutosaveTreinamento = null;
 window._ultimoEventoInfracaoTreinamento = 0;
@@ -2001,7 +2069,7 @@ window.renderizarTrilhaAluno = function() {
             } else if (bloqueado) {
                 btnAcao += `<div style="font-size:12px; padding:10px; border-radius:8px; background:#fff5f5; color:#c53030; border:1px solid #fed7d7;"><i class="ri-alert-line"></i> Tentativa encerrada. Procure a gestão caso precise de liberação.</div>`;
             } else if (minhaResposta && ((minhaResposta.nota !== '' && minhaResposta.nota !== undefined && minhaResposta.nota !== null) || (minhaResposta.nota_total_calculada !== '' && minhaResposta.nota_total_calculada !== undefined && minhaResposta.nota_total_calculada !== null))) {
-                btnAcao += `<button onclick="window.verFeedback('${minhaResposta.nota}', \`${(minhaResposta.feedback || 'Sem comentários.').replace(/'/g, '&apos;')}\`)" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-top:8px;"><i class="ri-message-3-line"></i> Ver Correção</button>`;
+                btnAcao += `<button onclick="window.verCorrecaoAluno('${docId}')" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-top:8px;"><i class="ri-message-3-line"></i> Ver Correção</button>`;
             }
         } else if (!jaLeu) {
             btnAcao += `<button onclick="window.concluirTreinamento('${docId}')" class="btn-hover color-11" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; background: #38a169; color:white; border:none;"><i class="ri-check-double-line"></i> Marcar como LIDO</button>`;
@@ -2153,26 +2221,60 @@ window.salvarCorrecaoAdmin = async function() {
     const docId = document.getElementById('correcao-docid').value;
     const nomeAluno = document.getElementById('correcao-nomealuno').value;
     const notaManual = parseFloat(document.getElementById('correcao-nota').value || '0') || 0;
-    const notaAuto = parseFloat(document.getElementById('correcao-auto-base').value || '0') || 0;
     const fb = document.getElementById('correcao-feedback').value;
-    const notaFinal = Number((notaAuto + notaManual).toFixed(2));
-    
-    const data = window.todosTreinamentosData.find(i=>i.id===docId)?.data;
+
+    const data = window.todosTreinamentosData.find(i => i.id === docId)?.data;
+    if (!data) return alert('Atividade não encontrada.');
+
     const respostas = data.respostas_alunos || [];
-    let respObjAntigo = null; let respStrAntiga = null;
-    respostas.forEach(r => { try { let o = window.safeParseJSON(r, null); if(o && o.nome === nomeAluno) { respObjAntigo = o; respStrAntiga = r; } } catch(e){} });
-    if(!respObjAntigo) return;
-    
-    let respNovaObj = { ...respObjAntigo, nota_manual: notaManual, nota_auto: notaAuto, nota: notaFinal, nota_total_calculada: notaFinal, feedback: fb };
-    let respStrNova = JSON.stringify(respNovaObj);
+    let respObjAntigo = null;
+    let respStrAntiga = null;
+
+    respostas.forEach(r => {
+        try {
+            const o = window.safeParseJSON(r, null);
+            if (o && o.nome === nomeAluno) {
+                respObjAntigo = o;
+                respStrAntiga = r;
+            }
+        } catch (e) {}
+    });
+
+    if (!respObjAntigo || !respStrAntiga) return alert('Resposta do aluno não encontrada.');
+
+    const notaAuto = parseFloat(respObjAntigo.nota_auto || '0') || 0;
+    const pontosObjetivos = parseFloat(respObjAntigo.pontos_objetivos || '0') || 0;
+    const pontosSubjetivos = parseFloat(respObjAntigo.pontos_subjetivos || '0') || 0;
+    const pontosMaximos = pontosObjetivos + pontosSubjetivos;
+    const pontosObtidos = notaAuto + notaManual;
+    const notaMaximaDaAtividade = parseFloat(String(data['Pontos Valendo'] || '10').replace(',', '.')) || 10;
+
+    const notaFinal = pontosMaximos > 0
+        ? Number(((pontosObtidos / pontosMaximos) * notaMaximaDaAtividade).toFixed(2))
+        : 0;
+
+    const respNovaObj = {
+        ...respObjAntigo,
+        nota_manual: notaManual,
+        nota_auto: notaAuto,
+        nota: notaFinal,
+        nota_total_calculada: notaFinal,
+        feedback: fb
+    };
+
+    const respStrNova = JSON.stringify(respNovaObj);
+
     try {
         const ref = window.doc(window.db, 'treinamentos', docId);
         await window.updateDoc(ref, { respostas_alunos: window.arrayRemove(respStrAntiga) });
         await window.updateDoc(ref, { respostas_alunos: window.arrayUnion(respStrNova) });
         alert(`Correção salva com sucesso! Nota final: ${notaFinal}`);
         document.getElementById('modal-correcao-admin').style.display = 'none';
-        document.getElementById('modal-leituras').style.display = 'flex'; 
-    } catch(e) { alert("Erro ao salvar: "+e.message); }
+        document.getElementById('modal-leituras').style.display = 'flex';
+        window.renderizarTrilhaAluno();
+    } catch (e) {
+        alert('Erro ao salvar: ' + e.message);
+    }
 };
 
 window.entrarPortalAluno = function() {
