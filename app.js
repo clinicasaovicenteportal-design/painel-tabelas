@@ -467,51 +467,130 @@ window.renderizarGraficoPrivadosGeral = function() {
 
 window.fecharModal = function() { document.getElementById('modal-cadastro').style.display = 'none'; };
 
-window.adicionarPerguntaBuilder = function(tipo, objAntigo = null) {
-    const container = document.getElementById('quiz-questions-list'); if(!container) return;
-    const div = document.createElement('div'); div.className = 'quiz-item-box'; div.style = "background: white; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px; position: relative;";
-    
-    let html = `<button type="button" onclick="this.parentElement.remove(); window.sincronizarQuizJSON();" style="position:absolute; top:10px; right:10px; background:none; border:none; color:red; cursor:pointer;"><i class="ri-delete-bin-line"></i></button>`;
-    html += `<input type="hidden" class="quiz-tipo" value="${tipo}">`;
-    html += `<label style="font-size:12px; font-weight:600;">Pergunta / Enunciado (${tipo === 'descritiva' ? 'Resposta em Texto' : 'Múltipla Escolha'}):</label>`;
-    html += `<textarea class="form-input quiz-pergunta" style="height:60px; margin-bottom:10px;" onkeyup="window.sincronizarQuizJSON()">${objAntigo ? objAntigo.p : ''}</textarea>`;
+window.escapeAttr = function(value = '') {
+    return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+};
 
-    if(tipo === 'multipla') {
-        const ops = objAntigo ? objAntigo.ops : ['','','','']; const corr = objAntigo ? objAntigo.correta : '0';
-        html += `<label style="font-size:12px; font-weight:600;">Opções de Resposta:</label>`;
-        ['A', 'B', 'C', 'D'].forEach((letra, idx) => { html += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;"><span style="font-weight:bold; width:20px;">${letra})</span><input type="text" class="form-input quiz-op" style="margin:0;" value="${ops[idx] || ''}" onkeyup="window.sincronizarQuizJSON()"></div>`; });
-        html += `<label style="font-size:12px; font-weight:600; margin-top:10px; display:block;">Qual é a opção CORRETA?</label>`;
-        html += `<select class="form-input quiz-correta" onchange="window.sincronizarQuizJSON()"><option value="0" ${corr==='0'?'selected':''}>Opção A</option><option value="1" ${corr==='1'?'selected':''}>Opção B</option><option value="2" ${corr==='2'?'selected':''}>Opção C</option><option value="3" ${corr==='3'?'selected':''}>Opção D</option></select>`;
+window.normalizarPerguntaBuilder = function(q = {}) {
+    return {
+        tipo: q.tipo || 'descritiva',
+        p: q.p || '',
+        apoio: q.apoio || '',
+        mediaUrl: q.mediaUrl || '',
+        mediaLegenda: q.mediaLegenda || '',
+        mediaTipo: q.mediaTipo || 'auto',
+        pontosQuestao: q.pontosQuestao || '',
+        ops: Array.isArray(q.ops) ? q.ops : ['', '', '', ''],
+        correta: q.correta !== undefined ? String(q.correta) : '0'
+    };
+};
+
+window.adicionarPerguntaBuilder = function(tipo, objAntigo = null) {
+    const container = document.getElementById('quiz-questions-list');
+    if (!container) return;
+
+    const q = window.normalizarPerguntaBuilder({ ...(objAntigo || {}), tipo: (objAntigo?.tipo || tipo || 'descritiva') });
+    const div = document.createElement('div');
+    div.className = 'quiz-item-box';
+    div.style = 'background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 12px; position: relative; box-shadow: var(--shadow-soft);';
+
+    let html = `<button type="button" onclick="this.parentElement.remove(); window.sincronizarQuizJSON();" style="position:absolute; top:10px; right:10px; background:none; border:none; color:red; cursor:pointer;"><i class="ri-delete-bin-line"></i></button>`;
+    html += `<input type="hidden" class="quiz-tipo" value="${window.escapeAttr(q.tipo)}">`;
+    html += `<div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:10px; align-items:center;">
+        <div style="font-size:12px; font-weight:700; color:var(--primary-color); text-transform:uppercase;">${q.tipo === 'descritiva' ? 'Questão dissertativa' : 'Questão múltipla escolha'}</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <label style="font-size:12px; font-weight:600;">Pontos da questão</label>
+            <input type="number" min="0" step="0.5" class="form-input quiz-pontos" value="${window.escapeAttr(q.pontosQuestao)}" style="width:90px; margin:0;" oninput="window.sincronizarQuizJSON()">
+        </div>
+    </div>`;
+    html += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:6px;">Pergunta / Enunciado</label>`;
+    html += `<textarea class="form-input quiz-pergunta" style="height:70px; margin-bottom:10px; resize:vertical;" oninput="window.sincronizarQuizJSON()">${window.escapeHTML(q.p)}</textarea>`;
+    html += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:6px;">Texto de apoio / instrução complementar (opcional)</label>`;
+    html += `<textarea class="form-input quiz-apoio" style="height:60px; margin-bottom:10px; resize:vertical;" oninput="window.sincronizarQuizJSON()">${window.escapeHTML(q.apoio)}</textarea>`;
+    html += `<div style="display:grid; grid-template-columns:1fr 170px; gap:10px; margin-bottom:10px;">
+        <div>
+            <label style="font-size:12px; font-weight:600; display:block; margin-bottom:6px;">Link da mídia (opcional)</label>
+            <input type="url" class="form-input quiz-media-url" value="${window.escapeAttr(q.mediaUrl)}" placeholder="Imagem, vídeo, YouTube, Drive, PDF..." oninput="window.sincronizarQuizJSON()">
+        </div>
+        <div>
+            <label style="font-size:12px; font-weight:600; display:block; margin-bottom:6px;">Tipo da mídia</label>
+            <select class="form-input quiz-media-tipo" onchange="window.sincronizarQuizJSON()">
+                <option value="auto" ${q.mediaTipo === 'auto' ? 'selected' : ''}>Automático</option>
+                <option value="imagem" ${q.mediaTipo === 'imagem' ? 'selected' : ''}>Imagem</option>
+                <option value="video" ${q.mediaTipo === 'video' ? 'selected' : ''}>Vídeo</option>
+                <option value="documento" ${q.mediaTipo === 'documento' ? 'selected' : ''}>Documento</option>
+            </select>
+        </div>
+    </div>`;
+    html += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:6px;">Legenda da mídia (opcional)</label>`;
+    html += `<input type="text" class="form-input quiz-media-legenda" value="${window.escapeAttr(q.mediaLegenda)}" placeholder="Ex.: Observe a imagem abaixo" oninput="window.sincronizarQuizJSON()">`;
+
+    if (q.tipo === 'multipla') {
+        html += `<label style="font-size:12px; font-weight:600; display:block; margin:12px 0 6px;">Opções de Resposta</label>`;
+        ['A', 'B', 'C', 'D'].forEach((letra, idx) => {
+            html += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;"><span style="font-weight:bold; width:20px;">${letra})</span><input type="text" class="form-input quiz-op" style="margin:0;" value="${window.escapeAttr(q.ops[idx] || '')}" oninput="window.sincronizarQuizJSON()"></div>`;
+        });
+        html += `<label style="font-size:12px; font-weight:600; display:block; margin-top:10px;">Qual é a opção CORRETA?</label>`;
+        html += `<select class="form-input quiz-correta" onchange="window.sincronizarQuizJSON()"><option value="0" ${q.correta==='0'?'selected':''}>Opção A</option><option value="1" ${q.correta==='1'?'selected':''}>Opção B</option><option value="2" ${q.correta==='2'?'selected':''}>Opção C</option><option value="3" ${q.correta==='3'?'selected':''}>Opção D</option></select>`;
     }
-    div.innerHTML = html; container.appendChild(div);
+
+    html += `<div class="quiz-preview-mini" style="margin-top:12px; padding:10px; border-radius:10px; background:#f8fafc; border:1px dashed #cbd5e1; font-size:12px; color:var(--text-muted);">Prévia da mídia será exibida para o aluno automaticamente, se o link for válido.</div>`;
+    div.innerHTML = html;
+    container.appendChild(div);
 };
 
 window.carregarPerguntasBuilder = function() {
     const inputOculto = document.getElementById('input-Configuração da Avaliação');
-    if(!inputOculto || !inputOculto.value || inputOculto.value === '') return;
+    if (!inputOculto || !inputOculto.value || inputOculto.value === '') return;
     try {
         const jsonStr = inputOculto.value.replace(/&quot;/g, '"').replace(/&apos;/g, "'");
         const arr = window.safeParseJSON(jsonStr, []);
         arr.forEach(q => window.adicionarPerguntaBuilder(q.tipo, q));
-    } catch(e) {}
+    } catch (e) {}
 };
 
 window.sincronizarQuizJSON = function() {
     const blocos = document.querySelectorAll('.quiz-item-box');
     const arrayFinal = [];
     blocos.forEach(bloco => {
-        const tipo = bloco.querySelector('.quiz-tipo').value;
-        const p = bloco.querySelector('.quiz-pergunta').value.replace(/"/g, "'");
-        if(tipo === 'descritiva') { arrayFinal.push({ tipo, p }); } 
-        else {
+        const tipo = bloco.querySelector('.quiz-tipo')?.value || 'descritiva';
+        const p = (bloco.querySelector('.quiz-pergunta')?.value || '').replace(/"/g, "'");
+        const apoio = (bloco.querySelector('.quiz-apoio')?.value || '').replace(/"/g, "'");
+        const mediaUrl = (bloco.querySelector('.quiz-media-url')?.value || '').trim();
+        const mediaLegenda = (bloco.querySelector('.quiz-media-legenda')?.value || '').replace(/"/g, "'");
+        const mediaTipo = bloco.querySelector('.quiz-media-tipo')?.value || 'auto';
+        const pontosQuestao = (bloco.querySelector('.quiz-pontos')?.value || '').trim();
+
+        if (tipo === 'descritiva') {
+            arrayFinal.push({ tipo, p, apoio, mediaUrl, mediaLegenda, mediaTipo, pontosQuestao });
+        } else {
             const opsInputs = bloco.querySelectorAll('.quiz-op');
-            const ops = Array.from(opsInputs).map(inpt => inpt.value.replace(/"/g, "'"));
-            const correta = bloco.querySelector('.quiz-correta').value;
-            arrayFinal.push({ tipo, p, ops, correta });
+            const ops = Array.from(opsInputs).map(inpt => (inpt.value || '').replace(/"/g, "'"));
+            const correta = bloco.querySelector('.quiz-correta')?.value || '0';
+            arrayFinal.push({ tipo, p, apoio, mediaUrl, mediaLegenda, mediaTipo, pontosQuestao, ops, correta });
         }
     });
     const inputOculto = document.getElementById('input-Configuração da Avaliação');
-    if(inputOculto) { inputOculto.value = JSON.stringify(arrayFinal).replace(/"/g, "&quot;").replace(/'/g, "&apos;"); }
+    if (inputOculto) inputOculto.value = JSON.stringify(arrayFinal).replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+};
+
+window.obterHtmlMidiaQuestao = function(q = {}, opts = {}) {
+    const link = String(q.mediaUrl || '').trim();
+    if (!link) return '';
+    const tipoBruto = String(q.mediaTipo || 'auto').toLowerCase();
+    const tipo = tipoBruto === 'auto'
+        ? (/youtube|youtu\.be|\.mp4|video/i.test(link) ? 'video' : (/\.png|\.jpg|\.jpeg|\.gif|\.webp|image/i.test(link) ? 'imagem' : 'documento'))
+        : tipoBruto;
+    const legenda = q.mediaLegenda ? `<div style="font-size:12px; color:var(--text-muted); margin-top:6px;">${window.escapeHTML(q.mediaLegenda)}</div>` : '';
+    const compacta = !!opts.compacta;
+    if (tipo === 'imagem') {
+        return `<div style="margin:10px 0; text-align:center;"><img src="${window.escapeAttr(link)}" alt="Mídia da questão" style="max-width:100%; ${compacta ? 'max-height:180px;' : 'max-height:320px;'} border-radius:12px; border:1px solid #e2e8f0; object-fit:contain; background:#fff;" onerror="this.outerHTML='<div style=&quot;padding:12px;border:1px dashed #cbd5e1;border-radius:10px;color:#64748b;&quot;>Não foi possível carregar a imagem desta questão.</div>'">${legenda}</div>`;
+    }
+    if (tipo === 'video') {
+        const embed = window.obterUrlEmbedMaterial(link);
+        return `<div style="margin:10px 0;"><div style="position:relative; padding-top:56.25%; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; background:#000;"><iframe src="${window.escapeAttr(embed)}" allowfullscreen style="position:absolute; inset:0; width:100%; height:100%; border:none;"></iframe></div>${legenda}</div>`;
+    }
+    return `<div style="margin:10px 0;"><button type="button" onclick="window.abrirMidiaFlutuante('${window.escapeAttr(link)}')" class="btn-hover color-8" style="width:100%; height:36px; border-radius:10px; font-size:12px;"><i class="ri-attachment-2"></i> Abrir material de apoio</button>${legenda}</div>`;
 };
 
 window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
@@ -560,8 +639,9 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
         else if(colecao === 'treinamentos' && campo === 'Configuração da Avaliação') {
             htmlCampos += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px;">Perguntas da Prova ou Enunciado da Tarefa:</label>`;
             htmlCampos += `<input type="hidden" id="input-${campo}" value="${valorAntigo}">`;
+            htmlCampos += `<div style="background:#f8fafc; border:1px dashed #cbd5e1; padding:12px; border-radius:12px; margin-bottom:12px; font-size:12px; color:var(--text-muted);"><strong style="color:var(--primary-color);">Construtor avançado:</strong> adicione quantas questões quiser, com texto de apoio, link de imagem/vídeo/documento e pontuação por questão.</div>`;
             htmlCampos += `<div id="quiz-questions-list"></div>`;
-            htmlCampos += `<div style="display:flex; gap:10px; margin-bottom: 15px;"><button type="button" onclick="window.adicionarPerguntaBuilder('descritiva')" class="btn-hover color-8" style="flex:1; height:35px; font-size:11px;">+ Adicionar Texto/Tarefa</button><button type="button" onclick="window.adicionarPerguntaBuilder('multipla')" class="btn-hover color-5" style="flex:1; height:35px; font-size:11px;">+ Adicionar Múltipla Escolha</button></div>`;
+            htmlCampos += `<div style="display:flex; gap:10px; margin-bottom: 15px; flex-wrap:wrap;"><button type="button" onclick="window.adicionarPerguntaBuilder('descritiva')" class="btn-hover color-8" style="flex:1; height:38px; font-size:11px; min-width:220px;">+ Adicionar Dissertativa</button><button type="button" onclick="window.adicionarPerguntaBuilder('multipla')" class="btn-hover color-5" style="flex:1; height:38px; font-size:11px; min-width:220px;">+ Adicionar Múltipla Escolha</button></div>`;
         }
         else if(colecao === 'corpo-clinico' && campo === 'Especialidade') {
             htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Geral (Sem Categoria)">Selecione a Especialidade...</option>`; especialidadesGlobais.forEach(s => { htmlCampos += `<option value="${s}" ${valorAntigo === s ? 'selected' : ''}>${s}</option>`; }); htmlCampos += `</select>`;
@@ -1722,6 +1802,10 @@ window.abrirCadastroProva = function() {
         if (pausa) pausa.value = 'Não';
         if (limite) limite.value = '3';
         if (regra) regra.value = 'zerada_por_saida';
+        const lista = document.getElementById('quiz-questions-list');
+        if (lista && !lista.children.length) {
+            window.adicionarPerguntaBuilder('multipla');
+        }
     }, 80);
 };
 window.inicializarGuardaTreinamento();
@@ -1932,12 +2016,15 @@ window.abrirModalResposta = async function(docId) {
     try {
         const jsonStr = typeof configJSON === 'string' ? configJSON : JSON.stringify(configJSON);
         const perguntas = window.safeParseJSON(jsonStr, []);
-        perguntas.forEach((q, idx) => {
-            let html = `<div class="pergunta-aluno-bloco" style="margin-bottom:15px; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">`;
-            html += `<div style="font-weight:600; font-size:13px; margin-bottom:10px;">${idx+1}. ${q.p}</div>`;
-            html += `<input type="hidden" class="resp-tipo" value="${q.tipo}"><input type="hidden" class="resp-pergunta-txt" value="${q.p}">`;
-            if(q.tipo === 'descritiva') html += `<textarea class="form-input resp-valor" style="height:80px; resize:vertical;" placeholder="Sua resposta..."></textarea>`;
-            else (q.ops || []).forEach(op => { if(String(op || '').trim() !== '') html += `<label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:5px; cursor:pointer;"><input type="radio" name="q_${idx}" class="resp-radio" value="${op}"> ${op}</label>`; });
+        perguntas.forEach((questaoBruta, idx) => {
+            const q = window.normalizarPerguntaBuilder(questaoBruta);
+            let html = `<div class="pergunta-aluno-bloco" style="margin-bottom:15px; background:#f8fafc; padding:14px; border-radius:12px; border:1px solid #e2e8f0;">`;
+            html += `<div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px; align-items:flex-start;"><div style="font-weight:700; font-size:14px; color:var(--text-main);">${idx+1}. ${window.escapeHTML(q.p)}</div>${q.pontosQuestao ? `<span style="background:#dbeafe; color:#1d4ed8; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700;">${window.escapeHTML(q.pontosQuestao)} pts</span>` : ''}</div>`;
+            if (q.apoio) html += `<div style="font-size:12px; color:var(--text-muted); margin-bottom:8px; white-space:pre-wrap;">${window.escapeHTML(q.apoio)}</div>`;
+            html += window.obterHtmlMidiaQuestao(q, { compacta: false });
+            html += `<input type="hidden" class="resp-tipo" value="${window.escapeAttr(q.tipo)}"><input type="hidden" class="resp-pergunta-txt" value="${window.escapeAttr(q.p)}">`;
+            if (q.tipo === 'descritiva') html += `<textarea class="form-input resp-valor" style="height:90px; resize:vertical;" placeholder="Sua resposta..."></textarea>`;
+            else (q.ops || []).forEach(op => { if (String(op || '').trim() !== '') html += `<label style="display:flex; align-items:flex-start; gap:8px; font-size:13px; margin-bottom:6px; cursor:pointer;"><input type="radio" name="q_${idx}" class="resp-radio" value="${window.escapeAttr(op)}"> <span>${window.escapeHTML(op)}</span></label>`; });
             html += `</div>`; area.innerHTML += html;
         });
     } catch(e) { area.innerHTML = '<p>Erro ao carregar perguntas do sistema.</p>'; }
@@ -1972,8 +2059,17 @@ window.abrirCorrecaoAdmin = function(docId, nomeAluno) {
     respostas.forEach(r => { try { let o = window.safeParseJSON(r, null); if(o && o.nome === nomeAluno) { respObj = o; respStr = r; } } catch(e){} });
     if(!respObj) return;
     
-    let html = `<b>Aluno:</b> ${nomeAluno} <br><b>Enviado em:</b> ${respObj.data}<br><br>`;
-    (respObj.respostas || []).forEach((r, i) => { html += `<div style="margin-bottom:10px; border-bottom:1px solid #e2e8f0; padding-bottom:5px;"><b>Q${i+1}:</b> ${r.pergunta}<br><span style="color:#3182ce;">R: ${r.resposta}</span></div>`; });
+    let html = `<b>Aluno:</b> ${window.escapeHTML(nomeAluno)} <br><b>Enviado em:</b> ${window.escapeHTML(respObj.data || '-')}<br><br>`;
+    const perguntasConfiguradas = window.safeParseJSON(typeof data['Configuração da Avaliação'] === 'string' ? data['Configuração da Avaliação'].replace(/&quot;/g, '"').replace(/&apos;/g, "'") : JSON.stringify(data['Configuração da Avaliação'] || []), []);
+    (respObj.respostas || []).forEach((r, i) => {
+        const qCfg = window.normalizarPerguntaBuilder(perguntasConfiguradas[i] || { p: r.pergunta, tipo: r.tipo });
+        html += `<div style="margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">`;
+        html += `<b>Q${i+1}:</b> ${window.escapeHTML(r.pergunta || qCfg.p || 'Pergunta')}<br>`;
+        if (qCfg.apoio) html += `<div style="font-size:12px; color:#64748b; margin:6px 0; white-space:pre-wrap;">${window.escapeHTML(qCfg.apoio)}</div>`;
+        html += window.obterHtmlMidiaQuestao(qCfg, { compacta: true });
+        html += `<span style="color:#3182ce; white-space:pre-wrap;">R: ${window.escapeHTML(r.resposta || '-')}</span>`;
+        html += `</div>`;
+    });
     
     document.getElementById('correcao-respostas-aluno').innerHTML = html;
     document.getElementById('correcao-nota').value = respObj.nota || '';
