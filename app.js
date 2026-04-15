@@ -671,6 +671,103 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
     if (isAdmin) cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
     cardHtml += `</div>`; return cardHtml;
 };
+window.imprimirEtiquetaAtivo = function(docId) {
+    try {
+        if (typeof QRCode === 'undefined') {
+            alert('A biblioteca de QR Code não foi carregada.');
+            return;
+        }
+
+        const ativos = window.dadosGlobaisAbas['ativos'] || [];
+        const ativo = ativos.find(item => item.id === docId);
+
+        if (!ativo) {
+            alert('Ativo não encontrado para gerar a etiqueta.');
+            return;
+        }
+
+        const data = ativo.data || {};
+        const nome = data['Nome do Equipamento'] || 'Equipamento';
+        const patrimonio = data['Número de Patrimônio'] || docId;
+        const categoria = data['Categoria'] || 'Sem categoria';
+        const local = data['Localização / Setor'] || 'Sem localização';
+        const responsavel = data['Responsável'] || 'Não informado';
+
+        const container = document.createElement('div');
+        container.style.position = 'fixed';
+        container.style.left = '-9999px';
+        container.style.top = '0';
+        container.style.padding = '20px';
+        container.style.fontFamily = 'Arial, sans-serif';
+        container.style.width = '320px';
+        container.style.background = '#fff';
+        container.style.color = '#111';
+
+        container.innerHTML = `
+            <div style="border:1px solid #ccc; border-radius:12px; padding:16px;">
+                <div style="font-size:18px; font-weight:700; margin-bottom:8px; color:#8B252C;">
+                    Etiqueta do Ativo
+                </div>
+                <div style="font-size:14px; margin-bottom:6px;"><strong>Equipamento:</strong> ${nome}</div>
+                <div style="font-size:14px; margin-bottom:6px;"><strong>Patrimônio:</strong> ${patrimonio}</div>
+                <div style="font-size:14px; margin-bottom:6px;"><strong>Categoria:</strong> ${categoria}</div>
+                <div style="font-size:14px; margin-bottom:6px;"><strong>Local:</strong> ${local}</div>
+                <div style="font-size:14px; margin-bottom:12px;"><strong>Responsável:</strong> ${responsavel}</div>
+                <div id="qr-print-area" style="display:flex; justify-content:center; margin:14px 0;"></div>
+                <div style="font-size:12px; color:#555; text-align:center;">
+                    Código: ${docId}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(container);
+
+        const qrArea = container.querySelector('#qr-print-area');
+        new QRCode(qrArea, {
+            text: String(patrimonio || docId),
+            width: 160,
+            height: 160
+        });
+
+        setTimeout(() => {
+            const win = window.open('', '_blank', 'width=420,height=650');
+            if (!win) {
+                document.body.removeChild(container);
+                alert('O navegador bloqueou a janela de impressão. Permita popups e tente novamente.');
+                return;
+            }
+
+            win.document.write(`
+                <html>
+                <head>
+                    <title>Etiqueta do Ativo</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            padding: 20px;
+                            margin: 0;
+                            background: #fff;
+                        }
+                    </style>
+                </head>
+                <body>${container.innerHTML}</body>
+                </html>
+            `);
+
+            win.document.close();
+            win.focus();
+
+            setTimeout(() => {
+                win.print();
+                win.close();
+                document.body.removeChild(container);
+            }, 500);
+        }, 300);
+    } catch (error) {
+        console.error('Erro ao imprimir etiqueta do ativo:', error);
+        alert('Erro ao gerar a etiqueta QR do ativo.');
+    }
+};
 
 window.renderizarListaGenerica = function(colecao) { 
     const grid = document.getElementById(`grid-${colecao}-list`); 
