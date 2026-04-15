@@ -865,5 +865,26 @@
     </div>
 
         <script type="module" src="app.js?v=3.3.1"></script>
+    <div id="modal-visualizar-qr" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:99999; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:#fff; width:min(420px, 100%); border-radius:18px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,0.25); position:relative;">
+        <button onclick="window.fecharVisualizacaoQR()" style="position:absolute; top:12px; right:12px; background:#f1f5f9; border:none; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:18px;">
+            ×
+        </button>
+
+        <div style="font-size:20px; font-weight:700; color:#8B252C; margin-bottom:14px;">
+            Visualizar QR Code
+        </div>
+
+        <div id="visualizar-qr-info" style="margin-bottom:14px; color:#1e293b;"></div>
+
+        <div id="visualizar-qr-area" style="display:flex; justify-content:center; align-items:center; min-height:240px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:14px;"></div>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+            <button onclick="window.fecharVisualizacaoQR()" style="flex:1; height:40px; border:none; border-radius:10px; background:#e2e8f0; cursor:pointer; font-weight:600;">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
