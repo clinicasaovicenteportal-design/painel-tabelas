@@ -1085,13 +1085,49 @@ window.imprimirEtiquetasAtivosEmLote = function() {
 
 
 window.renderizarListaGenerica = function(colecao) { 
-    const grid = document.getElementById(`grid-${colecao}-list`); 
-    if(!grid) return; 
-    grid.innerHTML = ''; 
-    const nomePasta = window[`pasta_${colecao}_Atual`]; 
-    const itensExibir = (window.dadosGlobaisAbas[colecao] || []).filter(i => (i.data[configuracaoAbas[colecao].campoAgrupador] || 'Geral') === nomePasta); 
-    itensExibir.sort((a, b) => String(a.data[configuracaoAbas[colecao].campos[0]] || '').toLowerCase().localeCompare(String(b.data[configuracaoAbas[colecao].campos[0]] || '').toLowerCase()));
-    itensExibir.forEach(item => { grid.innerHTML += window.gerarHTMLCard(colecao, item.id, item.data); }); 
+    const grid = document.getElementById(`grid-${colecao}-list`);
+    if (!grid) return;
+
+    grid.innerHTML = '';
+
+    const nomePasta = String(window[`pasta_${colecao}_Atual`] || '').trim().toLowerCase();
+    const config = configuracaoAbas[colecao];
+
+    const obterNomePasta = (item) => {
+        const bruto =
+            item?.data?.[config.campoAgrupador] ||
+            item?.data?.Pacotes ||
+            item?.data?.['Pasta / Módulo'] ||
+            item?.data?.Especialidade ||
+            item?.data?.Convênio ||
+            item?.data?.Exame ||
+            item?.data?.Tipo ||
+            item?.data?.['Categoria do Exame'] ||
+            item?.data?.['Número da Tabela'] ||
+            'Geral';
+
+        return String(bruto || 'Geral').trim();
+    };
+
+    const itensExibir = (window.dadosGlobaisAbas[colecao] || []).filter(i => {
+        return obterNomePasta(i).toLowerCase() === nomePasta;
+    });
+
+    itensExibir.sort((a, b) =>
+        String(a.data[config.campos[0]] || '').toLowerCase()
+            .localeCompare(String(b.data[config.campos[0]] || '').toLowerCase())
+    );
+
+    if (!itensExibir.length) {
+        grid.innerHTML = `<div style="grid-column:1/-1; color: var(--text-muted); font-size:14px; padding: 10px 0;">
+            Nenhum cadastro encontrado nesta pasta.
+        </div>`;
+        return;
+    }
+
+    itensExibir.forEach(item => {
+        grid.innerHTML += window.gerarHTMLCard(colecao, item.id, item.data);
+    });
 };
 
 window.renderizarPastasGenericas = function(colecao) {
