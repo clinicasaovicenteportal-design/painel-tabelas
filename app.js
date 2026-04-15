@@ -472,16 +472,57 @@ window.escapeAttr = function(value = '') {
 };
 
 window.normalizarPerguntaBuilder = function(q = {}) {
+    const tipoBruto = String(q.tipo || 'descritiva').trim().toLowerCase();
+    const tipo = (tipoBruto === 'multipla_escolha' || tipoBruto === 'multipla' || tipoBruto === 'objetiva') ? 'multipla' : 'descritiva';
     return {
-        tipo: q.tipo || 'descritiva',
-        p: q.p || '',
-        apoio: q.apoio || '',
-        mediaUrl: q.mediaUrl || '',
-        mediaLegenda: q.mediaLegenda || '',
+        tipo,
+        p: q.p || q.pergunta || '',
+        apoio: q.apoio || q.textoApoio || '',
+        mediaUrl: q.mediaUrl || q.linkMidia || '',
+        mediaLegenda: q.mediaLegenda || q.legendaMidia || '',
         mediaTipo: q.mediaTipo || 'auto',
-        pontosQuestao: q.pontosQuestao || '',
-        ops: Array.isArray(q.ops) ? q.ops : ['', '', '', ''],
-        correta: q.correta !== undefined ? String(q.correta) : '0'
+        pontosQuestao: q.pontosQuestao || q.pontos || '',
+        ops: Array.isArray(q.ops) ? q.ops : (Array.isArray(q.opcoes) ? q.opcoes : ['', '', '', '']),
+        correta: q.correta !== undefined ? String(q.correta) : (q.respostaCorreta !== undefined ? String(q.respostaCorreta) : '0')
+    };
+};
+
+window.decodificarConfigAvaliacao = function(config = '[]') {
+    const bruto = typeof config === 'string' ? config : JSON.stringify(config || []);
+    return bruto.replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+};
+
+window.calcularResultadoAutomaticoTreinamento = function(itemData = {}, respostasAluno = []) {
+    const perguntas = window.safeParseJSON(window.decodificarConfigAvaliacao(itemData['Configuração da Avaliação'] || '[]'), []);
+    let notaAuto = 0;
+    let pontosObjetivos = 0;
+    let pontosSubjetivos = 0;
+    let pendentes = 0;
+    const detalhes = [];
+
+    perguntas.forEach((questaoBruta, idx) => {
+        const q = window.normalizarPerguntaBuilder(questaoBruta || {});
+        const pontos = parseFloat(String(q.pontosQuestao || '0').replace(',', '.')) || 0;
+        const resp = respostasAluno[idx]?.resposta || '';
+        if (q.tipo === 'multipla') {
+            pontosObjetivos += pontos;
+            const correta = Array.isArray(q.ops) ? String(q.ops[parseInt(q.correta || '0', 10)] || '') : '';
+            const acertou = String(resp || '').trim() !== '' && String(resp).trim() === correta.trim();
+            if (acertou) notaAuto += pontos;
+            detalhes.push({ idx: idx + 1, tipo: 'multipla', pontos, acertou, resposta: resp, correta });
+        } else {
+            pontosSubjetivos += pontos;
+            pendentes += 1;
+            detalhes.push({ idx: idx + 1, tipo: 'descritiva', pontos, resposta: resp });
+        }
+    });
+
+    return {
+        notaAuto: Number(notaAuto.toFixed(2)),
+        pontosObjetivos: Number(pontosObjetivos.toFixed(2)),
+        pontosSubjetivos: Number(pontosSubjetivos.toFixed(2)),
+        pendentesSubjetivas: pendentes,
+        detalhes
     };
 };
 
@@ -1579,7 +1620,7 @@ if (!document.getElementById('modal-resposta-aluno')) {
 
 if (!document.getElementById('modal-correcao-admin')) {
     const c = document.createElement('div'); c.id = 'modal-correcao-admin'; c.className = 'modal-overlay'; c.style.display = 'none'; c.style.zIndex = '10005';
-    c.innerHTML = `<div class="modal-box glass-effect" style="max-width: 600px; max-height: 90vh; display:flex; flex-direction:column;"><header class="modal-header"><h3>Corrigir Resposta</h3><button onclick="document.getElementById('modal-correcao-admin').style.display='none'; document.getElementById('modal-leituras').style.display='flex';" class="btn-icon"><i class="ri-close-line"></i></button></header><div class="modal-body" style="overflow-y: auto; flex:1;"><div id="correcao-respostas-aluno" style="margin-bottom:15px; background:rgba(0,0,0,0.03); padding:10px; border-radius:8px; font-size:13px; white-space:pre-wrap;"></div><label style="font-size:12px; font-weight:600;">Nota Atribuída (XP):</label><input type="number" id="correcao-nota" class="form-input" style="margin-bottom:10px;"><label style="font-size:12px; font-weight:600;">Feedback / Observação do Gestor:</label><textarea id="correcao-feedback" class="form-input" style="height:80px; resize:vertical;"></textarea><input type="hidden" id="correcao-docid"><input type="hidden" id="correcao-nomealuno"></div><button onclick="window.salvarCorrecaoAdmin()" class="btn-hover color-11" style="width: 100%; margin-top: 15px; background: #38a169; color:white; border:none;"><i class="ri-check-line"></i> Salvar Correção</button></div>`;
+    c.innerHTML = `<div class="modal-box glass-effect" style="max-width: 680px; max-height: 90vh; display:flex; flex-direction:column;"><header class="modal-header"><h3>Corrigir Resposta</h3><button onclick="document.getElementById('modal-correcao-admin').style.display='none'; document.getElementById('modal-leituras').style.display='flex';" class="btn-icon"><i class="ri-close-line"></i></button></header><div class="modal-body" style="overflow-y: auto; flex:1;"><div id="correcao-resumo-auto" style="display:none; margin-bottom:12px; background:#eff6ff; border:1px solid #93c5fd; padding:12px; border-radius:10px; font-size:13px; color:#1d4ed8;"></div><div id="correcao-respostas-aluno" style="margin-bottom:15px; background:rgba(0,0,0,0.03); padding:10px; border-radius:8px; font-size:13px; white-space:pre-wrap;"></div><label style="font-size:12px; font-weight:600;">Pontos manuais / ajuste do gestor:</label><input type="number" id="correcao-nota" class="form-input" step="0.5" style="margin-bottom:10px;"><label style="font-size:12px; font-weight:600;">Feedback / Observação do Gestor:</label><textarea id="correcao-feedback" class="form-input" style="height:80px; resize:vertical;"></textarea><input type="hidden" id="correcao-docid"><input type="hidden" id="correcao-nomealuno"><input type="hidden" id="correcao-auto-base" value="0"></div><button onclick="window.salvarCorrecaoAdmin()" class="btn-hover color-11" style="width: 100%; margin-top: 15px; background: #38a169; color:white; border:none;"><i class="ri-check-line"></i> Salvar Correção</button></div>`;
     document.body.appendChild(c);
 }
 
@@ -1748,7 +1789,10 @@ window.inicializarGuardaTreinamento = function() {
 window.registrarInfracaoTreinamento = async function(motivo = 'Saiu da prova') {
     const sessao = window.sessaoTreinamentoAtiva;
     if (!sessao || sessao.modoControle !== 'prova_bloqueada') return;
+    const modal = document.getElementById('modal-resposta-aluno');
+    if (!modal || modal.style.display === 'none') return;
     const agora = Date.now();
+    if (sessao.guardGraceUntil && agora < sessao.guardGraceUntil) return;
     if (agora - window._ultimoEventoInfracaoTreinamento < 1500) return;
     window._ultimoEventoInfracaoTreinamento = agora;
     const novoTotal = (sessao.progresso?.infracoes || 0) + 1;
@@ -1935,7 +1979,7 @@ window.renderizarTrilhaAluno = function() {
             if (statusProgresso === 'zerada_por_saida') { statusTexto = 'Zerada por saída'; corStatus = '#c53030'; iconeStatus = 'ri-close-circle-fill'; bloqueado = true; }
             else if (statusProgresso === 'inconclusa') { statusTexto = 'Inconclusa'; corStatus = '#dd6b20'; iconeStatus = 'ri-error-warning-line'; bloqueado = modoControle === 'prova_bloqueada'; if (!bloqueado) pendentes++; }
             else if(minhaResposta) {
-                if(minhaResposta.nota && minhaResposta.nota !== "") { statusTexto = `Corrigido (Nota: ${minhaResposta.nota})`; corStatus = '#38a169'; iconeStatus = 'ri-award-fill'; pontos += parseInt(minhaResposta.nota) || 0; }
+                if((minhaResposta.nota !== '' && minhaResposta.nota !== undefined && minhaResposta.nota !== null) || (minhaResposta.nota_total_calculada !== '' && minhaResposta.nota_total_calculada !== undefined && minhaResposta.nota_total_calculada !== null)) { const notaExibir = minhaResposta.nota_total_calculada !== undefined && minhaResposta.nota_total_calculada !== '' ? minhaResposta.nota_total_calculada : minhaResposta.nota; statusTexto = `Corrigido (Nota: ${notaExibir})`; corStatus = '#38a169'; iconeStatus = 'ri-award-fill'; pontos += parseFloat(notaExibir) || 0; }
                 else { statusTexto = 'Aguardando Correção'; corStatus = '#ecc94b'; iconeStatus = 'ri-hourglass-line'; }
             } else if (statusProgresso === 'pausada') { statusTexto = 'Pausada'; corStatus = '#dd6b20'; iconeStatus = 'ri-pause-circle-line'; pendentes++; }
             else if (statusProgresso === 'em_andamento') { statusTexto = modoControle === 'prova_bloqueada' ? `Em andamento (${progresso?.infracoes || 0}/${limite} advert.)` : 'Em andamento'; corStatus = '#3182ce'; iconeStatus = 'ri-play-circle-line'; pendentes++; }
@@ -1956,7 +2000,7 @@ window.renderizarTrilhaAluno = function() {
                 btnAcao += `<button onclick="window.abrirModalResposta('${docId}')" class="btn-hover color-11" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; background: #3182ce; color:white; border:none;"><i class="ri-pencil-fill"></i> ${label}</button>`;
             } else if (bloqueado) {
                 btnAcao += `<div style="font-size:12px; padding:10px; border-radius:8px; background:#fff5f5; color:#c53030; border:1px solid #fed7d7;"><i class="ri-alert-line"></i> Tentativa encerrada. Procure a gestão caso precise de liberação.</div>`;
-            } else if (minhaResposta && minhaResposta.nota !== "") {
+            } else if (minhaResposta && ((minhaResposta.nota !== '' && minhaResposta.nota !== undefined && minhaResposta.nota !== null) || (minhaResposta.nota_total_calculada !== '' && minhaResposta.nota_total_calculada !== undefined && minhaResposta.nota_total_calculada !== null))) {
                 btnAcao += `<button onclick="window.verFeedback('${minhaResposta.nota}', \`${(minhaResposta.feedback || 'Sem comentários.').replace(/'/g, '&apos;')}\`)" class="btn-hover color-8" style="width: 100%; height: 35px; border-radius: 8px; font-size: 13px; margin-top:8px;"><i class="ri-message-3-line"></i> Ver Correção</button>`;
             }
         } else if (!jaLeu) {
@@ -2006,16 +2050,23 @@ window.abrirModalResposta = async function(docId) {
         return;
     }
 
+    const configJSON = item.data['Configuração da Avaliação'] || '[]';
+    const perguntas = window.safeParseJSON(window.decodificarConfigAvaliacao(configJSON), []);
+    if (!Array.isArray(perguntas) || !perguntas.length) {
+        area.innerHTML = '<div style="padding:14px; background:#fff7ed; border:1px solid #fdba74; border-radius:10px; color:#9a3412;">Esta prova/atividade ainda não possui perguntas configuradas.</div>';
+        document.getElementById('resposta-titulo').textContent = 'Atividade sem perguntas';
+        document.getElementById('modal-resposta-aluno').style.display = 'flex';
+        window.desativarSessaoTreinamento();
+        return;
+    }
+
     const tentativas = progressoAtual && progressoAtual.status !== 'pendente' ? (progressoAtual.tentativas || 1) : ((progressoAtual?.tentativas || 0) + 1);
     const progressoSalvo = await window.salvarProgressoTreinamento(docId, nomeAluno, { status: 'em_andamento', tentativas, infracoes: progressoAtual?.infracoes || 0, modo_controle: modoControle, regra_saida: regraSaida, limite_infracoes: limiteInfracoes });
-    window.sessaoTreinamentoAtiva = { docId, nomeAluno, itemData: item.data, modoControle, permitePausa, limiteInfracoes, regraSaida, progresso: progressoSalvo };
+    window.sessaoTreinamentoAtiva = { docId, nomeAluno, itemData: item.data, modoControle, permitePausa, limiteInfracoes, regraSaida, progresso: progressoSalvo, guardGraceUntil: Date.now() + 4000 };
     document.getElementById('resposta-titulo').textContent = modoControle === 'prova_bloqueada' ? 'Prova em andamento' : 'Responder Atividade';
     window.atualizarAvisoSessaoTreinamentoUI(item.data, progressoSalvo);
 
-    const configJSON = item.data['Configuração da Avaliação'] || '[]';
     try {
-        const jsonStr = typeof configJSON === 'string' ? configJSON : JSON.stringify(configJSON);
-        const perguntas = window.safeParseJSON(jsonStr, []);
         perguntas.forEach((questaoBruta, idx) => {
             const q = window.normalizarPerguntaBuilder(questaoBruta);
             let html = `<div class="pergunta-aluno-bloco" style="margin-bottom:15px; background:#f8fafc; padding:14px; border-radius:12px; border:1px solid #e2e8f0;">`;
@@ -2040,11 +2091,14 @@ window.enviarRespostaTreinamento = async function() {
     const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'];
     const respostasFinais = window.capturarRespostasModalTreinamento();
     if(!respostasFinais.some(item => String(item.resposta || '').trim() !== '')) { alert('Preencha ao menos uma resposta antes de enviar.'); return; }
-    const respostaObj = { nome: nomeAluno, data: new Date().toLocaleString('pt-BR'), respostas: respostasFinais, nota: "", feedback: "" };
+    const item = window.todosTreinamentosData.find(i => i.id === docId);
+    const resultadoAuto = window.calcularResultadoAutomaticoTreinamento(item?.data || {}, respostasFinais);
+    const respostaObj = { nome: nomeAluno, data: new Date().toLocaleString('pt-BR'), respostas: respostasFinais, nota: "", feedback: "", nota_auto: resultadoAuto.notaAuto, pontos_objetivos: resultadoAuto.pontosObjetivos, pontos_subjetivos: resultadoAuto.pontosSubjetivos, pendentes_subjetivas: resultadoAuto.pendentesSubjetivas, correcao_detalhes: resultadoAuto.detalhes, nota_total_calculada: resultadoAuto.pendentesSubjetivas ? "" : resultadoAuto.notaAuto };
     try {
         await window.updateDoc(window.doc(window.db, 'treinamentos', docId), { respostas_alunos: window.arrayUnion(JSON.stringify(respostaObj)) });
         await window.salvarProgressoTreinamento(docId, nomeAluno, { status: 'concluida', rascunho: [], tentativas: window.sessaoTreinamentoAtiva?.progresso?.tentativas || 1, infracoes: window.sessaoTreinamentoAtiva?.progresso?.infracoes || 0 });
-        alert("Sua resposta foi enviada para correção do supervisor! ");
+        const msgAuto = resultadoAuto.pontosObjetivos > 0 ? ` Pontos automáticos: ${resultadoAuto.notaAuto}.` : '';
+        alert(`Sua resposta foi enviada para correção do supervisor!${msgAuto}`);
         document.getElementById('modal-resposta-aluno').style.display = 'none';
         window.desativarSessaoTreinamento();
         window.renderizarTrilhaAluno();
@@ -2060,19 +2114,33 @@ window.abrirCorrecaoAdmin = function(docId, nomeAluno) {
     if(!respObj) return;
     
     let html = `<b>Aluno:</b> ${window.escapeHTML(nomeAluno)} <br><b>Enviado em:</b> ${window.escapeHTML(respObj.data || '-')}<br><br>`;
-    const perguntasConfiguradas = window.safeParseJSON(typeof data['Configuração da Avaliação'] === 'string' ? data['Configuração da Avaliação'].replace(/&quot;/g, '"').replace(/&apos;/g, "'") : JSON.stringify(data['Configuração da Avaliação'] || []), []);
+    const perguntasConfiguradas = window.safeParseJSON(window.decodificarConfigAvaliacao(data['Configuração da Avaliação'] || '[]'), []);
     (respObj.respostas || []).forEach((r, i) => {
         const qCfg = window.normalizarPerguntaBuilder(perguntasConfiguradas[i] || { p: r.pergunta, tipo: r.tipo });
         html += `<div style="margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">`;
         html += `<b>Q${i+1}:</b> ${window.escapeHTML(r.pergunta || qCfg.p || 'Pergunta')}<br>`;
         if (qCfg.apoio) html += `<div style="font-size:12px; color:#64748b; margin:6px 0; white-space:pre-wrap;">${window.escapeHTML(qCfg.apoio)}</div>`;
         html += window.obterHtmlMidiaQuestao(qCfg, { compacta: true });
+        if (qCfg.tipo === 'multipla') {
+            const correta = Array.isArray(qCfg.ops) ? String(qCfg.ops[parseInt(qCfg.correta || '0', 10)] || '') : '';
+            const acertou = String(r.resposta || '').trim() === String(correta).trim();
+            html += `<div style="margin-top:6px; font-size:12px; color:${acertou ? '#166534' : '#b91c1c'};"><b>${acertou ? 'Correta' : 'Incorreta'}</b>${correta ? ` | Gabarito: ${window.escapeHTML(correta)}` : ''}</div>`;
+        }
         html += `<span style="color:#3182ce; white-space:pre-wrap;">R: ${window.escapeHTML(r.resposta || '-')}</span>`;
         html += `</div>`;
     });
     
+    const notaAuto = parseFloat(respObj.nota_auto || respObj.nota_total_calculada || 0) || 0;
+    const pontosSubj = parseFloat(respObj.pontos_subjetivos || 0) || 0;
+    const pendentes = parseInt(respObj.pendentes_subjetivas || 0, 10) || 0;
+    const resumo = document.getElementById('correcao-resumo-auto');
+    if (resumo) {
+        resumo.style.display = 'block';
+        resumo.innerHTML = `<b>Correção automática:</b> ${notaAuto} ponto(s) já apurados nas questões objetivas.<br><b>Questões subjetivas pendentes:</b> ${pendentes} | <b>Pontos subjetivos possíveis:</b> ${pontosSubj}.`;
+    }
     document.getElementById('correcao-respostas-aluno').innerHTML = html;
-    document.getElementById('correcao-nota').value = respObj.nota || '';
+    document.getElementById('correcao-auto-base').value = String(notaAuto);
+    document.getElementById('correcao-nota').value = respObj.nota_manual !== undefined ? respObj.nota_manual : '';
     document.getElementById('correcao-feedback').value = respObj.feedback || '';
     document.getElementById('correcao-docid').value = docId;
     document.getElementById('correcao-nomealuno').value = nomeAluno;
@@ -2084,8 +2152,10 @@ window.abrirCorrecaoAdmin = function(docId, nomeAluno) {
 window.salvarCorrecaoAdmin = async function() {
     const docId = document.getElementById('correcao-docid').value;
     const nomeAluno = document.getElementById('correcao-nomealuno').value;
-    const nota = document.getElementById('correcao-nota').value;
+    const notaManual = parseFloat(document.getElementById('correcao-nota').value || '0') || 0;
+    const notaAuto = parseFloat(document.getElementById('correcao-auto-base').value || '0') || 0;
     const fb = document.getElementById('correcao-feedback').value;
+    const notaFinal = Number((notaAuto + notaManual).toFixed(2));
     
     const data = window.todosTreinamentosData.find(i=>i.id===docId)?.data;
     const respostas = data.respostas_alunos || [];
@@ -2093,13 +2163,13 @@ window.salvarCorrecaoAdmin = async function() {
     respostas.forEach(r => { try { let o = window.safeParseJSON(r, null); if(o && o.nome === nomeAluno) { respObjAntigo = o; respStrAntiga = r; } } catch(e){} });
     if(!respObjAntigo) return;
     
-    let respNovaObj = { ...respObjAntigo, nota: nota, feedback: fb };
+    let respNovaObj = { ...respObjAntigo, nota_manual: notaManual, nota_auto: notaAuto, nota: notaFinal, nota_total_calculada: notaFinal, feedback: fb };
     let respStrNova = JSON.stringify(respNovaObj);
     try {
         const ref = window.doc(window.db, 'treinamentos', docId);
         await window.updateDoc(ref, { respostas_alunos: window.arrayRemove(respStrAntiga) });
         await window.updateDoc(ref, { respostas_alunos: window.arrayUnion(respStrNova) });
-        alert("Correção salva com sucesso!");
+        alert(`Correção salva com sucesso! Nota final: ${notaFinal}`);
         document.getElementById('modal-correcao-admin').style.display = 'none';
         document.getElementById('modal-leituras').style.display = 'flex'; 
     } catch(e) { alert("Erro ao salvar: "+e.message); }
