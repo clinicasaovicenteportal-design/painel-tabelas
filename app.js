@@ -2644,10 +2644,10 @@ window.addEventListener('DOMContentLoaded', () => {
             
             try {
                 if(docId) { 
-                    await window.updateDoc(window.doc(window.db, colecao, docId), dados); 
-                } else { 
-                    await window.addDoc(window.collection(window.db, colecao), dados); 
-                }
+    await window.setDoc(window.doc(window.db, colecao, docId), dados, { merge: true }); 
+} else { 
+    await window.addDoc(window.collection(window.db, colecao), dados); 
+}
                 window.fecharModal();
 
                 if (colecao === 'ativos') {
