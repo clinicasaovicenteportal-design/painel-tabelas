@@ -2055,15 +2055,6 @@ window.renderizarGraficoAtivos = function() {
     });
 };
 
-// Modificação da função para carregar o gráfico sempre que abrir a aba de ativos
-const openFolderOld = window.abrirPastaGenerica;
-window.abrirPastaGenerica = function(colecao, valorPasta, docIdDestino = null) { 
-    openFolderOld(colecao, valorPasta, docIdDestino);
-    if(colecao === 'ativos') {
-        setTimeout(window.renderizarGraficoAtivos, 300);
-    }
-};
-
 let html5QrcodeScanner = null;
 
 window.iniciarLeitorQR = function() {
