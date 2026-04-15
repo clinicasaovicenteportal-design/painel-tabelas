@@ -686,8 +686,7 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
     if (isAdmin) cardHtml += `<div class="card-actions"><button class="btn-action btn-edit" data-id="${docId}" data-colecao="${colecaoNome}" data-info="${JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;")}" title="Editar"><i class="ri-pencil-line"></i></button><button class="btn-action btn-delete" data-id="${docId}" data-colecao="${colecaoNome}" title="Excluir"><i class="ri-delete-bin-line"></i></button></div>`;
     cardHtml += `</div>`; return cardHtml;
 };
-window.imprimirEtiquetaAtivo = function(docId) {
- window.visualizarEtiquetaAtivo = function(docId) {
+window.visualizarEtiquetaAtivo = function(docId) {
     try {
         if (typeof QRCode === 'undefined') {
             alert('A biblioteca de QR Code não foi carregada.');
