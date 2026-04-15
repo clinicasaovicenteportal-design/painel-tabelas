@@ -413,18 +413,20 @@ window.renderizarRamaisAgrupados = function() {
     grid.innerHTML = htmlFinal;
 };
 
-// Modificação da função para carregar o gráfico sempre que abrir a aba de ativos
-const openFolderOld = window.abrirPastaGenerica;
 window.abrirPastaGenerica = function(colecao, valorPasta, docIdDestino = null) { 
     window[`pasta_${colecao}_Atual`] = valorPasta; 
     document.getElementById(`${colecao}-view-folders`).style.display = 'none'; 
     document.getElementById(`${colecao}-view-list`).style.display = 'block'; 
     const titleEl = document.getElementById(`titulo-pasta-${colecao}`); 
-    if(titleEl && configuracaoAbas[colecao]) titleEl.innerHTML = `<i class="${configuracaoAbas[colecao].icone}"></i> Pasta: ${valorPasta}`; 
+    if (titleEl && configuracaoAbas[colecao]) {
+        titleEl.innerHTML = `<i class="${configuracaoAbas[colecao].icone}"></i> Pasta: ${valorPasta}`;
+    }
     window.renderizarListaGenerica(colecao); 
-    if(docIdDestino) window.destacarCard(docIdDestino); 
+    if (docIdDestino) window.destacarCard(docIdDestino); 
 
-    if(colecao === 'ativos') setTimeout(window.renderizarGraficoAtivos, 300);
+    if (colecao === 'ativos') {
+        setTimeout(window.renderizarGraficoAtivos, 300);
+    }
 };
 
 window.fecharPastaGenerica = function(colecao) { window[`pasta_${colecao}_Atual`] = null; document.getElementById(`${colecao}-view-folders`).style.display = 'block'; document.getElementById(`${colecao}-view-list`).style.display = 'none'; window.renderizarPastasGenericas(colecao); };
