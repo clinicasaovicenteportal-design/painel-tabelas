@@ -3537,7 +3537,7 @@ window.gerarImpressaoBoletim = function() {
 // FASE 1 - CONTROLE DE ATIVOS: UNIDADES > SETORES > ATIVOS + INVENTÁRIO
 // ==========================================
 
-window.configuracaoAbas['ativos'].campos = [
+configuracaoAbas['ativos'].campos = [
     'Nome do Equipamento',
     'Categoria',
     'Número de Patrimônio',
