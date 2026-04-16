@@ -40,7 +40,7 @@ const configuracaoAbas = {
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { initializeFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { initializeFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, setDoc, getDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCVphiwmF-SBFyYYkjV-QvTvSFIigzIsoc",
@@ -55,7 +55,7 @@ const app = initializeApp(firebaseConfig);
 const db = initializeFirestore(app, {});
 const auth = getAuth(app);
 
-window.db = db; window.updateDoc = updateDoc; window.doc = doc; window.arrayUnion = arrayUnion; window.arrayRemove = arrayRemove; window.addDoc = addDoc; window.collection = collection; window.deleteDoc = deleteDoc; window.onSnapshot = onSnapshot; window.setDoc = setDoc;
+window.db = db; window.updateDoc = updateDoc; window.doc = doc; window.arrayUnion = arrayUnion; window.arrayRemove = arrayRemove; window.addDoc = addDoc; window.collection = collection; window.deleteDoc = deleteDoc; window.onSnapshot = onSnapshot; window.setDoc = setDoc; window.getDoc = getDoc; window.runTransaction = runTransaction;
 
 let isAdmin = false; let abaAtual = 'home'; let emailLogado = ""; 
 
@@ -3205,6 +3205,32 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (!dados['Regra ao Sair']) dados['Regra ao Sair'] = dados['Modo de Controle'] === 'prova_bloqueada' ? 'zerada_por_saida' : 'inconclusa';
             }
             
+            if (colecao === 'ativos') {
+                if (!dados['Setor'] && dados['Localização / Setor']) dados['Setor'] = dados['Localização / Setor'];
+                if (!dados['Localização / Setor'] && dados['Setor']) dados['Localização / Setor'] = dados['Setor'];
+
+                const patrimonioInformado = String(dados['Número de Patrimônio'] || '').trim();
+                if (!docId && !patrimonioInformado) {
+                    const contadorRef = window.doc(window.db, 'configuracoes', 'contador_patrimonio');
+                    try {
+                        const novoNumero = await runTransaction(window.db, async (transaction) => {
+                            const contadorSnap = await transaction.get(contadorRef);
+                            const ultimoNumero = contadorSnap.exists() ? Number(contadorSnap.data().ultimoNumero || 0) : 0;
+                            const proximoNumero = ultimoNumero + 1;
+                            transaction.set(contadorRef, {
+                                ultimoNumero: proximoNumero,
+                                atualizadoEm: new Date().toISOString(),
+                                atualizadoPor: emailLogado || 'Gestor'
+                            }, { merge: true });
+                            return proximoNumero;
+                        });
+                        dados['Número de Patrimônio'] = String(novoNumero);
+                    } catch (errorPatrimonio) {
+                        throw new Error('Falha ao gerar o número de patrimônio automático: ' + errorPatrimonio.message);
+                    }
+                }
+            }
+
             // --- HISTÓRICO DE ATIVOS ---
             if (colecao === 'ativos') {
                 const acao = docId ? 'Editado/Movimentado' : 'Cadastrado';
@@ -4406,3 +4432,118 @@ window.atualizarBotaoVoltarInicioAtivos = function() {
         }, 120);
     };
 })();
+
+
+// ==========================================
+// AJUSTE UI - NÚMERO DE PATRIMÔNIO AUTOMÁTICO
+// ==========================================
+window.preencherPreviewPatrimonioAutomatico = async function() {
+    const input = document.getElementById('input-Número de Patrimônio');
+    const docId = document.getElementById('modal-doc-id');
+    if (!input || (docId && docId.value)) return;
+    if (String(input.value || '').trim() !== '') return;
+
+    try {
+        input.placeholder = 'Gerando número...';
+        const contadorRef = window.doc(window.db, 'configuracoes', 'contador_patrimonio');
+        const snap = await window.getDoc(contadorRef);
+        const ultimoNumero = snap.exists() ? Number(snap.data().ultimoNumero || 0) : 0;
+        input.value = String(ultimoNumero + 1);
+        input.setAttribute('data-patrimonio-auto', 'true');
+    } catch (error) {
+        console.error('Erro ao pré-visualizar patrimônio:', error);
+        input.placeholder = 'Número será gerado ao salvar';
+    }
+};
+
+(function() {
+    const oldAbrirModalPatrimonio = window.abrirModal;
+    window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
+        oldAbrirModalPatrimonio(colecao, docId, dadosAntigos);
+        if (colecao === 'ativos') {
+            setTimeout(() => window.preencherPreviewPatrimonioAutomatico(), 80);
+        }
+    };
+})();
+
+
+// ==========================================
+// AJUSTES FASE 1 - LIMPAR INVENTÁRIOS ÓRFÃOS + PATRIMÔNIO SOMENTE LEITURA
+// ==========================================
+window.obterInventariosAtivosValidos = function() {
+    const ativos = window.dadosGlobaisAbas['ativos'] || [];
+    const ativosIds = new Set(ativos.map(item => item.id));
+
+    return (window.inventariosAtivosData || []).filter(item => {
+        const data = item.data || {};
+        const unidade = String(data.unidade || '').trim();
+        const setor = String(data.setor || '').trim();
+        const esperados = Array.isArray(data.itensEsperadosIds) ? data.itensEsperadosIds : [];
+
+        if (esperados.some(id => ativosIds.has(id))) return true;
+        if (unidade && setor) {
+            return ativos.some(ativo => window.obterUnidadeAtivo(ativo.data || {}) === unidade && window.obterSetorAtivo(ativo.data || {}) === setor);
+        }
+        return false;
+    });
+};
+
+(function() {
+    const oldResumoInventarioLocal = window.obterResumoInventarioLocal;
+    window.obterResumoInventarioLocal = function(unidade = '', setor = '') {
+        const orig = window.inventariosAtivosData;
+        window.inventariosAtivosData = window.obterInventariosAtivosValidos();
+        const resp = oldResumoInventarioLocal(unidade, setor);
+        window.inventariosAtivosData = orig;
+        return resp;
+    };
+
+    const oldRenderizarOverviewInventarioAtivos = window.renderizarOverviewInventarioAtivos;
+    window.renderizarOverviewInventarioAtivos = function() {
+        const orig = window.inventariosAtivosData;
+        window.inventariosAtivosData = window.obterInventariosAtivosValidos();
+        oldRenderizarOverviewInventarioAtivos();
+        window.inventariosAtivosData = orig;
+    };
+
+    const oldRenderizarListaInventariosEmAberto = window.renderizarListaInventariosEmAberto;
+    window.renderizarListaInventariosEmAberto = function() {
+        const orig = window.inventariosAtivosData;
+        window.inventariosAtivosData = window.obterInventariosAtivosValidos();
+        oldRenderizarListaInventariosEmAberto();
+        window.inventariosAtivosData = orig;
+    };
+})();
+
+window.preencherPreviewPatrimonioAutomatico = async function() {
+    const input = document.getElementById('input-Número de Patrimônio');
+    const docId = document.getElementById('modal-doc-id');
+    if (!input || (docId && docId.value)) return;
+
+    const ativos = window.dadosGlobaisAbas['ativos'] || [];
+    const maiorExistente = ativos.reduce((acc, item) => {
+        const numero = Number(String(item.data?.['Número de Patrimônio'] || '').replace(/\D/g, '')) || 0;
+        return Math.max(acc, numero);
+    }, 0);
+
+    input.readOnly = true;
+    input.style.background = '#f8fafc';
+    input.style.cursor = 'not-allowed';
+    input.title = 'Número gerado automaticamente pelo sistema';
+
+    if (!String(input.value || '').trim()) {
+        input.value = String(maiorExistente + 1 || 1);
+    }
+
+    try {
+        const contadorRef = window.doc(window.db, 'configuracoes', 'contador_patrimonio');
+        const snap = await window.getDoc(contadorRef);
+        const ultimoNumero = snap.exists() ? Number(snap.data().ultimoNumero || 0) : 0;
+        const proximoNumero = Math.max(maiorExistente, ultimoNumero) + 1;
+        input.value = String(proximoNumero);
+        input.setAttribute('data-patrimonio-auto', 'true');
+    } catch (error) {
+        console.error('Erro ao pré-visualizar patrimônio:', error);
+        if (!String(input.value || '').trim()) input.value = String(maiorExistente + 1 || 1);
+    }
+};
