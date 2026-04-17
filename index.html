@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-    <link rel="stylesheet" href="style.css?v=3.4.0">
+    <link rel="stylesheet" href="style.css?v=3.5.0">
 
     <style>
         .sidebar-nav { overflow-y: auto; max-height: 65vh; }
@@ -64,6 +64,7 @@
                 <button class="nav-btn admin-only" id="btn-nav-colaboradores" data-tab="colaboradores" style="display: none;"><i class="ri-group-line"></i> Gerenciar Equipe</button>
                 <button class="nav-btn admin-only" id="btn-nav-ajustes" data-tab="ajustes" style="display: none;"><i class="ri-settings-4-line"></i> Ajustes Globais</button>
                 <button class="nav-btn admin-only" id="btn-nav-ativos" data-tab="ativos" style="display: none;"><i class="ri-qr-code-line"></i> Controle de Ativos</button>
+                <button class="nav-btn" id="btn-nav-agenda-trabalho" data-tab="agenda-trabalho"><i class="ri-calendar-event-line"></i> Agenda de Trabalho</button>
             </nav>
             <div class="sidebar-footer"><button id="btn-logout" class="nav-btn logout-btn"><i class="ri-logout-box-r-line"></i> Sair do Painel</button></div>
         </aside>
@@ -566,6 +567,45 @@
                 </div>
             </section>
 
+            
+            <section id="tab-agenda-trabalho" class="tab-content" style="display: none;">
+                <div class="agenda-shell">
+                    <div class="agenda-topbar">
+                        <div>
+                            <h2 class="text-primary" style="margin-bottom:6px;"><i class="ri-calendar-event-line"></i> Agenda de Trabalho</h2>
+                            <p class="text-muted">Planejamento operacional, board da equipe e visão da direção.</p>
+                        </div>
+                        <div class="agenda-top-actions">
+                            <input type="month" id="agenda-filtro-mes" class="form-input agenda-month-input" />
+                            <button class="btn-hover color-8" type="button" onclick="window.alternarViewAgenda('calendario')"><i class="ri-calendar-view"></i> Calendário</button>
+                            <button class="btn-hover color-9" type="button" onclick="window.alternarViewAgenda('board')"><i class="ri-layout-grid-line"></i> Board</button>
+                            <button class="btn-hover color-5" type="button" onclick="window.alternarViewAgenda('direcao')"><i class="ri-eye-line"></i> Direção</button>
+                            <button class="btn-hover color-11" type="button" onclick="window.abrirModalAgendaTrabalho()"><i class="ri-add-line"></i> Nova Demanda</button>
+                        </div>
+                    </div>
+
+                    <div class="agenda-operadores-card card">
+                        <div class="agenda-panel-title"><i class="ri-team-line"></i> Operação do Mês</div>
+                        <div id="agenda-colaboradores-grid" class="agenda-colaboradores-grid"></div>
+                    </div>
+
+                    <div id="agenda-view-calendario" class="agenda-view-panel">
+                        <div class="agenda-panel-title"><i class="ri-calendar-check-line"></i> Visualização Calendário</div>
+                        <div id="agenda-calendario-grid" class="agenda-calendario-grid"></div>
+                    </div>
+
+                    <div id="agenda-view-board" class="agenda-view-panel" style="display:none;">
+                        <div class="agenda-panel-title"><i class="ri-layout-grid-line"></i> Visualização Board</div>
+                        <div id="agenda-board-grid" class="agenda-board-grid"></div>
+                    </div>
+
+                    <div id="agenda-view-direcao" class="agenda-view-panel" style="display:none;">
+                        <div class="agenda-panel-title"><i class="ri-line-chart-line"></i> Visualização da Direção</div>
+                        <div id="agenda-direcao-grid" class="agenda-direcao-grid"></div>
+                    </div>
+                </div>
+            </section>
+
             <section id="tab-contatos" class="tab-content" style="display: none;">
                 <div class="cards-grid" id="menu-contatos">
                     <div class="card text-center cursor-pointer" onclick="window.abrirSubAba('ramais')"><h3>Ramais Internos</h3></div>
@@ -937,7 +977,58 @@
         </div>
     </div>
 
-    <script type="module" src="app.js?v=3.4.0"></script>
+    
+    <div id="modal-agenda-trabalho" class="modal-overlay" style="display:none; z-index:10020;">
+        <div class="modal-box glass-effect modal-scroll-y" style="max-width:760px;">
+            <header class="modal-header">
+                <h3 id="agenda-modal-title">Nova Demanda</h3>
+                <button class="btn-icon" type="button" onclick="window.fecharModalAgendaTrabalho()"><i class="ri-close-line"></i></button>
+            </header>
+            <div class="modal-body">
+                <input type="hidden" id="agenda-doc-id">
+                <input type="text" id="agenda-titulo" class="form-input" placeholder="Título da demanda">
+                <textarea id="agenda-descricao" class="form-input" style="height:90px; resize:vertical;" placeholder="Descrição / briefing"></textarea>
+                <div class="agenda-form-grid">
+                    <select id="agenda-responsavel" class="form-input"><option value="">Responsável</option></select>
+                    <select id="agenda-urgencia" class="form-input">
+                        <option value="Baixa">Urgência baixa</option>
+                        <option value="Média" selected>Urgência média</option>
+                        <option value="Alta">Urgência alta</option>
+                        <option value="Crítica">Urgência crítica</option>
+                    </select>
+                    <select id="agenda-status" class="form-input">
+                        <option value="A fazer">A fazer</option>
+                        <option value="Em andamento">Em andamento</option>
+                        <option value="Em revisão">Em revisão</option>
+                        <option value="Enviado">Enviado</option>
+                        <option value="Publicado">Publicado</option>
+                        <option value="Concluído">Concluído</option>
+                    </select>
+                    <select id="agenda-visibilidade" class="form-input">
+                        <option value="equipe">Só equipe</option>
+                        <option value="direcao">Só direção</option>
+                        <option value="ambos" selected>Direção e equipe</option>
+                    </select>
+                    <input type="date" id="agenda-data-principal" class="form-input">
+                    <input type="text" id="agenda-datas-extras" class="form-input" placeholder="Datas extras (YYYY-MM-DD, separadas por vírgula)">
+                </div>
+                <div class="agenda-form-grid">
+                    <input type="text" id="agenda-tema-especial" class="form-input" placeholder="Tema especial / campanha">
+                    <label class="agenda-checkline"><input type="checkbox" id="agenda-destaque-especial"> Marcar com estrela / data especial</label>
+                </div>
+                <input type="url" id="agenda-link" class="form-input" placeholder="Link do material / post / referência">
+                <input type="url" id="agenda-iframe" class="form-input" placeholder="Link para preview em iframe (opcional)">
+                <textarea id="agenda-historico-preview" class="form-input" style="height:110px; resize:vertical;" readonly placeholder="Histórico automático"></textarea>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:15px;">
+                <button class="btn-hover color-8" type="button" onclick="window.fecharModalAgendaTrabalho()"><i class="ri-close-line"></i> Fechar</button>
+                <button class="btn-hover color-11" type="button" onclick="window.salvarAgendaTrabalho()"><i class="ri-save-line"></i> Salvar Demanda</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module" src="app.js?v=3.5.0"></script>
 
 </body>
 </html>
