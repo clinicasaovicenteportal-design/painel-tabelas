@@ -4547,3 +4547,42 @@ window.preencherPreviewPatrimonioAutomatico = async function() {
         if (!String(input.value || '').trim()) input.value = String(maiorExistente + 1 || 1);
     }
 };
+
+
+// ==========================================
+// AJUSTE UI - SUGESTÕES DE NOMES JÁ CADASTRADOS NO NOVO ATIVO
+// ==========================================
+window.aplicarSugestoesNomeAtivoModal = function() {
+    const inputNome = document.getElementById('input-Nome do Equipamento');
+    if (!inputNome) return;
+
+    const nomes = Array.from(new Set(
+        (window.dadosGlobaisAbas['ativos'] || [])
+            .map(item => String(item.data?.['Nome do Equipamento'] || '').trim())
+            .filter(Boolean)
+    )).sort((a, b) => a.localeCompare(b));
+
+    let datalist = document.getElementById('lista-sugestoes-nomes-ativos');
+    if (!datalist) {
+        datalist = document.createElement('datalist');
+        datalist.id = 'lista-sugestoes-nomes-ativos';
+        document.body.appendChild(datalist);
+    }
+
+    datalist.innerHTML = nomes.map(nome => `<option value="${window.escapeAttr(nome)}"></option>`).join('');
+    inputNome.setAttribute('list', 'lista-sugestoes-nomes-ativos');
+    inputNome.setAttribute('autocomplete', 'off');
+    inputNome.placeholder = nomes.length
+        ? 'Digite ou selecione um item já cadastrado'
+        : 'Nome do Equipamento';
+};
+
+(function() {
+    const oldAbrirModalSugestaoAtivo = window.abrirModal;
+    window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
+        oldAbrirModalSugestaoAtivo(colecao, docId, dadosAntigos);
+        if (colecao === 'ativos') {
+            setTimeout(() => window.aplicarSugestoesNomeAtivoModal(), 120);
+        }
+    };
+})();
