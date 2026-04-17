@@ -4967,3 +4967,85 @@ window.addEventListener('DOMContentLoaded', () => {
         filtroMes.addEventListener('change', () => window.renderizarAgendaTrabalho());
     }
 });
+
+
+// ==========================================
+// AJUSTES AGENDA - MARKETING + RENDER IMEDIATO
+// ==========================================
+window.colaboradorEhMarketing = function(colab = {}) {
+    const setor = String(colab['Setor da Clínica'] || colab.setor || '').toLowerCase();
+    return setor.includes('marketing') || setor.includes('mkt');
+};
+
+window.preencherResponsaveisAgenda = function(valorAtual = '') {
+    const select = document.getElementById('agenda-responsavel');
+    if (!select) return;
+    const colaboradores = (window.todosOsDadosDoSistema['colaboradores'] || []).map(item => item.data || {}).filter(window.colaboradorEhMarketing);
+    const nomes = Array.from(new Set(colaboradores.map(c => String(c['Nome Completo do Colaborador'] || '').trim()).filter(Boolean))).sort((a,b) => a.localeCompare(b));
+    select.innerHTML = '<option value="">Responsável (Marketing)</option>' + nomes.map(nome => `<option value="${window.escapeAttr(nome)}">${window.escapeHTML(nome)}</option>`).join('');
+    if (valorAtual && nomes.includes(valorAtual)) select.value = valorAtual;
+};
+
+window.renderizarCardsColaboradoresAgenda = function() {
+    const grid = document.getElementById('agenda-colaboradores-grid');
+    if (!grid) return;
+    const mes = window.obterAgendaMesSelecionado();
+    const colaboradores = (window.todosOsDadosDoSistema['colaboradores'] || []).map(item => item.data || {}).filter(window.colaboradorEhMarketing);
+    if (!colaboradores.length) {
+        grid.innerHTML = '<div style="color:#64748b; font-size:13px;">Nenhum colaborador do marketing cadastrado.</div>';
+        return;
+    }
+
+    grid.innerHTML = colaboradores.map(colab => {
+        const nome = String(colab['Nome Completo do Colaborador'] || '').trim();
+        const setor = String(colab['Setor da Clínica'] || 'Marketing').trim();
+        const foto = String(colab['Link da Foto'] || colab['Foto'] || '').trim();
+        const aniversario = String(colab['Data de Aniversário'] || colab['Aniversário'] || 'Não informado').trim();
+        const info = String(colab['Informações Gerais'] || colab['Observações'] || 'Sem observações').trim();
+        const minhas = window.todosAgendaTrabalho.filter(item => item.data.responsavel === nome && window.agendaEstaNoMes(item.data, mes));
+        const pendentes = minhas.filter(item => !window.agendaStatusConclusivos.includes(item.data.status)).length;
+        return `
+            <div class="agenda-colaborador-card">
+                <div class="agenda-colaborador-avatar">${foto ? `<img src="${window.escapeAttr(foto)}" alt="${window.escapeAttr(nome)}" onerror="this.parentElement.innerHTML='<i class=\\"ri-user-3-line\\"></i>'">` : '<i class="ri-user-3-line"></i>'}</div>
+                <div class="agenda-colaborador-meta">
+                    <h4>${window.escapeHTML(nome || 'Colaborador')}</h4>
+                    <p><strong>Setor:</strong> ${window.escapeHTML(setor)}</p>
+                    <p><strong>Aniversário:</strong> ${window.escapeHTML(aniversario)}</p>
+                    <p>${window.escapeHTML(info)}</p>
+                    <span class="agenda-badge-pendente"><i class="ri-notification-3-line"></i> ${pendentes} pendente(s) no mês</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
+(function() {
+    const oldSalvarAgenda = window.salvarAgendaTrabalho;
+    window.salvarAgendaTrabalho = async function() {
+        const dataInput = document.getElementById('agenda-data-principal');
+        if (dataInput && !dataInput.value) dataInput.value = new Date().toISOString().slice(0, 10);
+        await oldSalvarAgenda();
+        setTimeout(() => window.renderizarAgendaTrabalho(), 180);
+    };
+})();
+
+window.forcarRenderAgendaAoAbrirAba = function() {
+    const btn = document.getElementById('btn-nav-agenda-trabalho');
+    if (!btn || btn.dataset.renderHooked === '1') return;
+    btn.dataset.renderHooked = '1';
+    btn.addEventListener('click', () => {
+        setTimeout(() => {
+            window.renderizarAgendaTrabalho();
+            window.alternarViewAgenda(window.agendaTrabalhoView || 'calendario');
+        }, 120);
+    });
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+    window.forcarRenderAgendaAoAbrirAba();
+    setTimeout(() => {
+        const mesInput = document.getElementById('agenda-filtro-mes');
+        if (mesInput && !mesInput.value) mesInput.value = window.getAgendaMesAtual();
+        window.renderizarAgendaTrabalho();
+    }, 250);
+});
