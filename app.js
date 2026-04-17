@@ -4967,3 +4967,213 @@ window.addEventListener('DOMContentLoaded', () => {
         filtroMes.addEventListener('change', () => window.renderizarAgendaTrabalho());
     }
 });
+
+
+// ==========================================
+// AJUSTES AGENDA - MARKETING + RENDER IMEDIATO
+// ==========================================
+window.colaboradorEhMarketing = function(colab = {}) {
+    const setor = String(colab['Setor da Clínica'] || colab.setor || '').toLowerCase();
+    return setor.includes('marketing') || setor.includes('mkt');
+};
+
+window.preencherResponsaveisAgenda = function(valorAtual = '') {
+    const select = document.getElementById('agenda-responsavel');
+    if (!select) return;
+    const colaboradores = (window.todosOsDadosDoSistema['colaboradores'] || []).map(item => item.data || {}).filter(window.colaboradorEhMarketing);
+    const nomes = Array.from(new Set(colaboradores.map(c => String(c['Nome Completo do Colaborador'] || '').trim()).filter(Boolean))).sort((a,b) => a.localeCompare(b));
+    select.innerHTML = '<option value="">Responsável (Marketing)</option>' + nomes.map(nome => `<option value="${window.escapeAttr(nome)}">${window.escapeHTML(nome)}</option>`).join('');
+    if (valorAtual && nomes.includes(valorAtual)) select.value = valorAtual;
+};
+
+window.renderizarCardsColaboradoresAgenda = function() {
+    const grid = document.getElementById('agenda-colaboradores-grid');
+    if (!grid) return;
+    const mes = window.obterAgendaMesSelecionado();
+    const colaboradores = (window.todosOsDadosDoSistema['colaboradores'] || []).map(item => item.data || {}).filter(window.colaboradorEhMarketing);
+    if (!colaboradores.length) {
+        grid.innerHTML = '<div style="color:#64748b; font-size:13px;">Nenhum colaborador do marketing cadastrado.</div>';
+        return;
+    }
+
+    grid.innerHTML = colaboradores.map(colab => {
+        const nome = String(colab['Nome Completo do Colaborador'] || '').trim();
+        const setor = String(colab['Setor da Clínica'] || 'Marketing').trim();
+        const foto = String(colab['Link da Foto'] || colab['Foto'] || '').trim();
+        const aniversario = String(colab['Data de Aniversário'] || colab['Aniversário'] || 'Não informado').trim();
+        const info = String(colab['Informações Gerais'] || colab['Observações'] || 'Sem observações').trim();
+        const minhas = window.todosAgendaTrabalho.filter(item => item.data.responsavel === nome && window.agendaEstaNoMes(item.data, mes));
+        const pendentes = minhas.filter(item => !window.agendaStatusConclusivos.includes(item.data.status)).length;
+        return `
+            <div class="agenda-colaborador-card">
+                <div class="agenda-colaborador-avatar">${foto ? `<img src="${window.escapeAttr(foto)}" alt="${window.escapeAttr(nome)}" onerror="this.parentElement.innerHTML='<i class=\\"ri-user-3-line\\"></i>'">` : '<i class="ri-user-3-line"></i>'}</div>
+                <div class="agenda-colaborador-meta">
+                    <h4>${window.escapeHTML(nome || 'Colaborador')}</h4>
+                    <p><strong>Setor:</strong> ${window.escapeHTML(setor)}</p>
+                    <p><strong>Aniversário:</strong> ${window.escapeHTML(aniversario)}</p>
+                    <p>${window.escapeHTML(info)}</p>
+                    <span class="agenda-badge-pendente"><i class="ri-notification-3-line"></i> ${pendentes} pendente(s) no mês</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
+(function() {
+    const oldSalvarAgenda = window.salvarAgendaTrabalho;
+    window.salvarAgendaTrabalho = async function() {
+        const dataInput = document.getElementById('agenda-data-principal');
+        if (dataInput && !dataInput.value) dataInput.value = new Date().toISOString().slice(0, 10);
+        await oldSalvarAgenda();
+        setTimeout(() => window.renderizarAgendaTrabalho(), 180);
+    };
+})();
+
+window.forcarRenderAgendaAoAbrirAba = function() {
+    const btn = document.getElementById('btn-nav-agenda-trabalho');
+    if (!btn || btn.dataset.renderHooked === '1') return;
+    btn.dataset.renderHooked = '1';
+    btn.addEventListener('click', () => {
+        setTimeout(() => {
+            window.renderizarAgendaTrabalho();
+            window.alternarViewAgenda(window.agendaTrabalhoView || 'calendario');
+        }, 120);
+    });
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+    window.forcarRenderAgendaAoAbrirAba();
+    setTimeout(() => {
+        const mesInput = document.getElementById('agenda-filtro-mes');
+        if (mesInput && !mesInput.value) mesInput.value = window.getAgendaMesAtual();
+        window.renderizarAgendaTrabalho();
+    }, 250);
+});
+
+
+// ==========================================
+// AJUSTES AGENDA - DIREÇÃO + ERRO AMIGÁVEL DE PERMISSÃO
+// ==========================================
+window.renderizarAgendaDirecao = function() {
+    const grid = document.getElementById('agenda-direcao-grid');
+    if (!grid) return;
+    const mes = window.obterAgendaMesSelecionado();
+    const tarefas = window.todosAgendaTrabalho.filter(item => ['direcao', 'ambos'].includes(item.data.visibilidade) && (window.agendaEstaNoMes(item.data, mes) || !item.data.dataPrincipal));
+    const hoje = new Date().toISOString().slice(0,10);
+    const feitasHoje = tarefas.filter(item => window.agendaStatusConclusivos.includes(item.data.status) && (window.obterDatasAgendaDaTarefa(item.data).includes(hoje) || String(item.data.atualizadoEm || '').startsWith(hoje)));
+    const emProducao = tarefas.filter(item => ['A fazer', 'Em andamento', 'Em revisão', 'Enviado'].includes(item.data.status));
+    const futuras = tarefas.filter(item => !window.agendaStatusConclusivos.includes(item.data.status) && (!item.data.dataPrincipal || item.data.dataPrincipal >= hoje));
+    const historico = tarefas.filter(item => window.agendaStatusConclusivos.includes(item.data.status)).sort((a,b) => String(b.data.atualizadoEm || '').localeCompare(String(a.data.atualizadoEm || ''))).slice(0,12);
+
+    const renderLista = (lista) => lista.length ? `<div class="agenda-direcao-list">${lista.map(item => `<div class="agenda-direcao-item"><strong>${window.escapeHTML(item.data.titulo)}</strong><br><span style="font-size:12px; color:#64748b;">${window.escapeHTML(item.data.responsavel || 'Sem responsável')} • ${window.escapeHTML(item.data.status)}${item.data.dataPrincipal ? ` • ${window.escapeHTML(item.data.dataPrincipal)}` : ''}</span></div>`).join('')}</div>` : '<p style="font-size:12px; color:#94a3b8;">Nenhum item nesta visão.</p>';
+
+    grid.innerHTML = `
+        <div class="agenda-direcao-card">
+            <h4>Em produção / enviado</h4>
+            ${renderLista(emProducao.slice(0, 12))}
+        </div>
+        <div class="agenda-direcao-card">
+            <h4>Próximas entregas</h4>
+            ${renderLista(futuras.slice(0, 12))}
+        </div>
+        <div class="agenda-direcao-card">
+            <h4>Feito hoje + histórico</h4>
+            ${renderLista([...feitasHoje, ...historico].slice(0, 12))}
+        </div>
+    `;
+};
+
+(function() {
+    const oldAplicarDnDAgenda = window.aplicarDnDAgenda;
+    window.aplicarDnDAgenda = function() {
+        oldAplicarDnDAgenda();
+        document.querySelectorAll('.agenda-board-column').forEach(col => {
+            const novo = col.cloneNode(true);
+            if (col.parentNode) col.parentNode.replaceChild(novo, col);
+        });
+        // reaplica handlers com mensagens mais claras
+        document.querySelectorAll('.agenda-task-card[data-task-id]').forEach(card => {
+            card.addEventListener('dragstart', () => { window.agendaDragTaskId = card.getAttribute('data-task-id'); });
+            card.addEventListener('dragend', () => { window.agendaDragTaskId = null; });
+        });
+        document.querySelectorAll('.agenda-board-column').forEach(col => {
+            col.addEventListener('dragover', (e) => { e.preventDefault(); col.classList.add('drag-over'); });
+            col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
+            col.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                col.classList.remove('drag-over');
+                const taskId = window.agendaDragTaskId;
+                const novoStatus = col.getAttribute('data-status');
+                if (!taskId || !novoStatus) return;
+                const item = window.todosAgendaTrabalho.find(t => t.id === taskId);
+                if (!item) return;
+                const hist = Array.isArray(item.data.historico) ? item.data.historico : [];
+                hist.push(`Status alterado para ${novoStatus} em ${new Date().toLocaleString('pt-BR')} por ${emailLogado || 'Gestor'}`);
+                try {
+                    await window.setDoc(window.doc(window.db, 'agenda_trabalho', taskId), { status: novoStatus, atualizadoEm: new Date().toISOString(), historico: hist.slice(-80) }, { merge: true });
+                } catch (error) {
+                    console.error(error);
+                    alert('O status não foi alterado porque a coleção agenda_trabalho está bloqueada nas Rules do Firestore.');
+                }
+            });
+        });
+    };
+})();
+
+
+// ==========================================
+// AJUSTES AGENDA - FOTO DO COLABORADOR + PREVIEW SEM IFRAME EMBUTIDO
+// ==========================================
+configuracaoAbas['colaboradores'].campos = [
+    'Nome Completo do Colaborador',
+    'Setor da Clínica',
+    'PIN de Acesso (Treinamentos)',
+    'Data de Aniversário',
+    'Link da Foto',
+    'Informações Gerais'
+];
+
+window.abrirPreviewAgenda = function(url = '', titulo = 'Visualizar Demanda') {
+    const link = String(url || '').trim();
+    if (!link) {
+        alert('Nenhum link de visualização foi informado nesta demanda.');
+        return;
+    }
+
+    if (typeof window.abrirJanelaFlutuante === 'function') {
+        window.abrirJanelaFlutuante(link, titulo);
+        return;
+    }
+
+    if (typeof window.abrirMidiaFlutuante === 'function') {
+        window.abrirMidiaFlutuante(link, titulo);
+        return;
+    }
+
+    window.open(link, '_blank', 'noopener,noreferrer');
+};
+
+window.gerarCardAgendaTarefa = function(item = {}, opts = {}) {
+    const data = window.normalizarAgendaData(item.data || {});
+    const podeEditar = opts.podeEditar !== false;
+    const visualUrl = data.link || data.iframeUrl || '';
+    return `
+        <div class="agenda-task-card" draggable="true" data-task-id="${item.id}" style="border-left-color:${data.destaqueEspecial ? '#f59e0b' : 'var(--primary-color)'};">
+            <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start;">
+                <h5>${data.destaqueEspecial ? '<span class="agenda-estrela">★</span> ' : ''}${window.escapeHTML(data.titulo || 'Demanda')}</h5>
+                ${podeEditar ? `<button type="button" class="btn-action btn-edit" style="width:28px; height:28px; font-size:14px;" onclick="window.abrirModalAgendaTrabalho('${item.id}')"><i class="ri-pencil-line"></i></button>` : ''}
+            </div>
+            <p>${window.escapeHTML(data.descricao || 'Sem descrição.')}</p>
+            ${data.temaEspecial ? `<p><strong>Tema:</strong> ${window.escapeHTML(data.temaEspecial)}</p>` : ''}
+            <p><strong>Responsável:</strong> ${window.escapeHTML(data.responsavel || 'Não definido')}</p>
+            <div class="agenda-task-meta">
+                <span class="agenda-mini-badge ${window.agendaCorUrgenciaClass(data.urgencia)}">${window.escapeHTML(data.urgencia)}</span>
+                <span class="agenda-mini-badge">${window.escapeHTML(data.status)}</span>
+                <span class="agenda-mini-badge">${window.escapeHTML(data.visibilidade)}</span>
+            </div>
+            ${visualUrl ? `<div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                <button class="btn-hover color-9" style="height:30px; font-size:11px; padding:0 12px;" type="button" onclick="window.abrirPreviewAgenda('${window.escapeAttr(visualUrl)}','${window.escapeAttr(data.titulo)}')"><i class="ri-layout-window-line"></i> Visualizar</button>
+            </div>` : ''}
+        </div>
+    `;
+};
