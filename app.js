@@ -1,7 +1,7 @@
 // ==========================================
 // 1. CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
 // ==========================================
-console.log('APP NOVO 3.5.3 CARREGADO');
+console.log('APP NOVO 3.5.2 CARREGADO');
 const configuracaoAbas = {
     'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da Clínica', 'PIN de Acesso (Treinamentos)'] },
     
@@ -73,7 +73,6 @@ window.dadosGlobaisAbas = {}; window.todosOsDadosDoSistema = {}; window.dadosBol
 window.pastaBoletimAtual = null; window.pastaPrivadoAtual = null; window.alunoLogado = null; 
 
 window.corStatusPendente = "#e53e3e"; window.corStatusConcluido = "#38a169";
-window._habilitarEscutaRestritaManual = false;
 
 window.safeParseJSON = function(raw, fallback = null) {
     if (raw === undefined || raw === null || raw === '' || raw === 'undefined' || raw === 'null') return fallback;
@@ -3953,11 +3952,6 @@ window.preencherSelectInventarioAtivos = function() {
 
 window.escutarInventariosAtivos = function() {
     const emailAtual = String(auth?.currentUser?.email || emailLogado || '').toLowerCase().trim();
-    if (!window._habilitarEscutaRestritaManual) {
-        window.inventariosAtivosData = [];
-        window._inventariosAtivosEscutando = false;
-        return;
-    }
     if (!window.podeVerAbasRestritas || !window.podeVerAbasRestritas(emailAtual)) {
         window.inventariosAtivosData = [];
         window._inventariosAtivosEscutando = false;
@@ -4662,11 +4656,6 @@ window.agendaCorUrgenciaClass = function(urgencia = '') {
 
 window.escutarAgendaTrabalho = function() {
     const emailAtual = String(auth?.currentUser?.email || emailLogado || '').toLowerCase().trim();
-    if (!window._habilitarEscutaRestritaManual) {
-        window.todosAgendaTrabalho = [];
-        window.agendaListenerAtivo = false;
-        return;
-    }
     if (!window.podeVerAbasRestritas || !window.podeVerAbasRestritas(emailAtual)) {
         window.todosAgendaTrabalho = [];
         window.agendaListenerAtivo = false;
@@ -4688,7 +4677,6 @@ window.escutarAgendaTrabalho = function() {
 onAuthStateChanged(auth, (user) => {
     const emailAtual = String(user?.email || emailLogado || '').toLowerCase().trim();
     if (!(user && window.podeVerAbasRestritas && window.podeVerAbasRestritas(emailAtual))) {
-        window._habilitarEscutaRestritaManual = false;
         window.todosAgendaTrabalho = [];
         window.inventariosAtivosData = [];
         window.agendaListenerAtivo = false;
@@ -5411,7 +5399,6 @@ window.inicializarListenersRestritosSobDemanda = function() {
         btnAtivos.addEventListener('click', () => {
             const emailAtual = String(auth?.currentUser?.email || emailLogado || '').toLowerCase().trim();
             if (window.podeVerAbasRestritas && window.podeVerAbasRestritas(emailAtual) && window.escutarInventariosAtivos) {
-                window._habilitarEscutaRestritaManual = true;
                 window.escutarInventariosAtivos();
             }
         });
@@ -5422,7 +5409,6 @@ window.inicializarListenersRestritosSobDemanda = function() {
         btnAgenda.addEventListener('click', () => {
             const emailAtual = String(auth?.currentUser?.email || emailLogado || '').toLowerCase().trim();
             if (window.podeVerAbasRestritas && window.podeVerAbasRestritas(emailAtual) && window.escutarAgendaTrabalho) {
-                window._habilitarEscutaRestritaManual = true;
                 window.escutarAgendaTrabalho();
             }
         });
@@ -5436,3 +5422,362 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }, 150);
 });
+
+
+// ==========================================
+// AGENDA 3.5.4 - CALENDÁRIO ALINHADO + CORES + COLLAPSE
+// ==========================================
+(function() {
+    window.aplicarEstilosAgendaAvancados = function() {
+        if (document.getElementById('agenda-style-354')) return;
+        const style = document.createElement('style');
+        style.id = 'agenda-style-354';
+        style.textContent = `
+            #agenda-calendario-grid.agenda-calendario-grid--mes {
+                display:grid;
+                grid-template-columns:repeat(7, minmax(145px, 1fr));
+                gap:14px;
+                align-items:start;
+            }
+            .agenda-weekday-head {
+                background:#eef2f7;
+                border:1px solid #d8e0ea;
+                border-radius:14px;
+                padding:10px 12px;
+                font-size:12px;
+                font-weight:800;
+                text-transform:uppercase;
+                color:#334155;
+                text-align:center;
+            }
+            .agenda-day-column--blank {
+                background:transparent;
+                border:1px dashed #e2e8f0;
+                min-height:110px;
+                box-shadow:none;
+            }
+            .agenda-day-column {
+                min-height:190px;
+            }
+            .agenda-task-card {
+                border-left-width:5px !important;
+                transition:all .2s ease;
+                overflow:hidden;
+            }
+            .agenda-task-card:hover {
+                transform:translateY(-1px);
+                box-shadow:0 8px 18px rgba(15, 23, 42, 0.08);
+            }
+            .agenda-task-header {
+                display:flex;
+                justify-content:space-between;
+                gap:10px;
+                align-items:flex-start;
+                cursor:pointer;
+            }
+            .agenda-task-header-main {
+                min-width:0;
+                flex:1;
+            }
+            .agenda-task-header-main h5 {
+                margin:0 0 4px 0;
+            }
+            .agenda-task-header-date {
+                font-size:11px;
+                font-weight:700;
+                color:#64748b;
+            }
+            .agenda-task-chevron {
+                font-size:16px;
+                color:#475569;
+                transition:transform .2s ease;
+                margin-left:6px;
+            }
+            .agenda-task-card.is-open .agenda-task-chevron {
+                transform:rotate(180deg);
+            }
+            .agenda-task-body-collapsible {
+                display:none;
+                margin-top:10px;
+            }
+            .agenda-task-card.is-open .agenda-task-body-collapsible {
+                display:block;
+            }
+            .agenda-task-actions {
+                display:flex;
+                gap:6px;
+                align-items:center;
+                flex-shrink:0;
+            }
+            .agenda-mini-badge-data {
+                background:rgba(255,255,255,.75);
+                color:#334155;
+            }
+            .agenda-direcao-list {
+                display:flex;
+                flex-direction:column;
+                gap:10px;
+            }
+            .agenda-direcao-item {
+                border:1px solid rgba(148, 163, 184, 0.25);
+                border-left:5px solid #cbd5e1;
+                border-radius:14px;
+                padding:12px;
+                background:#fff;
+            }
+            .agenda-direcao-item strong {
+                display:block;
+                margin-bottom:5px;
+            }
+            .agenda-direcao-item small {
+                display:block;
+                margin-top:6px;
+                color:#64748b;
+                font-size:11px;
+                font-weight:600;
+            }
+            .agenda-direcao-item.is-danger,
+            .agenda-task-card.is-danger { background:#fef2f2; border-left-color:#dc2626 !important; }
+            .agenda-direcao-item.is-warning,
+            .agenda-task-card.is-warning { background:#fffbeb; border-left-color:#d97706 !important; }
+            .agenda-direcao-item.is-info,
+            .agenda-task-card.is-info { background:#eff6ff; border-left-color:#2563eb !important; }
+            .agenda-direcao-item.is-success,
+            .agenda-task-card.is-success { background:#f0fdf4; border-left-color:#16a34a !important; }
+            .agenda-direcao-item.is-dark,
+            .agenda-task-card.is-dark { background:#f8fafc; border-left-color:#475569 !important; }
+            .agenda-direcao-item.is-purple,
+            .agenda-task-card.is-purple { background:#faf5ff; border-left-color:#9333ea !important; }
+            @media (max-width: 1200px) {
+                #agenda-calendario-grid.agenda-calendario-grid--mes {
+                    grid-template-columns:repeat(7, minmax(125px, 1fr));
+                    gap:10px;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    };
+
+    window.getAgendaStatusVisual = function(status = '') {
+        const s = String(status || '').toLowerCase().trim();
+        if (s.includes('concluído') || s.includes('concluido') || s.includes('publicado')) {
+            return { tone: 'is-success', label: 'Concluído/Publicado' };
+        }
+        if (s.includes('enviado')) {
+            return { tone: 'is-purple', label: 'Enviado' };
+        }
+        if (s.includes('em revisão') || s.includes('revisao')) {
+            return { tone: 'is-warning', label: 'Em revisão' };
+        }
+        if (s.includes('em andamento')) {
+            return { tone: 'is-info', label: 'Em andamento' };
+        }
+        if (s.includes('a fazer')) {
+            return { tone: 'is-danger', label: 'A fazer' };
+        }
+        return { tone: 'is-dark', label: status || 'Status' };
+    };
+
+    window.getAgendaDataExibicao = function(data = {}) {
+        const normalizada = window.normalizarAgendaData(data);
+        return String(normalizada.dataPrincipal || '').trim();
+    };
+
+    window.toggleAgendaCard = function(collapseId) {
+        const el = document.getElementById(collapseId);
+        const card = el ? el.closest('.agenda-task-card') : null;
+        if (!el || !card) return;
+        card.classList.toggle('is-open');
+    };
+
+    window.gerarCardAgendaTarefa = function(item = {}, opts = {}) {
+        window.aplicarEstilosAgendaAvancados();
+        const data = window.normalizarAgendaData(item.data || {});
+        const podeEditar = opts.podeEditar !== false;
+        const visualUrl = data.link || data.iframeUrl || '';
+        const extraordinaria = !!data.destaqueEspecial;
+        const statusVisual = window.getAgendaStatusVisual(data.status);
+        const collapseId = `agenda-collapse-${item.id}`;
+        const dataExibicao = window.getAgendaDataExibicao(data);
+
+        return `
+            <div class="agenda-task-card ${extraordinaria ? 'agenda-task-card--extraordinaria' : ''} ${statusVisual.tone}" draggable="true" data-task-id="${item.id}">
+                <div class="agenda-task-header" onclick="window.toggleAgendaCard('${collapseId}')">
+                    <div class="agenda-task-header-main">
+                        <h5>${extraordinaria ? '<span class="agenda-raio"><i class="ri-flashlight-fill"></i></span>' : ''}${window.escapeHTML(data.titulo || 'Demanda')}</h5>
+                        <div class="agenda-task-header-date">${dataExibicao ? window.escapeHTML(dataExibicao) : 'Sem data definida'}</div>
+                    </div>
+                    <div style="display:flex; align-items:flex-start; gap:8px;">
+                        ${podeEditar ? `
+                            <div class="agenda-task-actions" onclick="event.stopPropagation()">
+                                <button type="button" class="btn-action btn-edit" style="width:28px; height:28px; font-size:14px;" onclick="window.abrirModalAgendaTrabalho('${item.id}')" title="Editar demanda">
+                                    <i class="ri-pencil-line"></i>
+                                </button>
+                                <button type="button" class="btn-action btn-delete" style="width:28px; height:28px; font-size:14px;" onclick="window.excluirAgendaTrabalho('${item.id}')" title="Excluir demanda">
+                                    <i class="ri-delete-bin-6-line"></i>
+                                </button>
+                            </div>` : ''}
+                        <i class="ri-arrow-down-s-line agenda-task-chevron"></i>
+                    </div>
+                </div>
+                <div id="${collapseId}" class="agenda-task-body-collapsible">
+                    <p>${window.escapeHTML(data.descricao || 'Sem descrição.')}</p>
+                    ${data.temaEspecial ? `<p><strong>Tema:</strong> ${window.escapeHTML(data.temaEspecial)}</p>` : ''}
+                    <p><strong>Responsável:</strong> ${window.escapeHTML(data.responsavel || 'Não definido')}</p>
+                    <div class="agenda-task-meta">
+                        ${extraordinaria ? `<span class="agenda-mini-badge agenda-mini-badge-extraordinaria"><i class="ri-flashlight-fill"></i> Extraordinária</span>` : ''}
+                        <span class="agenda-mini-badge ${window.agendaCorUrgenciaClass(data.urgencia)}">${window.escapeHTML(data.urgencia)}</span>
+                        <span class="agenda-mini-badge">${window.escapeHTML(data.status)}</span>
+                        <span class="agenda-mini-badge">${window.escapeHTML(data.visibilidade)}</span>
+                        ${dataExibicao ? `<span class="agenda-mini-badge agenda-mini-badge-data"><i class="ri-calendar-line"></i> ${window.escapeHTML(dataExibicao)}</span>` : ''}
+                    </div>
+                    ${visualUrl ? `<div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                        <button class="btn-hover color-9" style="height:30px; font-size:11px; padding:0 12px;" type="button" onclick="event.stopPropagation(); window.abrirPreviewAgenda('${window.escapeAttr(visualUrl)}','${window.escapeAttr(data.titulo)}')"><i class="ri-layout-window-line"></i> Visualizar</button>
+                    </div>` : ''}
+                </div>
+            </div>
+        `;
+    };
+
+    window.gerarDiasDoMesAgenda = function(mes = '') {
+        const [ano, mesNum] = mes.split('-').map(Number);
+        if (!ano || !mesNum) return [];
+        const dias = new Date(ano, mesNum, 0).getDate();
+        const arr = [];
+        for (let dia = 1; dia <= dias; dia++) {
+            const data = new Date(ano, mesNum - 1, dia);
+            arr.push({
+                iso: `${ano}-${String(mesNum).padStart(2, '0')}-${String(dia).padStart(2, '0')}`,
+                label: data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                semana: data.toLocaleDateString('pt-BR', { weekday: 'short' }),
+                weekIndex: (data.getDay() + 6) % 7
+            });
+        }
+        return arr;
+    };
+
+    window.renderizarAgendaCalendario = function() {
+        window.aplicarEstilosAgendaAvancados();
+        const grid = document.getElementById('agenda-calendario-grid');
+        if (!grid) return;
+        const mes = window.obterAgendaMesSelecionado();
+        const dias = window.gerarDiasDoMesAgenda(mes);
+        const [ano, mesNum] = mes.split('-').map(Number);
+        const primeiroDia = new Date(ano, mesNum - 1, 1);
+        const offsetInicio = (primeiroDia.getDay() + 6) % 7;
+        const tarefas = window.todosAgendaTrabalho.filter(item => {
+            const dataPrincipal = window.getAgendaDataExibicao(item.data);
+            return dataPrincipal && dataPrincipal.startsWith(mes);
+        });
+
+        const weekHeaders = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+            .map(label => `<div class="agenda-weekday-head">${label}</div>`).join('');
+
+        const blanksInicio = Array.from({ length: offsetInicio }).map(() => `<div class="agenda-day-column agenda-day-column--blank"></div>`).join('');
+
+        const cellsDias = dias.map(dia => {
+            const tarefasDia = tarefas
+                .filter(item => window.getAgendaDataExibicao(item.data) === dia.iso)
+                .sort((a, b) => String(a.data.status || '').localeCompare(String(b.data.status || '')));
+
+            return `
+                <div class="agenda-day-column" data-date="${dia.iso}">
+                    <div class="agenda-day-header">
+                        <strong>${dia.label}</strong>
+                        <span>${window.escapeHTML(dia.semana)}</span>
+                    </div>
+                    <div>${tarefasDia.map(item => window.gerarCardAgendaTarefa(item)).join('') || '<p style="font-size:12px; color:#94a3b8;">Sem demandas</p>'}</div>
+                </div>
+            `;
+        }).join('');
+
+        const totalCeldas = offsetInicio + dias.length;
+        const resto = totalCeldas % 7;
+        const blanksFim = resto === 0 ? '' : Array.from({ length: 7 - resto }).map(() => `<div class="agenda-day-column agenda-day-column--blank"></div>`).join('');
+
+        grid.classList.add('agenda-calendario-grid--mes');
+        grid.innerHTML = weekHeaders + blanksInicio + cellsDias + blanksFim;
+        window.aplicarDnDAgenda();
+    };
+
+    window.renderizarAgendaBoard = function() {
+        window.aplicarEstilosAgendaAvancados();
+        const grid = document.getElementById('agenda-board-grid');
+        if (!grid) return;
+        const mes = window.obterAgendaMesSelecionado();
+        const tarefas = window.todosAgendaTrabalho
+            .filter(item => {
+                const dataPrincipal = window.getAgendaDataExibicao(item.data);
+                return dataPrincipal && dataPrincipal.startsWith(mes);
+            })
+            .sort((a, b) => String(window.getAgendaDataExibicao(a.data)).localeCompare(String(window.getAgendaDataExibicao(b.data))));
+        grid.innerHTML = window.agendaStatusColunas.map(status => {
+            const col = tarefas.filter(item => item.data.status === status);
+            return `
+                <div class="agenda-board-column" data-status="${window.escapeAttr(status)}">
+                    <h4>${window.escapeHTML(status)} <span style="color:#94a3b8;">(${col.length})</span></h4>
+                    ${col.map(item => window.gerarCardAgendaTarefa(item)).join('') || '<p style="font-size:12px; color:#94a3b8;">Sem itens</p>'}
+                </div>
+            `;
+        }).join('');
+        window.aplicarDnDAgenda();
+    };
+
+    window.renderizarAgendaDirecao = function() {
+        window.aplicarEstilosAgendaAvancados();
+        const grid = document.getElementById('agenda-direcao-grid');
+        if (!grid) return;
+        const mes = window.obterAgendaMesSelecionado();
+        const hoje = new Date().toISOString().slice(0,10);
+
+        const tarefas = window.todosAgendaTrabalho
+            .filter(item => ['direcao', 'ambos'].includes(item.data.visibilidade))
+            .filter(item => {
+                const dataPrincipal = window.getAgendaDataExibicao(item.data);
+                return dataPrincipal && dataPrincipal.startsWith(mes);
+            })
+            .sort((a, b) => String(window.getAgendaDataExibicao(a.data)).localeCompare(String(window.getAgendaDataExibicao(b.data))));
+
+        const doDia = tarefas.filter(item => window.getAgendaDataExibicao(item.data) === hoje);
+        const proximas = tarefas.filter(item => {
+            const dataPrincipal = window.getAgendaDataExibicao(item.data);
+            return dataPrincipal > hoje && !window.agendaStatusConclusivos.includes(item.data.status);
+        }).slice(0, 10);
+        const concluidas = tarefas.filter(item => window.agendaStatusConclusivos.includes(item.data.status))
+            .sort((a, b) => String(b.data.atualizadoEm || '').localeCompare(String(a.data.atualizadoEm || '')))
+            .slice(0, 10);
+
+        const renderLista = (lista) => lista.length ? `<div class="agenda-direcao-list">${lista.map(item => {
+            const visual = window.getAgendaStatusVisual(item.data.status);
+            const dataPrincipal = window.getAgendaDataExibicao(item.data);
+            return `<div class="agenda-direcao-item ${visual.tone}">
+                <strong>${window.escapeHTML(item.data.titulo)}</strong>
+                <span style="font-size:12px; color:#475569;">${window.escapeHTML(item.data.responsavel || 'Sem responsável')} • ${window.escapeHTML(item.data.status)} • ${window.escapeHTML(dataPrincipal || 'Sem data')}</span>
+                ${item.data.temaEspecial ? `<small>Tema: ${window.escapeHTML(item.data.temaEspecial)}</small>` : ''}
+            </div>`;
+        }).join('')}</div>` : '<p style="font-size:12px; color:#94a3b8;">Nenhum item nesta visão.</p>';
+
+        grid.innerHTML = `
+            <div class="agenda-direcao-card">
+                <h4>Demandas do dia</h4>
+                ${renderLista(doDia)}
+            </div>
+            <div class="agenda-direcao-card">
+                <h4>Próximas entregas</h4>
+                ${renderLista(proximas)}
+            </div>
+            <div class="agenda-direcao-card">
+                <h4>Concluídas / publicadas</h4>
+                ${renderLista(concluidas)}
+            </div>
+        `;
+    };
+
+    const _oldRenderAgendaTrabalho354 = window.renderizarAgendaTrabalho;
+    window.renderizarAgendaTrabalho = function() {
+        window.aplicarEstilosAgendaAvancados();
+        if (typeof _oldRenderAgendaTrabalho354 === 'function') {
+            return _oldRenderAgendaTrabalho354();
+        }
+    };
+})();
