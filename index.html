@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-    <link rel="stylesheet" href="style.css?v=3.5.0">
+    <link rel="stylesheet" href="style.css?v=3.5.1">
 
     <style>
         .sidebar-nav { overflow-y: auto; max-height: 65vh; }
@@ -1014,21 +1014,24 @@
                 </div>
                 <div class="agenda-form-grid">
                     <input type="text" id="agenda-tema-especial" class="form-input" placeholder="Tema especial / campanha">
-                    <label class="agenda-checkline"><input type="checkbox" id="agenda-destaque-especial"> Marcar com estrela / data especial</label>
+                    <label class="agenda-checkline"><input type="checkbox" id="agenda-destaque-especial"> Atividade extraordinária / última hora (ícone de raio)</label>
                 </div>
                 <input type="url" id="agenda-link" class="form-input" placeholder="Link do material / post / referência">
                 <input type="url" id="agenda-iframe" class="form-input" placeholder="Link para preview em iframe (opcional)">
                 <textarea id="agenda-historico-preview" class="form-input" style="height:110px; resize:vertical;" readonly placeholder="Histórico automático"></textarea>
             </div>
-            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:15px;">
-                <button class="btn-hover color-8" type="button" onclick="window.fecharModalAgendaTrabalho()"><i class="ri-close-line"></i> Fechar</button>
-                <button class="btn-hover color-11" type="button" onclick="window.salvarAgendaTrabalho()"><i class="ri-save-line"></i> Salvar Demanda</button>
+            <div class="agenda-modal-footer">
+                <button id="btn-excluir-agenda" class="btn-hover color-11" type="button" onclick="window.excluirAgendaTrabalhoAtual()" style="display:none;"><i class="ri-delete-bin-6-line"></i> Excluir Demanda</button>
+                <div class="agenda-modal-footer-actions">
+                    <button class="btn-hover color-8" type="button" onclick="window.fecharModalAgendaTrabalho()"><i class="ri-close-line"></i> Fechar</button>
+                    <button class="btn-hover color-11" type="button" onclick="window.salvarAgendaTrabalho()"><i class="ri-save-line"></i> Salvar Demanda</button>
+                </div>
             </div>
         </div>
     </div>
 
 
-    <script type="module" src="app.js?v=3.5.0"></script>
+    <script type="module" src="app.js?v=3.5.1"></script>
 
 </body>
 </html>
