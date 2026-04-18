@@ -458,3 +458,18 @@ body.is-auth-loading { cursor: progress; }
   .agenda-top-actions { width:100%; }
   .agenda-top-actions .btn-hover { flex:1; }
 }
+
+
+/* AGENDA - EXTRAORDINÁRIAS + EXCLUSÃO */
+.agenda-modal-footer { display:flex; gap:10px; justify-content:space-between; align-items:center; margin-top:15px; flex-wrap:wrap; }
+.agenda-modal-footer-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+.agenda-task-actions { display:flex; gap:6px; align-items:center; flex-shrink:0; }
+.agenda-task-card.agenda-task-card--extraordinaria { background:linear-gradient(180deg, #fffaf0 0%, #ffffff 100%); box-shadow:0 4px 16px rgba(245, 158, 11, 0.12); }
+.agenda-mini-badge-extraordinaria { background:#fff7ed; color:#c2410c; display:inline-flex; align-items:center; gap:5px; }
+.agenda-mini-badge-extraordinaria i { font-size:11px; }
+.agenda-raio { color:#f59e0b; font-size:16px; display:inline-flex; vertical-align:middle; margin-right:4px; }
+.agenda-checkline input[type="checkbox"] { accent-color:#f59e0b; }
+@media (max-width: 700px) {
+  .agenda-modal-footer, .agenda-modal-footer-actions { width:100%; }
+  .agenda-modal-footer-actions .btn-hover, .agenda-modal-footer > .btn-hover { flex:1; }
+}
