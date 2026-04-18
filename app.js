@@ -5781,3 +5781,113 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     };
 })();
+
+
+// ==========================================
+// AGENDA 3.5.5 - DATA BR + DIREÇÃO SOMENTE DO DIA
+// ==========================================
+(function() {
+    window.formatarDataAgenda = function(valor = '', comAno = true) {
+        const raw = String(valor || '').trim();
+        if (!raw) return '';
+        const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (match) {
+            const [, ano, mes, dia] = match;
+            return comAno ? `${dia}/${mes}/${ano}` : `${dia}/${mes}`;
+        }
+        const data = new Date(raw);
+        if (!Number.isNaN(data.getTime())) {
+            return data.toLocaleDateString('pt-BR', comAno ? { day:'2-digit', month:'2-digit', year:'numeric' } : { day:'2-digit', month:'2-digit' });
+        }
+        return raw;
+    };
+
+    window.gerarCardAgendaTarefa = function(item = {}, opts = {}) {
+        window.aplicarEstilosAgendaAvancados();
+        const data = window.normalizarAgendaData(item.data || {});
+        const podeEditar = opts.podeEditar !== false;
+        const visualUrl = data.link || data.iframeUrl || '';
+        const extraordinaria = !!data.destaqueEspecial;
+        const statusVisual = window.getAgendaStatusVisual(data.status);
+        const collapseId = `agenda-collapse-${item.id}`;
+        const dataExibicao = window.getAgendaDataExibicao(data);
+        const dataFormatada = window.formatarDataAgenda(dataExibicao);
+
+        return `
+            <div class="agenda-task-card ${extraordinaria ? 'agenda-task-card--extraordinaria' : ''} ${statusVisual.tone}" draggable="true" data-task-id="${item.id}">
+                <div class="agenda-task-header" onclick="window.toggleAgendaCard('${collapseId}')">
+                    <div class="agenda-task-header-main">
+                        <h5>${extraordinaria ? '<span class="agenda-raio"><i class="ri-flashlight-fill"></i></span>' : ''}${window.escapeHTML(data.titulo || 'Demanda')}</h5>
+                        <div class="agenda-task-header-date">${dataFormatada || 'Sem data definida'}</div>
+                    </div>
+                    <div style="display:flex; align-items:flex-start; gap:8px;">
+                        ${podeEditar ? `
+                            <div class="agenda-task-actions" onclick="event.stopPropagation()">
+                                <button type="button" class="btn-action btn-edit" style="width:28px; height:28px; font-size:14px;" onclick="window.abrirModalAgendaTrabalho('${item.id}')" title="Editar demanda">
+                                    <i class="ri-pencil-line"></i>
+                                </button>
+                                <button type="button" class="btn-action btn-delete" style="width:28px; height:28px; font-size:14px;" onclick="window.excluirAgendaTrabalho('${item.id}')" title="Excluir demanda">
+                                    <i class="ri-delete-bin-6-line"></i>
+                                </button>
+                            </div>` : ''}
+                        <i class="ri-arrow-down-s-line agenda-task-chevron"></i>
+                    </div>
+                </div>
+                <div id="${collapseId}" class="agenda-task-body-collapsible">
+                    <p>${window.escapeHTML(data.descricao || 'Sem descrição.')}</p>
+                    ${data.temaEspecial ? `<p><strong>Tema:</strong> ${window.escapeHTML(data.temaEspecial)}</p>` : ''}
+                    <p><strong>Responsável:</strong> ${window.escapeHTML(data.responsavel || 'Não definido')}</p>
+                    <div class="agenda-task-meta">
+                        ${extraordinaria ? `<span class="agenda-mini-badge agenda-mini-badge-extraordinaria"><i class="ri-flashlight-fill"></i> Extraordinária</span>` : ''}
+                        <span class="agenda-mini-badge ${window.agendaCorUrgenciaClass(data.urgencia)}">${window.escapeHTML(data.urgencia)}</span>
+                        <span class="agenda-mini-badge">${window.escapeHTML(data.status)}</span>
+                        <span class="agenda-mini-badge">${window.escapeHTML(data.visibilidade)}</span>
+                        ${dataFormatada ? `<span class="agenda-mini-badge agenda-mini-badge-data"><i class="ri-calendar-line"></i> ${window.escapeHTML(dataFormatada)}</span>` : ''}
+                    </div>
+                    ${visualUrl ? `<div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                        <button class="btn-hover color-9" style="height:30px; font-size:11px; padding:0 12px;" type="button" onclick="event.stopPropagation(); window.abrirPreviewAgenda('${window.escapeAttr(visualUrl)}','${window.escapeAttr(data.titulo)}')"><i class="ri-layout-window-line"></i> Visualizar</button>
+                    </div>` : ''}
+                </div>
+            </div>
+        `;
+    };
+
+    window.renderizarAgendaDirecao = function() {
+        window.aplicarEstilosAgendaAvancados();
+        const grid = document.getElementById('agenda-direcao-grid');
+        if (!grid) return;
+
+        const hoje = new Date().toISOString().slice(0,10);
+        const doDia = window.todosAgendaTrabalho
+            .filter(item => ['direcao', 'ambos'].includes(item.data.visibilidade))
+            .filter(item => window.getAgendaDataExibicao(item.data) === hoje)
+            .sort((a, b) => {
+                const ordem = {
+                    'A fazer': 1,
+                    'Em andamento': 2,
+                    'Em revisão': 3,
+                    'Enviado': 4,
+                    'Publicado': 5,
+                    'Concluído': 6
+                };
+                return (ordem[a.data.status] || 99) - (ordem[b.data.status] || 99);
+            });
+
+        const renderLista = (lista) => lista.length ? `<div class="agenda-direcao-list">${lista.map(item => {
+            const visual = window.getAgendaStatusVisual(item.data.status);
+            const dataPrincipal = window.formatarDataAgenda(window.getAgendaDataExibicao(item.data));
+            return `<div class="agenda-direcao-item ${visual.tone}">
+                <strong>${window.escapeHTML(item.data.titulo)}</strong>
+                <span style="font-size:12px; color:#475569;">${window.escapeHTML(item.data.responsavel || 'Sem responsável')} • ${window.escapeHTML(item.data.status)}${dataPrincipal ? ` • ${window.escapeHTML(dataPrincipal)}` : ''}</span>
+                ${item.data.temaEspecial ? `<small>Tema: ${window.escapeHTML(item.data.temaEspecial)}</small>` : ''}
+            </div>`;
+        }).join('')}</div>` : '<p style="font-size:12px; color:#94a3b8;">Nenhuma demanda programada para hoje.</p>';
+
+        grid.innerHTML = `
+            <div class="agenda-direcao-card" style="grid-column:1 / -1;">
+                <h4>Demandas do dia</h4>
+                ${renderLista(doDia)}
+            </div>
+        `;
+    };
+})();
