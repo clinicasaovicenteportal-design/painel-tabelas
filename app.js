@@ -6856,3 +6856,157 @@ window.addEventListener('DOMContentLoaded', () => {
         `;
     };
 })();
+
+
+// ==========================================
+// AGENDA 3.6.3 - MINI CARDS / ZEBRA NAS TAREFAS
+// ==========================================
+(function() {
+    window.aplicarEstilosMiniCardsAgenda = function() {
+        if (document.getElementById('agenda-style-363')) return;
+        const style = document.createElement('style');
+        style.id = 'agenda-style-363';
+        style.textContent = `
+            .agenda-mini-task-list {
+                display:flex;
+                flex-direction:column;
+                gap:6px;
+                margin-top:8px;
+            }
+            .agenda-mini-task-row {
+                padding:8px 10px;
+                border-radius:10px;
+                border:1px solid #e2e8f0;
+                border-left:4px solid #cbd5e1;
+                font-size:12px;
+                line-height:1.45;
+                color:#334155;
+            }
+            .agenda-mini-task-row:nth-child(odd) { background:#ffffff; }
+            .agenda-mini-task-row:nth-child(even) { background:#f8fafc; }
+            .agenda-mini-task-row.is-danger { border-left-color:#dc2626; background:#fef2f2; }
+            .agenda-mini-task-row.is-warning { border-left-color:#d97706; background:#fffbeb; }
+            .agenda-mini-task-row.is-info { border-left-color:#2563eb; background:#eff6ff; }
+            .agenda-mini-task-row.is-success { border-left-color:#16a34a; background:#f0fdf4; }
+            .agenda-mini-task-row.is-purple { border-left-color:#9333ea; background:#faf5ff; }
+            .agenda-mini-task-row strong {
+                display:block;
+                font-size:12px;
+                margin-bottom:3px;
+                color:#0f172a;
+            }
+            .agenda-mini-task-row small {
+                display:block;
+                font-size:11px;
+                color:#64748b;
+            }
+        `;
+        document.head.appendChild(style);
+    };
+
+    window.renderizarMiniListaAgenda = function(lista = [], limite = 3) {
+        window.aplicarEstilosMiniCardsAgenda();
+        const itens = (lista || []).slice(0, limite);
+        if (!itens.length) return '<div class="agenda-day-preview">Sem demandas</div>';
+
+        return `<div class="agenda-mini-task-list">${itens.map(item => {
+            const data = window.normalizarAgendaData(item.data || {});
+            const visual = window.getAgendaStatusVisual ? window.getAgendaStatusVisual(data.status) : { tone: '' };
+            const hora = data.horario ? ` • ${window.escapeHTML(data.horario)}` : '';
+            return `<div class="agenda-mini-task-row ${visual.tone}">
+                <strong>${window.escapeHTML(data.titulo || 'Demanda')}</strong>
+                <small>${window.escapeHTML(data.status || 'Status')}${hora}</small>
+            </div>`;
+        }).join('')}</div>`;
+    };
+
+    window.renderizarCardsColaboradoresAgenda = function() {
+        window.aplicarEstilosMiniCardsAgenda();
+        const grid = document.getElementById('agenda-colaboradores-grid');
+        if (!grid) return;
+        const colaboradores = (window.todosOsDadosDoSistema['colaboradores'] || []).map(item => item.data || {}).filter(window.colaboradorEhMarketing);
+        const dataRef = window.getAgendaDataFiltroExato() || new Date().toISOString().slice(0,10);
+
+        if (!colaboradores.length) {
+            grid.innerHTML = '<div style="color:#64748b; font-size:13px;">Nenhum colaborador do marketing cadastrado.</div>';
+            return;
+        }
+
+        grid.innerHTML = colaboradores.map(colab => {
+            const nome = String(colab['Nome Completo do Colaborador'] || '').trim();
+            const setor = String(colab['Setor da Clínica'] || 'Marketing').trim();
+            const foto = String(colab['Link da Foto'] || colab['Foto'] || '').trim();
+            const aniversario = String(colab['Data de Aniversário'] || colab['Aniversário'] || 'Não informado').trim();
+            const info = String(colab['Informações Gerais'] || colab['Observações'] || 'Sem observações').trim();
+
+            const todas = (window.todosAgendaTrabalho || []).filter(item => item.data.responsavel === nome);
+            const doDia = todas.filter(item => window.getAgendaDatasExecucao(item.data).includes(dataRef));
+            const concluidas = todas.filter(item => window.agendaStatusConclusivos.includes(item.data.status)).length;
+
+            return `
+                <div class="agenda-colaborador-card">
+                    <div class="agenda-colaborador-avatar">${foto ? `<img src="${window.escapeAttr(foto)}" alt="${window.escapeAttr(nome)}" onerror="this.parentElement.innerHTML='<i class=\\"ri-user-3-line\\"></i>'">` : '<i class="ri-user-3-line"></i>'}</div>
+                    <div class="agenda-colaborador-meta">
+                        <h4>${window.escapeHTML(nome || 'Colaborador')}</h4>
+                        <p><strong>Setor:</strong> ${window.escapeHTML(setor)}</p>
+                        <p><strong>Aniversário:</strong> ${window.escapeHTML(aniversario)}</p>
+                        <p>${window.escapeHTML(info)}</p>
+                        <div class="agenda-colaborador-resumo">
+                            <span class="agenda-badge-hoje"><i class="ri-calendar-check-line"></i> ${doDia.length} do dia</span>
+                            <span class="agenda-badge-concluido"><i class="ri-checkbox-circle-line"></i> ${concluidas} concluída(s)</span>
+                        </div>
+                        ${window.renderizarMiniListaAgenda(doDia, 3)}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    };
+
+    window.renderizarAgendaCalendario = function() {
+        window.aplicarEstilosAgendaAvancados();
+        window.aplicarEstilosAgendaConferencia();
+        window.aplicarEstilosMiniCardsAgenda();
+        const grid = document.getElementById('agenda-calendario-grid');
+        if (!grid) return;
+        const mes = window.obterAgendaMesSelecionado();
+        const dias = window.gerarDiasDoMesAgenda(mes);
+        const [ano, mesNum] = mes.split('-').map(Number);
+        const primeiroDia = new Date(ano, mesNum - 1, 1);
+        const offsetInicio = (primeiroDia.getDay() + 6) % 7;
+        const tarefas = (window.todosAgendaTrabalho || []).filter(item => {
+            const datas = window.getAgendaDatasExecucao(item.data);
+            return datas.some(dt => dt.startsWith(mes));
+        });
+
+        const weekHeaders = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+            .map(label => `<div class="agenda-weekday-head">${label}</div>`).join('');
+
+        const blanksInicio = Array.from({ length: offsetInicio }).map(() => `<div class="agenda-day-column agenda-day-column--blank"></div>`).join('');
+
+        const cellsDias = dias.map(dia => {
+            const tarefasDia = tarefas.filter(item => window.getAgendaDatasExecucao(item.data).includes(dia.iso));
+            const concluidas = tarefasDia.filter(item => window.agendaStatusConclusivos.includes(item.data.status)).length;
+
+            return `
+                <div class="agenda-day-column clickable-day" data-date="${dia.iso}" onclick="window.abrirDiaAgenda('${dia.iso}')">
+                    <div class="agenda-day-header">
+                        <strong>${dia.label}</strong>
+                        <span>${window.escapeHTML(dia.semana)}</span>
+                    </div>
+                    <div class="agenda-day-summary">
+                        <span class="agenda-day-count"><i class="ri-stack-line"></i> ${tarefasDia.length} demanda(s)</span>
+                        ${concluidas ? `<span class="agenda-badge-concluido"><i class="ri-checkbox-circle-line"></i> ${concluidas} concluída(s)</span>` : ''}
+                        ${window.renderizarMiniListaAgenda(tarefasDia, 2)}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        const totalCeldas = offsetInicio + dias.length;
+        const resto = totalCeldas % 7;
+        const blanksFim = resto === 0 ? '' : Array.from({ length: 7 - resto }).map(() => `<div class="agenda-day-column agenda-day-column--blank"></div>`).join('');
+
+        grid.classList.add('agenda-calendario-grid--mes');
+        grid.innerHTML = weekHeaders + blanksInicio + cellsDias + blanksFim;
+    };
+})();
