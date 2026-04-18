@@ -5891,3 +5891,530 @@ window.addEventListener('DOMContentLoaded', () => {
         `;
     };
 })();
+
+
+// ==========================================
+// AGENDA 3.6.0 - FILTRO POR DATA + DIA + HORÁRIO + CONFERÊNCIA
+// ==========================================
+(function() {
+    window.aplicarEstilosAgendaConferencia = function() {
+        if (document.getElementById('agenda-style-360')) return;
+        const style = document.createElement('style');
+        style.id = 'agenda-style-360';
+        style.textContent = `
+            .agenda-filtro-extra-wrap {
+                display:flex;
+                gap:10px;
+                flex-wrap:wrap;
+                align-items:center;
+            }
+            .agenda-day-summary {
+                display:flex;
+                flex-direction:column;
+                gap:8px;
+                margin-top:10px;
+            }
+            .agenda-day-count {
+                display:inline-flex;
+                align-items:center;
+                gap:6px;
+                width:max-content;
+                padding:6px 10px;
+                border-radius:999px;
+                background:#eff6ff;
+                color:#1d4ed8;
+                font-size:11px;
+                font-weight:800;
+            }
+            .agenda-day-preview {
+                font-size:12px;
+                color:#64748b;
+                line-height:1.45;
+            }
+            .agenda-day-column.clickable-day {
+                cursor:pointer;
+            }
+            .agenda-day-column.clickable-day:hover {
+                border-color:#94a3b8;
+                box-shadow:0 8px 18px rgba(15,23,42,.06);
+            }
+            .agenda-colaborador-resumo {
+                display:flex;
+                flex-wrap:wrap;
+                gap:8px;
+                margin-top:8px;
+            }
+            .agenda-badge-concluido {
+                display:inline-flex;
+                align-items:center;
+                gap:6px;
+                padding:5px 9px;
+                background:#f0fdf4;
+                color:#15803d;
+                border-radius:999px;
+                font-size:11px;
+                font-weight:700;
+            }
+            .agenda-badge-hoje {
+                display:inline-flex;
+                align-items:center;
+                gap:6px;
+                padding:5px 9px;
+                background:#eff6ff;
+                color:#1d4ed8;
+                border-radius:999px;
+                font-size:11px;
+                font-weight:700;
+            }
+            .agenda-prazo-chip {
+                display:inline-flex;
+                align-items:center;
+                gap:6px;
+                padding:4px 8px;
+                border-radius:999px;
+                font-size:10px;
+                font-weight:800;
+            }
+            .agenda-prazo-chip.is-danger { background:#fee2e2; color:#b91c1c; }
+            .agenda-prazo-chip.is-warning { background:#fef3c7; color:#b45309; }
+            .agenda-prazo-chip.is-success { background:#dcfce7; color:#166534; }
+            .agenda-prazo-chip.is-info { background:#dbeafe; color:#1d4ed8; }
+            .agenda-mini-badge-horario {
+                background:rgba(255,255,255,.75);
+                color:#0f172a;
+            }
+            .agenda-dia-modal-overlay {
+                position:fixed;
+                inset:0;
+                background:rgba(15,23,42,.45);
+                backdrop-filter:blur(3px);
+                z-index:10040;
+                display:none;
+                align-items:center;
+                justify-content:center;
+                padding:20px;
+            }
+            .agenda-dia-modal-box {
+                width:min(980px, 96vw);
+                max-height:90vh;
+                overflow:auto;
+                background:#fff;
+                border-radius:22px;
+                padding:22px;
+                box-shadow:0 28px 60px rgba(15,23,42,.25);
+            }
+            .agenda-dia-modal-grid {
+                display:grid;
+                grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+                gap:14px;
+                margin-top:16px;
+            }
+        `;
+        document.head.appendChild(style);
+    };
+
+    const _oldNormalizarAgenda360 = window.normalizarAgendaData;
+    window.normalizarAgendaData = function(data = {}) {
+        const base = typeof _oldNormalizarAgenda360 === 'function' ? _oldNormalizarAgenda360(data) : { ...(data || {}) };
+        return {
+            ...base,
+            horario: String(data.horario || base.horario || '').trim()
+        };
+    };
+
+    window.getAgendaDataFiltroExato = function() {
+        const input = document.getElementById('agenda-filtro-data');
+        return input ? String(input.value || '').trim() : '';
+    };
+
+    window.getAgendaPeriodoAtivo = function() {
+        const dataExata = window.getAgendaDataFiltroExato();
+        if (dataExata) return { tipo: 'data', valor: dataExata };
+        return { tipo: 'mes', valor: window.obterAgendaMesSelecionado() };
+    };
+
+    window.filtrarAgendaPorPeriodo = function(lista = []) {
+        const periodo = window.getAgendaPeriodoAtivo();
+        return (lista || []).filter(item => {
+            const dataPrincipal = window.getAgendaDataExibicao(item.data);
+            if (!dataPrincipal) return false;
+            if (periodo.tipo === 'data') return dataPrincipal === periodo.valor;
+            return dataPrincipal.startsWith(periodo.valor);
+        });
+    };
+
+    window.formatarDuracaoRestanteAgenda = function(ms = 0) {
+        const totalMin = Math.max(1, Math.round(Math.abs(ms) / 60000));
+        const dias = Math.floor(totalMin / (60 * 24));
+        const horas = Math.floor((totalMin % (60 * 24)) / 60);
+        const minutos = totalMin % 60;
+        if (dias > 0) return `${dias}d ${horas}h`;
+        if (horas > 0) return `${horas}h ${minutos}min`;
+        return `${minutos}min`;
+    };
+
+    window.getAgendaPrazoInfo = function(data = {}) {
+        const normalizada = window.normalizarAgendaData(data);
+        if (!normalizada.dataPrincipal || !normalizada.horario) return null;
+
+        const due = new Date(`${normalizada.dataPrincipal}T${normalizada.horario}:00`);
+        if (Number.isNaN(due.getTime())) return null;
+
+        const agora = new Date();
+        const diff = due.getTime() - agora.getTime();
+        const conclusiva = window.agendaStatusConclusivos.includes(normalizada.status);
+        const atualizado = normalizada.atualizadoEm ? new Date(normalizada.atualizadoEm) : null;
+
+        if (conclusiva && atualizado && !Number.isNaN(atualizado.getTime())) {
+            if (atualizado.getTime() <= due.getTime()) {
+                return { texto: 'Concluída no prazo', tone: 'is-success' };
+            }
+            if (atualizado.toISOString().slice(0,10) === normalizada.dataPrincipal) {
+                return { texto: 'Feita no dia com atraso', tone: 'is-warning' };
+            }
+            return { texto: 'Concluída com atraso', tone: 'is-danger' };
+        }
+
+        if (diff < 0) {
+            return { texto: `Atrasada há ${window.formatarDuracaoRestanteAgenda(diff)}`, tone: 'is-danger' };
+        }
+        if (diff <= 1000 * 60 * 60 * 6) {
+            return { texto: `Falta ${window.formatarDuracaoRestanteAgenda(diff)}`, tone: 'is-warning' };
+        }
+        if (diff <= 1000 * 60 * 60 * 24) {
+            return { texto: `Entrega hoje às ${normalizada.horario}`, tone: 'is-info' };
+        }
+        return { texto: `Entrega às ${normalizada.horario}`, tone: 'is-info' };
+    };
+
+    window.garantirCampoHorarioAgenda = function() {
+        const dataInput = document.getElementById('agenda-data-principal');
+        if (!dataInput || document.getElementById('agenda-horario')) return;
+        const horario = document.createElement('input');
+        horario.type = 'time';
+        horario.id = 'agenda-horario';
+        horario.className = 'form-input';
+        horario.placeholder = 'Horário da atividade';
+        const parent = dataInput.parentElement;
+        if (parent) {
+            parent.appendChild(horario);
+        }
+    };
+
+    const _oldAbrirModalAgenda360 = window.abrirModalAgendaTrabalho;
+    window.abrirModalAgendaTrabalho = function(docId = null) {
+        if (typeof _oldAbrirModalAgenda360 === 'function') _oldAbrirModalAgenda360(docId);
+        window.garantirCampoHorarioAgenda();
+        const item = docId ? (window.todosAgendaTrabalho.find(t => t.id === docId) || null) : null;
+        const data = item ? window.normalizarAgendaData(item.data) : window.normalizarAgendaData({});
+        const horarioInput = document.getElementById('agenda-horario');
+        if (horarioInput) horarioInput.value = data.horario || '';
+    };
+
+    const _oldSalvarAgenda360 = window.salvarAgendaTrabalho;
+    window.salvarAgendaTrabalho = async function() {
+        window.garantirCampoHorarioAgenda();
+        const horarioInput = document.getElementById('agenda-horario');
+        const docId = document.getElementById('agenda-doc-id')?.value || '';
+        const itemAntigo = docId ? (window.todosAgendaTrabalho.find(t => t.id === docId) || null) : null;
+        const horarioAnterior = itemAntigo?.data?.horario || '';
+        await _oldSalvarAgenda360();
+        try {
+            const idAtual = docId || '';
+            const horario = String(horarioInput?.value || horarioAnterior || '').trim();
+            if (idAtual && horario) {
+                await window.setDoc(window.doc(window.db, 'agenda_trabalho', idAtual), { horario }, { merge: true });
+            }
+        } catch (e) {
+            console.error('Falha ao salvar horário da demanda:', e);
+        }
+        setTimeout(() => window.renderizarAgendaTrabalho(), 150);
+    };
+
+    window.inicializarFiltrosAvancadosAgenda = function() {
+        window.aplicarEstilosAgendaConferencia();
+        const filtroMes = document.getElementById('agenda-filtro-mes');
+        if (!filtroMes || document.getElementById('agenda-filtro-data')) return;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'agenda-filtro-extra-wrap';
+        wrap.innerHTML = `
+            <input type="date" id="agenda-filtro-data" class="form-input agenda-month-input" style="width:170px; margin-bottom:0;" title="Filtrar por data específica">
+            <button type="button" id="agenda-limpar-data" class="btn-hover color-8" style="height:45px; padding:0 14px; font-size:12px;">
+                <i class="ri-close-line"></i> Limpar data
+            </button>
+        `;
+
+        filtroMes.parentElement?.appendChild(wrap);
+
+        const inputData = wrap.querySelector('#agenda-filtro-data');
+        const btnLimpar = wrap.querySelector('#agenda-limpar-data');
+        if (inputData) inputData.addEventListener('change', () => window.renderizarAgendaTrabalho());
+        if (btnLimpar) btnLimpar.addEventListener('click', () => {
+            if (inputData) inputData.value = '';
+            window.renderizarAgendaTrabalho();
+        });
+    };
+
+    window.garantirModalDiaAgenda = function() {
+        if (document.getElementById('agenda-dia-modal')) return;
+        window.aplicarEstilosAgendaConferencia();
+        const overlay = document.createElement('div');
+        overlay.id = 'agenda-dia-modal';
+        overlay.className = 'agenda-dia-modal-overlay';
+        overlay.innerHTML = `
+            <div class="agenda-dia-modal-box">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                    <h3 id="agenda-dia-modal-title" style="margin:0;">Demandas do dia</h3>
+                    <button type="button" class="btn-icon" onclick="window.fecharDiaAgenda()"><i class="ri-close-line"></i></button>
+                </div>
+                <div id="agenda-dia-modal-grid" class="agenda-dia-modal-grid"></div>
+            </div>
+        `;
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) window.fecharDiaAgenda();
+        });
+        document.body.appendChild(overlay);
+    };
+
+    window.abrirDiaAgenda = function(isoDate = '') {
+        window.garantirModalDiaAgenda();
+        const overlay = document.getElementById('agenda-dia-modal');
+        const title = document.getElementById('agenda-dia-modal-title');
+        const grid = document.getElementById('agenda-dia-modal-grid');
+        if (!overlay || !title || !grid) return;
+
+        const tarefasDia = (window.todosAgendaTrabalho || [])
+            .filter(item => window.getAgendaDataExibicao(item.data) === isoDate)
+            .sort((a, b) => String(a.data.horario || '').localeCompare(String(b.data.horario || '')));
+
+        title.textContent = `Demandas de ${window.formatarDataAgenda(isoDate) || isoDate}`;
+        grid.innerHTML = tarefasDia.length
+            ? tarefasDia.map(item => window.gerarCardAgendaTarefa(item)).join('')
+            : '<p style="color:#64748b;">Nenhuma demanda para esta data.</p>';
+        overlay.style.display = 'flex';
+    };
+
+    window.fecharDiaAgenda = function() {
+        const overlay = document.getElementById('agenda-dia-modal');
+        if (overlay) overlay.style.display = 'none';
+    };
+
+    window.gerarCardAgendaTarefa = function(item = {}, opts = {}) {
+        window.aplicarEstilosAgendaAvancados();
+        window.aplicarEstilosAgendaConferencia();
+        const data = window.normalizarAgendaData(item.data || {});
+        const podeEditar = opts.podeEditar !== false;
+        const visualUrl = data.link || data.iframeUrl || '';
+        const extraordinaria = !!data.destaqueEspecial;
+        const statusVisual = window.getAgendaStatusVisual(data.status);
+        const collapseId = `agenda-collapse-${item.id}`;
+        const dataExibicao = window.getAgendaDataExibicao(data);
+        const dataFormatada = window.formatarDataAgenda(dataExibicao);
+        const prazo = window.getAgendaPrazoInfo(data);
+
+        return `
+            <div class="agenda-task-card ${extraordinaria ? 'agenda-task-card--extraordinaria' : ''} ${statusVisual.tone}" draggable="true" data-task-id="${item.id}">
+                <div class="agenda-task-header" onclick="window.toggleAgendaCard('${collapseId}')">
+                    <div class="agenda-task-header-main">
+                        <h5>${extraordinaria ? '<span class="agenda-raio"><i class="ri-flashlight-fill"></i></span>' : ''}${window.escapeHTML(data.titulo || 'Demanda')}</h5>
+                        <div class="agenda-task-header-date">${dataFormatada || 'Sem data definida'}${data.horario ? ` • ${window.escapeHTML(data.horario)}` : ''}</div>
+                    </div>
+                    <div style="display:flex; align-items:flex-start; gap:8px;">
+                        ${podeEditar ? `
+                            <div class="agenda-task-actions" onclick="event.stopPropagation()">
+                                <button type="button" class="btn-action btn-edit" style="width:28px; height:28px; font-size:14px;" onclick="window.abrirModalAgendaTrabalho('${item.id}')" title="Editar demanda">
+                                    <i class="ri-pencil-line"></i>
+                                </button>
+                                <button type="button" class="btn-action btn-delete" style="width:28px; height:28px; font-size:14px;" onclick="window.excluirAgendaTrabalho('${item.id}')" title="Excluir demanda">
+                                    <i class="ri-delete-bin-6-line"></i>
+                                </button>
+                            </div>` : ''}
+                        <i class="ri-arrow-down-s-line agenda-task-chevron"></i>
+                    </div>
+                </div>
+                <div id="${collapseId}" class="agenda-task-body-collapsible">
+                    <p>${window.escapeHTML(data.descricao || 'Sem descrição.')}</p>
+                    ${data.temaEspecial ? `<p><strong>Tema:</strong> ${window.escapeHTML(data.temaEspecial)}</p>` : ''}
+                    <p><strong>Responsável:</strong> ${window.escapeHTML(data.responsavel || 'Não definido')}</p>
+                    <div class="agenda-task-meta">
+                        ${extraordinaria ? `<span class="agenda-mini-badge agenda-mini-badge-extraordinaria"><i class="ri-flashlight-fill"></i> Extraordinária</span>` : ''}
+                        <span class="agenda-mini-badge ${window.agendaCorUrgenciaClass(data.urgencia)}">${window.escapeHTML(data.urgencia)}</span>
+                        <span class="agenda-mini-badge">${window.escapeHTML(data.status)}</span>
+                        <span class="agenda-mini-badge">${window.escapeHTML(data.visibilidade)}</span>
+                        ${dataFormatada ? `<span class="agenda-mini-badge agenda-mini-badge-data"><i class="ri-calendar-line"></i> ${window.escapeHTML(dataFormatada)}</span>` : ''}
+                        ${data.horario ? `<span class="agenda-mini-badge agenda-mini-badge-horario"><i class="ri-time-line"></i> ${window.escapeHTML(data.horario)}</span>` : ''}
+                    </div>
+                    ${prazo ? `<div style="margin-top:10px;"><span class="agenda-prazo-chip ${prazo.tone}"><i class="ri-alarm-warning-line"></i> ${window.escapeHTML(prazo.texto)}</span></div>` : ''}
+                    ${visualUrl ? `<div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                        <button class="btn-hover color-9" style="height:30px; font-size:11px; padding:0 12px;" type="button" onclick="event.stopPropagation(); window.abrirPreviewAgenda('${window.escapeAttr(visualUrl)}','${window.escapeAttr(data.titulo)}')"><i class="ri-layout-window-line"></i> Visualizar</button>
+                    </div>` : ''}
+                </div>
+            </div>
+        `;
+    };
+
+    window.renderizarCardsColaboradoresAgenda = function() {
+        const grid = document.getElementById('agenda-colaboradores-grid');
+        if (!grid) return;
+        const colaboradores = (window.todosOsDadosDoSistema['colaboradores'] || []).map(item => item.data || {}).filter(window.colaboradorEhMarketing);
+        const dataRef = window.getAgendaDataFiltroExato() || new Date().toISOString().slice(0,10);
+
+        if (!colaboradores.length) {
+            grid.innerHTML = '<div style="color:#64748b; font-size:13px;">Nenhum colaborador do marketing cadastrado.</div>';
+            return;
+        }
+
+        grid.innerHTML = colaboradores.map(colab => {
+            const nome = String(colab['Nome Completo do Colaborador'] || '').trim();
+            const setor = String(colab['Setor da Clínica'] || 'Marketing').trim();
+            const foto = String(colab['Link da Foto'] || colab['Foto'] || '').trim();
+            const aniversario = String(colab['Data de Aniversário'] || colab['Aniversário'] || 'Não informado').trim();
+            const info = String(colab['Informações Gerais'] || colab['Observações'] || 'Sem observações').trim();
+
+            const todas = (window.todosAgendaTrabalho || []).filter(item => item.data.responsavel === nome);
+            const doDia = todas.filter(item => window.getAgendaDataExibicao(item.data) === dataRef);
+            const concluidas = todas.filter(item => window.agendaStatusConclusivos.includes(item.data.status)).length;
+
+            const resumoHoje = doDia.length
+                ? doDia.slice(0, 2).map(item => `• ${window.escapeHTML(item.data.titulo)}`).join('<br>')
+                : 'Sem demanda para a data selecionada.';
+
+            return `
+                <div class="agenda-colaborador-card">
+                    <div class="agenda-colaborador-avatar">${foto ? `<img src="${window.escapeAttr(foto)}" alt="${window.escapeAttr(nome)}" onerror="this.parentElement.innerHTML='<i class=\\"ri-user-3-line\\"></i>'">` : '<i class="ri-user-3-line"></i>'}</div>
+                    <div class="agenda-colaborador-meta">
+                        <h4>${window.escapeHTML(nome || 'Colaborador')}</h4>
+                        <p><strong>Setor:</strong> ${window.escapeHTML(setor)}</p>
+                        <p><strong>Aniversário:</strong> ${window.escapeHTML(aniversario)}</p>
+                        <p>${window.escapeHTML(info)}</p>
+                        <div class="agenda-colaborador-resumo">
+                            <span class="agenda-badge-hoje"><i class="ri-calendar-check-line"></i> ${doDia.length} do dia</span>
+                            <span class="agenda-badge-concluido"><i class="ri-checkbox-circle-line"></i> ${concluidas} concluída(s)</span>
+                        </div>
+                        <div style="margin-top:10px; font-size:12px; color:#64748b; line-height:1.5;">${resumoHoje}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    };
+
+    window.renderizarAgendaCalendario = function() {
+        window.aplicarEstilosAgendaAvancados();
+        window.aplicarEstilosAgendaConferencia();
+        const grid = document.getElementById('agenda-calendario-grid');
+        if (!grid) return;
+        const mes = window.obterAgendaMesSelecionado();
+        const dias = window.gerarDiasDoMesAgenda(mes);
+        const [ano, mesNum] = mes.split('-').map(Number);
+        const primeiroDia = new Date(ano, mesNum - 1, 1);
+        const offsetInicio = (primeiroDia.getDay() + 6) % 7;
+        const tarefas = (window.todosAgendaTrabalho || []).filter(item => {
+            const dataPrincipal = window.getAgendaDataExibicao(item.data);
+            return dataPrincipal && dataPrincipal.startsWith(mes);
+        });
+
+        const weekHeaders = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+            .map(label => `<div class="agenda-weekday-head">${label}</div>`).join('');
+
+        const blanksInicio = Array.from({ length: offsetInicio }).map(() => `<div class="agenda-day-column agenda-day-column--blank"></div>`).join('');
+
+        const cellsDias = dias.map(dia => {
+            const tarefasDia = tarefas.filter(item => window.getAgendaDataExibicao(item.data) === dia.iso);
+            const concluidas = tarefasDia.filter(item => window.agendaStatusConclusivos.includes(item.data.status)).length;
+            const preview = tarefasDia.slice(0, 2).map(item => window.escapeHTML(item.data.titulo)).join(' • ');
+
+            return `
+                <div class="agenda-day-column clickable-day" data-date="${dia.iso}" onclick="window.abrirDiaAgenda('${dia.iso}')">
+                    <div class="agenda-day-header">
+                        <strong>${dia.label}</strong>
+                        <span>${window.escapeHTML(dia.semana)}</span>
+                    </div>
+                    <div class="agenda-day-summary">
+                        <span class="agenda-day-count"><i class="ri-stack-line"></i> ${tarefasDia.length} demanda(s)</span>
+                        ${concluidas ? `<span class="agenda-badge-concluido"><i class="ri-checkbox-circle-line"></i> ${concluidas} concluída(s)</span>` : ''}
+                        <div class="agenda-day-preview">${tarefasDia.length ? preview : 'Sem demandas'}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        const totalCeldas = offsetInicio + dias.length;
+        const resto = totalCeldas % 7;
+        const blanksFim = resto === 0 ? '' : Array.from({ length: 7 - resto }).map(() => `<div class="agenda-day-column agenda-day-column--blank"></div>`).join('');
+
+        grid.classList.add('agenda-calendario-grid--mes');
+        grid.innerHTML = weekHeaders + blanksInicio + cellsDias + blanksFim;
+    };
+
+    window.renderizarAgendaBoard = function() {
+        window.aplicarEstilosAgendaAvancados();
+        window.aplicarEstilosAgendaConferencia();
+        const grid = document.getElementById('agenda-board-grid');
+        if (!grid) return;
+        const tarefas = window.filtrarAgendaPorPeriodo(window.todosAgendaTrabalho)
+            .sort((a, b) => String(window.getAgendaDataExibicao(a.data)).localeCompare(String(window.getAgendaDataExibicao(b.data))));
+        grid.innerHTML = window.agendaStatusColunas.map(status => {
+            const col = tarefas.filter(item => item.data.status === status);
+            return `
+                <div class="agenda-board-column" data-status="${window.escapeAttr(status)}">
+                    <h4>${window.escapeHTML(status)} <span style="color:#94a3b8;">(${col.length})</span></h4>
+                    ${col.map(item => window.gerarCardAgendaTarefa(item)).join('') || '<p style="font-size:12px; color:#94a3b8;">Sem itens</p>'}
+                </div>
+            `;
+        }).join('');
+        window.aplicarDnDAgenda();
+    };
+
+    window.renderizarAgendaDirecao = function() {
+        window.aplicarEstilosAgendaAvancados();
+        window.aplicarEstilosAgendaConferencia();
+        const grid = document.getElementById('agenda-direcao-grid');
+        if (!grid) return;
+
+        const dataRef = window.getAgendaDataFiltroExato() || new Date().toISOString().slice(0,10);
+        const doDia = (window.todosAgendaTrabalho || [])
+            .filter(item => ['direcao', 'ambos'].includes(item.data.visibilidade))
+            .filter(item => window.getAgendaDataExibicao(item.data) === dataRef)
+            .sort((a, b) => String(a.data.horario || '').localeCompare(String(b.data.horario || '')));
+
+        const renderLista = (lista) => lista.length ? `<div class="agenda-direcao-list">${lista.map(item => {
+            const visual = window.getAgendaStatusVisual(item.data.status);
+            const dataPrincipal = window.formatarDataAgenda(window.getAgendaDataExibicao(item.data));
+            const prazo = window.getAgendaPrazoInfo(item.data);
+            return `<div class="agenda-direcao-item ${visual.tone}">
+                <strong>${window.escapeHTML(item.data.titulo)}</strong>
+                <span style="font-size:12px; color:#475569;">${window.escapeHTML(item.data.responsavel || 'Sem responsável')} • ${window.escapeHTML(item.data.status)}${dataPrincipal ? ` • ${window.escapeHTML(dataPrincipal)}` : ''}${item.data.horario ? ` • ${window.escapeHTML(item.data.horario)}` : ''}</span>
+                ${item.data.temaEspecial ? `<small>Tema: ${window.escapeHTML(item.data.temaEspecial)}</small>` : ''}
+                ${prazo ? `<div style="margin-top:8px;"><span class="agenda-prazo-chip ${prazo.tone}"><i class="ri-alarm-warning-line"></i> ${window.escapeHTML(prazo.texto)}</span></div>` : ''}
+            </div>`;
+        }).join('')}</div>` : '<p style="font-size:12px; color:#94a3b8;">Nenhuma demanda programada para esta data.</p>';
+
+        grid.innerHTML = `
+            <div class="agenda-direcao-card" style="grid-column:1 / -1;">
+                <h4>Demandas do dia — ${window.formatarDataAgenda(dataRef)}</h4>
+                ${renderLista(doDia)}
+            </div>
+        `;
+    };
+
+    window.renderizarAgendaTrabalho = function() {
+        window.aplicarEstilosAgendaAvancados();
+        window.aplicarEstilosAgendaConferencia();
+        window.inicializarFiltrosAvancadosAgenda();
+        const inputMes = document.getElementById('agenda-filtro-mes');
+        if (inputMes && !inputMes.value) inputMes.value = window.getAgendaMesAtual();
+        window.renderizarCardsColaboradoresAgenda();
+        if (window.agendaTrabalhoView === 'board') window.renderizarAgendaBoard();
+        else if (window.agendaTrabalhoView === 'direcao') window.renderizarAgendaDirecao();
+        else window.renderizarAgendaCalendario();
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            window.inicializarFiltrosAvancadosAgenda();
+            window.garantirCampoHorarioAgenda();
+            window.garantirModalDiaAgenda();
+        }, 160);
+    });
+})();
