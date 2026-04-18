@@ -5245,3 +5245,126 @@ window.addEventListener('DOMContentLoaded', () => {
 onAuthStateChanged(auth, (user) => {
     setTimeout(() => window.atualizarVisibilidadeAbasRestritas(), 80);
 });
+
+
+// ==========================================
+// AGENDA - EXTRAORDINÁRIAS + EXCLUSÃO
+// ==========================================
+(function() {
+    const originalAbrirModalAgendaTrabalho = window.abrirModalAgendaTrabalho;
+    const originalFecharModalAgendaTrabalho = window.fecharModalAgendaTrabalho;
+
+    window.excluirAgendaTrabalho = async function(docId = '') {
+        const id = String(docId || '').trim();
+        if (!id) {
+            alert('Nenhuma demanda selecionada para exclusão.');
+            return;
+        }
+
+        const item = (window.todosAgendaTrabalho || []).find(t => t.id === id);
+        const titulo = item?.data?.titulo || 'esta demanda';
+
+        if (!confirm(`Deseja realmente excluir "${titulo}"? Esta ação não poderá ser desfeita.`)) {
+            return;
+        }
+
+        try {
+            await window.deleteDoc(window.doc(window.db, 'agenda_trabalho', id));
+            if (typeof originalFecharModalAgendaTrabalho === 'function') {
+                originalFecharModalAgendaTrabalho();
+            } else {
+                const modal = document.getElementById('modal-agenda-trabalho');
+                if (modal) modal.style.display = 'none';
+            }
+            setTimeout(() => {
+                if (typeof window.renderizarAgendaTrabalho === 'function') window.renderizarAgendaTrabalho();
+            }, 120);
+            alert('Demanda excluída com sucesso!');
+        } catch (error) {
+            alert('Erro ao excluir demanda: ' + (error?.message || 'falha desconhecida'));
+        }
+    };
+
+    window.excluirAgendaTrabalhoAtual = function() {
+        const input = document.getElementById('agenda-doc-id');
+        const docId = input ? String(input.value || '').trim() : '';
+        if (!docId) {
+            alert('Abra uma demanda existente para excluir.');
+            return;
+        }
+        window.excluirAgendaTrabalho(docId);
+    };
+
+    window.abrirModalAgendaTrabalho = function(docId = null) {
+        if (typeof originalAbrirModalAgendaTrabalho === 'function') {
+            originalAbrirModalAgendaTrabalho(docId);
+        }
+
+        const btnExcluir = document.getElementById('btn-excluir-agenda');
+        if (btnExcluir) {
+            btnExcluir.style.display = docId ? 'inline-flex' : 'none';
+            btnExcluir.disabled = !docId;
+        }
+
+        const tituloModal = document.getElementById('agenda-modal-title');
+        if (tituloModal && docId) {
+            tituloModal.textContent = 'Editar Demanda / Atividade';
+        }
+
+        const checkbox = document.getElementById('agenda-destaque-especial');
+        if (checkbox) {
+            checkbox.title = 'Use para sinalizar atividades extraordinárias ou de última hora.';
+        }
+    };
+
+    window.fecharModalAgendaTrabalho = function() {
+        const btnExcluir = document.getElementById('btn-excluir-agenda');
+        if (btnExcluir) {
+            btnExcluir.style.display = 'none';
+            btnExcluir.disabled = false;
+        }
+
+        if (typeof originalFecharModalAgendaTrabalho === 'function') {
+            originalFecharModalAgendaTrabalho();
+        } else {
+            const modal = document.getElementById('modal-agenda-trabalho');
+            if (modal) modal.style.display = 'none';
+        }
+    };
+
+    window.gerarCardAgendaTarefa = function(item = {}, opts = {}) {
+        const data = window.normalizarAgendaData(item.data || {});
+        const podeEditar = opts.podeEditar !== false;
+        const visualUrl = data.link || data.iframeUrl || '';
+        const extraordinaria = !!data.destaqueEspecial;
+
+        return `
+            <div class="agenda-task-card ${extraordinaria ? 'agenda-task-card--extraordinaria' : ''}" draggable="true" data-task-id="${item.id}" style="border-left-color:${extraordinaria ? '#f59e0b' : 'var(--primary-color)'};">
+                <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start;">
+                    <h5>${extraordinaria ? '<span class="agenda-raio"><i class="ri-flashlight-fill"></i></span>' : ''}${window.escapeHTML(data.titulo || 'Demanda')}</h5>
+                    ${podeEditar ? `
+                        <div class="agenda-task-actions">
+                            <button type="button" class="btn-action btn-edit" style="width:28px; height:28px; font-size:14px;" onclick="window.abrirModalAgendaTrabalho('${item.id}')" title="Editar demanda">
+                                <i class="ri-pencil-line"></i>
+                            </button>
+                            <button type="button" class="btn-action btn-delete" style="width:28px; height:28px; font-size:14px;" onclick="window.excluirAgendaTrabalho('${item.id}')" title="Excluir demanda">
+                                <i class="ri-delete-bin-6-line"></i>
+                            </button>
+                        </div>` : ''}
+                </div>
+                <p>${window.escapeHTML(data.descricao || 'Sem descrição.')}</p>
+                ${data.temaEspecial ? `<p><strong>Tema:</strong> ${window.escapeHTML(data.temaEspecial)}</p>` : ''}
+                <p><strong>Responsável:</strong> ${window.escapeHTML(data.responsavel || 'Não definido')}</p>
+                <div class="agenda-task-meta">
+                    ${extraordinaria ? `<span class="agenda-mini-badge agenda-mini-badge-extraordinaria"><i class="ri-flashlight-fill"></i> Extraordinária</span>` : ''}
+                    <span class="agenda-mini-badge ${window.agendaCorUrgenciaClass(data.urgencia)}">${window.escapeHTML(data.urgencia)}</span>
+                    <span class="agenda-mini-badge">${window.escapeHTML(data.status)}</span>
+                    <span class="agenda-mini-badge">${window.escapeHTML(data.visibilidade)}</span>
+                </div>
+                ${visualUrl ? `<div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                    <button class="btn-hover color-9" style="height:30px; font-size:11px; padding:0 12px;" type="button" onclick="window.abrirPreviewAgenda('${window.escapeAttr(visualUrl)}','${window.escapeAttr(data.titulo)}')"><i class="ri-layout-window-line"></i> Visualizar</button>
+                </div>` : ''}
+            </div>
+        `;
+    };
+})();
