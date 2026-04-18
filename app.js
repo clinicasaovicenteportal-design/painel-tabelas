@@ -6600,3 +6600,259 @@ window.addEventListener('DOMContentLoaded', () => {
         }, 180);
     });
 })();
+
+
+// ==========================================
+// AGENDA 3.6.2 - INTERVALO DE DATAS + REPETIÇÃO NAS DATAS EXTRAS
+// ==========================================
+(function() {
+    window.getAgendaDatasExecucao = function(data = {}) {
+        if (typeof window.obterDatasAgendaDaTarefa === 'function') {
+            return window.obterDatasAgendaDaTarefa(data);
+        }
+        const normalizada = window.normalizarAgendaData(data);
+        const set = new Set();
+        if (normalizada.dataPrincipal) set.add(normalizada.dataPrincipal);
+        (normalizada.datasExtras || []).forEach(dt => { if (dt) set.add(dt); });
+        return Array.from(set).sort();
+    };
+
+    window.adicionarIntervaloDatasAgenda = function() {
+        const inputInicio = document.getElementById('agenda-data-inicio-range');
+        const inputFim = document.getElementById('agenda-data-fim-range');
+        const inicio = String(inputInicio?.value || '').trim();
+        const fim = String(inputFim?.value || '').trim();
+        if (!inicio || !fim) return;
+        if (inicio > fim) {
+            alert('A data inicial não pode ser maior que a data final.');
+            return;
+        }
+
+        let cursor = new Date(`${inicio}T00:00:00`);
+        const limite = new Date(`${fim}T00:00:00`);
+        while (cursor <= limite) {
+            const iso = cursor.toISOString().slice(0,10);
+            if (!window.agendaDatasExtrasSelecionadas.includes(iso)) {
+                window.agendaDatasExtrasSelecionadas.push(iso);
+            }
+            cursor.setDate(cursor.getDate() + 1);
+        }
+
+        if (inputInicio) inputInicio.value = '';
+        if (inputFim) inputFim.value = '';
+        window.renderizarDatasExtrasAgenda();
+    };
+
+    window.configurarPickerDatasExtrasAgenda = function() {
+        window.aplicarEstilosAgendaDatasExtras();
+
+        const inputOriginal = document.getElementById('agenda-datas-extras');
+        if (!inputOriginal) return;
+
+        let box = document.getElementById('agenda-datas-picker-box');
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'agenda-datas-picker-box';
+            box.className = 'agenda-datas-picker-box';
+            inputOriginal.parentElement?.insertBefore(box, inputOriginal.nextSibling);
+        }
+
+        box.innerHTML = `
+            <div class="agenda-datas-picker-title">Datas extras da atividade</div>
+            <div class="agenda-datas-picker-row">
+                <input type="date" id="agenda-data-extra-picker" class="form-input">
+                <button type="button" id="agenda-btn-add-data-extra" class="btn-hover color-9" style="height:45px; padding:0 16px; font-size:12px;">
+                    <i class="ri-add-line"></i> Adicionar data
+                </button>
+            </div>
+            <div class="agenda-datas-picker-title" style="margin-top:14px;">Adicionar intervalo automático</div>
+            <div class="agenda-datas-picker-row">
+                <input type="date" id="agenda-data-inicio-range" class="form-input" placeholder="Data inicial">
+                <input type="date" id="agenda-data-fim-range" class="form-input" placeholder="Data final">
+                <button type="button" id="agenda-btn-add-range" class="btn-hover color-5" style="height:45px; padding:0 16px; font-size:12px;">
+                    <i class="ri-calendar-check-line"></i> Adicionar intervalo
+                </button>
+            </div>
+            <div id="agenda-datas-tags" class="agenda-datas-tags"></div>
+        `;
+
+        inputOriginal.style.display = 'none';
+
+        const addBtn = document.getElementById('agenda-btn-add-data-extra');
+        const picker = document.getElementById('agenda-data-extra-picker');
+        const addRangeBtn = document.getElementById('agenda-btn-add-range');
+
+        if (addBtn && addBtn.dataset.bound !== '1') {
+            addBtn.dataset.bound = '1';
+            addBtn.addEventListener('click', window.adicionarDataExtraAgenda);
+        }
+        if (picker && picker.dataset.bound !== '1') {
+            picker.dataset.bound = '1';
+            picker.addEventListener('change', window.adicionarDataExtraAgenda);
+        }
+        if (addRangeBtn && addRangeBtn.dataset.bound !== '1') {
+            addRangeBtn.dataset.bound = '1';
+            addRangeBtn.addEventListener('click', window.adicionarIntervaloDatasAgenda);
+        }
+
+        window.agendaDatasExtrasSelecionadas = String(inputOriginal.value || '')
+            .split(',')
+            .map(v => v.trim())
+            .filter(Boolean);
+
+        window.renderizarDatasExtrasAgenda();
+    };
+
+    window.filtrarAgendaPorPeriodo = function(lista = []) {
+        const periodo = window.getAgendaPeriodoAtivo();
+        return (lista || []).filter(item => {
+            const datas = window.getAgendaDatasExecucao(item.data);
+            if (!datas.length) return false;
+            if (periodo.tipo === 'data') return datas.includes(periodo.valor);
+            return datas.some(dt => dt.startsWith(periodo.valor));
+        });
+    };
+
+    window.renderizarCardsColaboradoresAgenda = function() {
+        const grid = document.getElementById('agenda-colaboradores-grid');
+        if (!grid) return;
+        const colaboradores = (window.todosOsDadosDoSistema['colaboradores'] || []).map(item => item.data || {}).filter(window.colaboradorEhMarketing);
+        const dataRef = window.getAgendaDataFiltroExato() || new Date().toISOString().slice(0,10);
+
+        if (!colaboradores.length) {
+            grid.innerHTML = '<div style="color:#64748b; font-size:13px;">Nenhum colaborador do marketing cadastrado.</div>';
+            return;
+        }
+
+        grid.innerHTML = colaboradores.map(colab => {
+            const nome = String(colab['Nome Completo do Colaborador'] || '').trim();
+            const setor = String(colab['Setor da Clínica'] || 'Marketing').trim();
+            const foto = String(colab['Link da Foto'] || colab['Foto'] || '').trim();
+            const aniversario = String(colab['Data de Aniversário'] || colab['Aniversário'] || 'Não informado').trim();
+            const info = String(colab['Informações Gerais'] || colab['Observações'] || 'Sem observações').trim();
+
+            const todas = (window.todosAgendaTrabalho || []).filter(item => item.data.responsavel === nome);
+            const doDia = todas.filter(item => window.getAgendaDatasExecucao(item.data).includes(dataRef));
+            const concluidas = todas.filter(item => window.agendaStatusConclusivos.includes(item.data.status)).length;
+
+            const resumoHoje = doDia.length
+                ? doDia.slice(0, 2).map(item => `• ${window.escapeHTML(item.data.titulo)}`).join('<br>')
+                : 'Sem demanda para a data selecionada.';
+
+            return `
+                <div class="agenda-colaborador-card">
+                    <div class="agenda-colaborador-avatar">${foto ? `<img src="${window.escapeAttr(foto)}" alt="${window.escapeAttr(nome)}" onerror="this.parentElement.innerHTML='<i class=\\"ri-user-3-line\\"></i>'">` : '<i class="ri-user-3-line"></i>'}</div>
+                    <div class="agenda-colaborador-meta">
+                        <h4>${window.escapeHTML(nome || 'Colaborador')}</h4>
+                        <p><strong>Setor:</strong> ${window.escapeHTML(setor)}</p>
+                        <p><strong>Aniversário:</strong> ${window.escapeHTML(aniversario)}</p>
+                        <p>${window.escapeHTML(info)}</p>
+                        <div class="agenda-colaborador-resumo">
+                            <span class="agenda-badge-hoje"><i class="ri-calendar-check-line"></i> ${doDia.length} do dia</span>
+                            <span class="agenda-badge-concluido"><i class="ri-checkbox-circle-line"></i> ${concluidas} concluída(s)</span>
+                        </div>
+                        <div style="margin-top:10px; font-size:12px; color:#64748b; line-height:1.5;">${resumoHoje}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    };
+
+    window.abrirDiaAgenda = function(isoDate = '') {
+        window.garantirModalDiaAgenda();
+        const overlay = document.getElementById('agenda-dia-modal');
+        const title = document.getElementById('agenda-dia-modal-title');
+        const grid = document.getElementById('agenda-dia-modal-grid');
+        if (!overlay || !title || !grid) return;
+
+        const tarefasDia = (window.todosAgendaTrabalho || [])
+            .filter(item => window.getAgendaDatasExecucao(item.data).includes(isoDate))
+            .sort((a, b) => String(a.data.horario || '').localeCompare(String(b.data.horario || '')));
+
+        title.textContent = `Demandas de ${window.formatarDataAgenda(isoDate) || isoDate}`;
+        grid.innerHTML = tarefasDia.length
+            ? tarefasDia.map(item => window.gerarCardAgendaTarefa(item)).join('')
+            : '<p style="color:#64748b;">Nenhuma demanda para esta data.</p>';
+        overlay.style.display = 'flex';
+    };
+
+    window.renderizarAgendaCalendario = function() {
+        window.aplicarEstilosAgendaAvancados();
+        window.aplicarEstilosAgendaConferencia();
+        const grid = document.getElementById('agenda-calendario-grid');
+        if (!grid) return;
+        const mes = window.obterAgendaMesSelecionado();
+        const dias = window.gerarDiasDoMesAgenda(mes);
+        const [ano, mesNum] = mes.split('-').map(Number);
+        const primeiroDia = new Date(ano, mesNum - 1, 1);
+        const offsetInicio = (primeiroDia.getDay() + 6) % 7;
+        const tarefas = (window.todosAgendaTrabalho || []).filter(item => {
+            const datas = window.getAgendaDatasExecucao(item.data);
+            return datas.some(dt => dt.startsWith(mes));
+        });
+
+        const weekHeaders = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+            .map(label => `<div class="agenda-weekday-head">${label}</div>`).join('');
+
+        const blanksInicio = Array.from({ length: offsetInicio }).map(() => `<div class="agenda-day-column agenda-day-column--blank"></div>`).join('');
+
+        const cellsDias = dias.map(dia => {
+            const tarefasDia = tarefas.filter(item => window.getAgendaDatasExecucao(item.data).includes(dia.iso));
+            const concluidas = tarefasDia.filter(item => window.agendaStatusConclusivos.includes(item.data.status)).length;
+            const preview = tarefasDia.slice(0, 2).map(item => window.escapeHTML(item.data.titulo)).join(' • ');
+
+            return `
+                <div class="agenda-day-column clickable-day" data-date="${dia.iso}" onclick="window.abrirDiaAgenda('${dia.iso}')">
+                    <div class="agenda-day-header">
+                        <strong>${dia.label}</strong>
+                        <span>${window.escapeHTML(dia.semana)}</span>
+                    </div>
+                    <div class="agenda-day-summary">
+                        <span class="agenda-day-count"><i class="ri-stack-line"></i> ${tarefasDia.length} demanda(s)</span>
+                        ${concluidas ? `<span class="agenda-badge-concluido"><i class="ri-checkbox-circle-line"></i> ${concluidas} concluída(s)</span>` : ''}
+                        <div class="agenda-day-preview">${tarefasDia.length ? preview : 'Sem demandas'}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        const totalCeldas = offsetInicio + dias.length;
+        const resto = totalCeldas % 7;
+        const blanksFim = resto === 0 ? '' : Array.from({ length: 7 - resto }).map(() => `<div class="agenda-day-column agenda-day-column--blank"></div>`).join('');
+
+        grid.classList.add('agenda-calendario-grid--mes');
+        grid.innerHTML = weekHeaders + blanksInicio + cellsDias + blanksFim;
+    };
+
+    window.renderizarAgendaDirecao = function() {
+        window.aplicarEstilosAgendaAvancados();
+        window.aplicarEstilosAgendaConferencia();
+        const grid = document.getElementById('agenda-direcao-grid');
+        if (!grid) return;
+
+        const dataRef = window.getAgendaDataFiltroExato() || new Date().toISOString().slice(0,10);
+        const doDia = (window.todosAgendaTrabalho || [])
+            .filter(item => ['direcao', 'ambos'].includes(item.data.visibilidade))
+            .filter(item => window.getAgendaDatasExecucao(item.data).includes(dataRef))
+            .sort((a, b) => String(a.data.horario || '').localeCompare(String(b.data.horario || '')));
+
+        const renderLista = (lista) => lista.length ? `<div class="agenda-direcao-list">${lista.map(item => {
+            const visual = window.getAgendaStatusVisual(item.data.status);
+            const dataPrincipal = window.formatarDataAgenda(window.getAgendaDataExibicao(item.data));
+            const prazo = window.getAgendaPrazoInfo(item.data);
+            return `<div class="agenda-direcao-item ${visual.tone}">
+                <strong>${window.escapeHTML(item.data.titulo)}</strong>
+                <span style="font-size:12px; color:#475569;">${window.escapeHTML(item.data.responsavel || 'Sem responsável')} • ${window.escapeHTML(item.data.status)}${dataPrincipal ? ` • base ${window.escapeHTML(dataPrincipal)}` : ''}${item.data.horario ? ` • ${window.escapeHTML(item.data.horario)}` : ''}</span>
+                ${item.data.temaEspecial ? `<small>Tema: ${window.escapeHTML(item.data.temaEspecial)}</small>` : ''}
+                ${prazo ? `<div style="margin-top:8px;"><span class="agenda-prazo-chip ${prazo.tone}"><i class="ri-alarm-warning-line"></i> ${window.escapeHTML(prazo.texto)}</span></div>` : ''}
+            </div>`;
+        }).join('')}</div>` : '<p style="font-size:12px; color:#94a3b8;">Nenhuma demanda programada para esta data.</p>';
+
+        grid.innerHTML = `
+            <div class="agenda-direcao-card" style="grid-column:1 / -1;">
+                <h4>Demandas do dia — ${window.formatarDataAgenda(dataRef)}</h4>
+                ${renderLista(doDia)}
+            </div>
+        `;
+    };
+})();
