@@ -473,3 +473,7 @@ body.is-auth-loading { cursor: progress; }
   .agenda-modal-footer, .agenda-modal-footer-actions { width:100%; }
   .agenda-modal-footer-actions .btn-hover, .agenda-modal-footer > .btn-hover { flex:1; }
 }
+
+
+/* certificados ensino */
+.certificado-alert-host{margin-bottom:16px}
