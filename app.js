@@ -8475,3 +8475,35 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     };
 })();
+
+
+// ==========================================
+// AGENDA 3.8.2 - TRAVA DE RECORRÊNCIA LEGADA NO MÊS BASE
+// ==========================================
+(function() {
+    window.getAgendaMesBaseLegado = function(data = {}) {
+        const normalizada = window.normalizarAgendaData ? window.normalizarAgendaData(data) : (data || {});
+        const candidates = [
+            String(normalizada.recorrenciaMesInicio || '').trim(),
+            String(normalizada.recorrenciaMesFim || '').trim(),
+            String(normalizada.dataPrincipal || '').trim().slice(0, 7),
+            String(normalizada.criadoEm || '').trim().slice(0, 7),
+            String(normalizada.atualizadoEm || '').trim().slice(0, 7)
+        ].filter(v => /^\d{4}-\d{2}$/.test(v));
+        return candidates[0] || '';
+    };
+
+    window.mesEstaDentroDaRecorrenciaAgenda = function(mesContexto = '', data = {}) {
+        const normalizada = window.normalizarAgendaData ? window.normalizarAgendaData(data) : (data || {});
+        const inicio = String(normalizada.recorrenciaMesInicio || '').trim();
+        const fim = String(normalizada.recorrenciaMesFim || '').trim();
+        const base = window.getAgendaMesBaseLegado(normalizada);
+
+        if (!inicio && !fim && Array.isArray(normalizada.diasRecorrentes) && normalizada.diasRecorrentes.length) {
+            return !!base && mesContexto === base;
+        }
+        if (inicio && mesContexto < inicio) return false;
+        if (fim && mesContexto > fim) return false;
+        return true;
+    };
+})();
