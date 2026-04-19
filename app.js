@@ -8925,3 +8925,279 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 })();
+
+
+// ==========================================
+// CERTIFICADOS ENSINO 3.9.1 - NOTA MÍNIMA + CENTRAL DE IMPRESSÃO + BLOQUEIO APÓS CONCLUSÃO
+// ==========================================
+(function() {
+    const camposTreino = configuracaoAbas?.treinamentos?.campos || [];
+    if (!camposTreino.includes('Nota Mínima para Certificado')) camposTreino.push('Nota Mínima para Certificado');
+
+    window.obterNotaMinimaCertificado = function(data = {}) {
+        const raw = String(data['Nota Mínima para Certificado'] || '').replace(',', '.').trim();
+        const val = parseFloat(raw);
+        return Number.isFinite(val) ? val : null;
+    };
+
+    window.obterNotaAlunoTreinamento = function(item = {}, nomeAluno = '') {
+        const respostas = item?.data?.respostas_alunos || [];
+        let minhaResposta = null;
+        respostas.forEach(r => { try { const obj = window.safeParseJSON(r, null); if (obj && obj.nome === nomeAluno) minhaResposta = obj; } catch(e){} });
+        if (!minhaResposta) return null;
+        const notaBruta = minhaResposta.nota_total_calculada !== undefined && minhaResposta.nota_total_calculada !== ''
+            ? minhaResposta.nota_total_calculada
+            : minhaResposta.nota;
+        const nota = parseFloat(String(notaBruta).replace(',', '.'));
+        return Number.isFinite(nota) ? nota : null;
+    };
+
+    const oldAbrirModalCert391 = window.abrirModal;
+    window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
+        if (typeof oldAbrirModalCert391 === 'function') oldAbrirModalCert391(colecao, docId, dadosAntigos);
+        if (colecao !== 'treinamentos') return;
+        setTimeout(() => {
+            const notaMinInput = document.getElementById('input-Nota Mínima para Certificado');
+            if (notaMinInput) {
+                notaMinInput.type = 'number';
+                notaMinInput.step = '0.5';
+                notaMinInput.min = '0';
+                notaMinInput.placeholder = 'Nota mínima para liberar certificado (opcional)';
+            }
+        }, 40);
+    };
+
+    window.obterElegibilidadeCertificadoTreinamento = function(item = {}, nomeAluno = '') {
+        const data = item.data || {};
+        const tipoCert = window.getTipoCertificadoTreinamento(data).toLowerCase();
+        const respostas = data.respostas_alunos || [];
+        let minhaResposta = null;
+        respostas.forEach(r => { try { const obj = window.safeParseJSON(r, null); if (obj && obj.nome === nomeAluno) minhaResposta = obj; } catch(e){} });
+        const progresso = window.obterProgressoAlunoTreinamento ? window.obterProgressoAlunoTreinamento(data, nomeAluno) : null;
+        const jaLeu = (data.leituras || []).some(txt => String(txt).startsWith(nomeAluno));
+        const tipoTreino = String(data['Tipo (Vídeo, PDF, Tarefa, Prova)'] || 'Vídeo');
+        const precisaResponder = tipoTreino.includes('Tarefa') || tipoTreino.includes('Prova');
+        const temCorrecao = !!(minhaResposta && ((minhaResposta.nota !== '' && minhaResposta.nota !== undefined && minhaResposta.nota !== null) || (minhaResposta.nota_total_calculada !== '' && minhaResposta.nota_total_calculada !== undefined && minhaResposta.nota_total_calculada !== null)));
+        const submeteu = !!minhaResposta;
+        const concluiuFluxo = jaLeu || String(progresso?.status || '') === 'concluida';
+        const notaMinima = window.obterNotaMinimaCertificado(data);
+        const notaAluno = window.obterNotaAlunoTreinamento(item, nomeAluno);
+        const atendeNota = notaMinima === null || !precisaResponder || (notaAluno !== null && notaAluno >= notaMinima);
+
+        const participacao = (tipoCert === 'participação' || tipoCert === 'participacao' || tipoCert === 'ambos')
+            && (precisaResponder ? (submeteu || concluiuFluxo) : concluiuFluxo)
+            && atendeNota;
+        const conclusao = (tipoCert === 'conclusão' || tipoCert === 'conclusao' || tipoCert === 'ambos')
+            && (precisaResponder ? (temCorrecao || concluiuFluxo) : concluiuFluxo)
+            && atendeNota;
+        return { participacao, conclusao, notaMinima, notaAluno, atendeNota };
+    };
+
+    const oldAbrirModalResposta391 = window.abrirModalResposta;
+    window.abrirModalResposta = async function(docId) {
+        if (!window.alunoLogado) return;
+        const item = (window.todosTreinamentosData || []).find(i => i.id === docId);
+        if (!item) return;
+        const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'];
+        const progresso = window.obterProgressoAlunoTreinamento ? window.obterProgressoAlunoTreinamento(item.data, nomeAluno) : null;
+        const respostas = item.data?.respostas_alunos || [];
+        let minhaResposta = null;
+        respostas.forEach(r => { try { const obj = window.safeParseJSON(r, null); if (obj && obj.nome === nomeAluno) minhaResposta = obj; } catch(e){} });
+        const jaLeu = (item.data?.leituras || []).some(txt => String(txt).startsWith(nomeAluno));
+        const notaFechada = !!(minhaResposta && ((minhaResposta.nota !== '' && minhaResposta.nota !== undefined && minhaResposta.nota !== null) || (minhaResposta.nota_total_calculada !== '' && minhaResposta.nota_total_calculada !== undefined && minhaResposta.nota_total_calculada !== null)));
+        const concluido = jaLeu || String(progresso?.status || '') === 'concluida' || notaFechada;
+        if (concluido) {
+            alert('Esta atividade já foi finalizada. O aluno não pode editar nem refazer após a conclusão.');
+            return;
+        }
+        return oldAbrirModalResposta391(docId);
+    };
+
+    const oldConcluirTreinamento391 = window.concluirTreinamento;
+    window.concluirTreinamento = async function(docId) {
+        if (!window.alunoLogado) return;
+        const item = (window.todosTreinamentosData || []).find(i => i.id === docId);
+        if (!item) return;
+        const nomeAluno = window.alunoLogado['Nome Completo do Colaborador'];
+        const jaLeu = (item.data?.leituras || []).some(txt => String(txt).startsWith(nomeAluno));
+        if (jaLeu) {
+            alert('Este material já foi concluído.');
+            return;
+        }
+        return oldConcluirTreinamento391(docId);
+    };
+
+    window.garantirModalSolicitacoesCertificado = function() {
+        if (document.getElementById('modal-solicitacoes-certificado')) return;
+        const overlay = document.createElement('div');
+        overlay.id = 'modal-solicitacoes-certificado';
+        overlay.className = 'modal-overlay';
+        overlay.style.display = 'none';
+        overlay.style.zIndex = '10021';
+        overlay.innerHTML = `
+            <div class="modal-box" style="max-width:1040px; width:95vw;">
+                <div class="modal-header">
+                    <h3>Solicitações de Certificado Manual</h3>
+                    <button type="button" class="btn-icon" onclick="document.getElementById('modal-solicitacoes-certificado').style.display='none'"><i class="ri-close-line"></i></button>
+                </div>
+                <div class="modal-body"><div id="lista-solicitacoes-certificado"></div></div>
+            </div>`;
+        document.body.appendChild(overlay);
+    };
+
+    window.abrirCentralSolicitacoesCertificado = function() {
+        window.garantirModalSolicitacoesCertificado();
+        const lista = document.getElementById('lista-solicitacoes-certificado');
+        const itens = window.getSolicitacoesCertificadoPendentes();
+        lista.innerHTML = itens.length ? itens.map((item, idx) => `
+            <div class="card" style="margin-bottom:14px; border-left:4px solid #f97316;">
+                <div style="display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:center;">
+                    <div>
+                        <strong>${window.escapeHTML(item.titulo)}</strong>
+                        <div style="font-size:13px; color:#64748b; margin-top:6px;">Aluno: ${window.escapeHTML(item.aluno || '---')} • Tipo: ${window.escapeHTML(item.tipo || 'participacao')} • Solicitação em ${window.formatarDataAgenda(String(item.em || '').slice(0,10)) || ''}</div>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button type="button" class="btn-hover color-8" style="height:36px; font-size:12px;" onclick="window.imprimirSolicitacaoCertificado('${item.docId}','${window.escapeAttr(item.aluno || '')}','${window.escapeAttr(item.tipo || 'participacao')}')"><i class="ri-printer-line"></i> Imprimir</button>
+                        <button type="button" class="btn-hover color-5" style="height:36px; font-size:12px;" onclick="window.marcarSolicitacaoCertificadoComoAtendida('${item.docId}','${idx}')"><i class="ri-check-line"></i> Marcar atendida</button>
+                    </div>
+                </div>
+            </div>`).join('') : '<p style="color:#64748b;">Sem solicitações pendentes.</p>';
+        document.getElementById('modal-solicitacoes-certificado').style.display = 'flex';
+    };
+
+    window.imprimirSolicitacaoCertificado = function(docId = '', aluno = '', tipo = 'participacao') {
+        const item = (window.todosTreinamentosData || []).find(t => t.id === docId);
+        if (!item) return;
+        const htmlCert = window.gerarHTMLCertificadoTreinamento(item, {
+            nomeAluno: aluno,
+            tipo,
+            assinatura: 'manual',
+            textoExtra: String(item.data['Texto Personalizado do Certificado'] || '').trim()
+        });
+        const w = window.open('', '_blank', 'width=1100,height=860');
+        if (!w) { alert('Permita pop-ups para imprimir o certificado.'); return; }
+        const cssCert = document.getElementById('certificado-style-runtime')?.innerHTML || '';
+        w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Certificado</title><style>${cssCert} body{margin:0;padding:20px;background:#f1f5f9;} .certificado-doc{min-height:auto;} @media print { body{background:#fff;padding:0;} .certificado-doc{page-break-after:avoid;} }</style></head><body><div id="certificado-print-root">${htmlCert}</div><script>window.onload=function(){setTimeout(function(){window.print();},200);};<\/script></body></html>`);
+        w.document.close();
+    };
+
+    window.marcarSolicitacaoCertificadoComoAtendida = async function(docId = '', idx = -1) {
+        const item = (window.todosTreinamentosData || []).find(t => t.id === docId);
+        if (!item) return;
+        const atual = Array.isArray(item.data.solicitacoes_certificado) ? item.data.solicitacoes_certificado.slice() : [];
+        const pendentes = atual.map(raw => {
+            const obj = window.safeParseJSON(raw, null);
+            return obj;
+        });
+        let alvo = pendentes.filter(Boolean)[idx];
+        if (!alvo) return;
+        const novos = atual.map(raw => {
+            const obj = window.safeParseJSON(raw, null);
+            if (!obj) return raw;
+            if (obj.aluno === alvo.aluno && obj.em === alvo.em && obj.tipo === alvo.tipo && String(obj.status || 'pendente') === 'pendente') {
+                obj.status = 'atendida';
+                obj.atendidaEm = new Date().toISOString();
+                return JSON.stringify(obj);
+            }
+            return raw;
+        });
+        try {
+            await window.setDoc(window.doc(window.db, 'treinamentos', docId), { solicitacoes_certificado: novos }, { merge: true });
+            window.abrirCentralSolicitacoesCertificado();
+        } catch (e) {
+            alert('Erro ao marcar solicitação como atendida: ' + e.message);
+        }
+    };
+
+    const oldRenderAlertCert391 = window.renderizarAlertasCertificadosPendentes;
+    window.renderizarAlertasCertificadosPendentes = function() {
+        if (typeof oldRenderAlertCert391 === 'function') oldRenderAlertCert391();
+        if (!isAdmin) return;
+        const itens = window.getSolicitacoesCertificadoPendentes();
+        const html = itens.length
+            ? `<div class="certificado-alert"><i class="ri-notification-3-line"></i> Você tem <strong>${itens.length}</strong> solicitação(ões) de certificado manual pendente(s). <button type="button" class="btn-hover color-8" style="height:32px;font-size:11px;padding:0 12px;margin-left:10px;" onclick="window.abrirCentralSolicitacoesCertificado()"><i class="ri-printer-line"></i> Abrir central</button></div>`
+            : '';
+        ['tab-home', 'tab-treinamentos'].forEach(id => {
+            const host = document.getElementById(id);
+            if (!host) return;
+            let box = host.querySelector('.certificado-alert-host');
+            if (!box) {
+                box = document.createElement('div');
+                box.className = 'certificado-alert-host';
+                host.insertBefore(box, host.firstChild.nextSibling || host.firstChild);
+            }
+            box.innerHTML = html;
+        });
+    };
+
+    window.imprimirCertificadoTreinamento = function() {
+        const docId = document.getElementById('cert-docid')?.value || '';
+        const item = (window.todosTreinamentosData || []).find(t => t.id === docId);
+        if (!item || !window.alunoLogado) return;
+        const htmlCert = window.gerarHTMLCertificadoTreinamento(item, {
+            nomeAluno: window.alunoLogado['Nome Completo do Colaborador'],
+            tipo: document.getElementById('cert-tipo')?.value || 'participacao',
+            assinatura: 'digital',
+            textoExtra: document.getElementById('cert-texto-extra')?.value || ''
+        });
+        const w = window.open('', '_blank', 'width=1100,height=860');
+        if (!w) { alert('Permita pop-ups para imprimir o certificado.'); return; }
+        const cssCert = document.getElementById('certificado-style-runtime')?.innerHTML || '';
+        w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Certificado</title><style>${cssCert} body{margin:0;padding:20px;background:#f1f5f9;} .certificado-doc{min-height:auto;} @media print { body{background:#fff;padding:0;} .certificado-doc{page-break-after:avoid;} }</style></head><body><div id="certificado-print-root">${htmlCert}</div><script>window.onload=function(){setTimeout(function(){window.print();},200);};<\/script></body></html>`);
+        w.document.close();
+    };
+
+    window.renderizarPainelCursosInternos = function() {
+        const tab = document.getElementById('tab-treinamentos');
+        if (!tab || !isAdmin) return;
+        let host = document.getElementById('painel-cursos-internos');
+        if (!host) {
+            host = document.createElement('div');
+            host.id = 'painel-cursos-internos';
+            host.className = 'card';
+            host.style.marginBottom = '18px';
+            const alvo = tab.querySelector('#treinamentos-view-folders') || tab.firstElementChild;
+            tab.insertBefore(host, alvo);
+        }
+        const itens = (window.todosTreinamentosData || []).slice().sort((a,b) => String(a.data['Pasta / Módulo'] || '').localeCompare(String(b.data['Pasta / Módulo'] || '')) || String(a.data['Título da Atividade'] || '').localeCompare(String(b.data['Título da Atividade'] || '')));
+        host.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+                <div>
+                    <h3 style="margin:0;color:#0f172a;"><i class="ri-building-4-line"></i> Cursos Internos da Clínica</h3>
+                    <p style="margin:4px 0 0;color:#64748b;font-size:13px;">Visão geral dos módulos, certificados e quem já concluiu.</p>
+                </div>
+                ${window.getSolicitacoesCertificadoPendentes().length ? `<button type="button" class="btn-hover color-8" style="height:38px;font-size:12px;" onclick="window.abrirCentralSolicitacoesCertificado()"><i class="ri-printer-line"></i> Solicitações manuais</button>` : ''}
+            </div>
+            <div class="cards-grid">${itens.map(item => {
+                const data = item.data || {};
+                const concluidos = [];
+                (data.leituras || []).forEach(txt => concluidos.push(String(txt).split(' (')[0]));
+                (data.respostas_alunos || []).forEach(raw => { const obj = window.safeParseJSON(raw, null); if (obj?.nome && !concluidos.includes(obj.nome)) concluidos.push(obj.nome); });
+                return `<div class="card" style="border-left:4px solid #8B252C;">
+                    <div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:6px;">${window.escapeHTML(data['Pasta / Módulo'] || 'Módulo')}</div>
+                    <div style="font-size:18px;font-weight:700;color:#0f172a;line-height:1.25;margin-bottom:10px;">${window.escapeHTML(data['Título da Atividade'] || 'Curso')}</div>
+                    <div style="font-size:13px;color:#475569;line-height:1.7;">
+                        <div><strong>Tipo:</strong> ${window.escapeHTML(data['Tipo (Vídeo, PDF, Tarefa, Prova)'] || '---')}</div>
+                        <div><strong>Certificado:</strong> ${window.escapeHTML(data['Tipo de Certificado'] || 'Nenhum')}</div>
+                        <div><strong>Carga Horária:</strong> ${window.escapeHTML(data['Carga Horária (Certificado)'] || '---')}</div>
+                        <div><strong>Nota mínima:</strong> ${window.escapeHTML(data['Nota Mínima para Certificado'] || '---')}</div>
+                        <div><strong>Concluintes:</strong> ${concluidos.length}</div>
+                    </div>
+                    <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e2e8f0;font-size:12px;color:#64748b;line-height:1.6;">${concluidos.length ? concluidos.slice(0,6).map(nome => `• ${window.escapeHTML(nome)}`).join('<br>') : 'Ainda sem concluintes registrados.'}</div>
+                </div>`;
+            }).join('')}</div>`;
+    };
+
+    const oldProcessarSnapshotCert391 = window._processarSnapshotColecao;
+    if (typeof oldProcessarSnapshotCert391 === 'function') {
+        window._processarSnapshotColecao = function(colecaoNome, snapshot) {
+            oldProcessarSnapshotCert391(colecaoNome, snapshot);
+            if (colecaoNome === 'treinamentos') {
+                setTimeout(() => {
+                    window.renderizarAlertasCertificadosPendentes();
+                    window.renderizarPainelCursosInternos();
+                }, 60);
+            }
+        };
+    }
+})();
