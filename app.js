@@ -7070,3 +7070,314 @@ window.addEventListener('DOMContentLoaded', () => {
         window.aplicarDnDAgenda();
     };
 })();
+
+
+// ==========================================
+// AGENDA 3.7.0 - REPETIÇÃO POR DIA DA SEMANA + STATUS POR DATA
+// ==========================================
+(function() {
+    window.diasSemanaRecorrenciaAgenda = [
+        { valor: '1', label: 'Seg' },
+        { valor: '2', label: 'Ter' },
+        { valor: '3', label: 'Qua' },
+        { valor: '4', label: 'Qui' },
+        { valor: '5', label: 'Sex' },
+        { valor: '6', label: 'Sáb' },
+        { valor: '0', label: 'Dom' }
+    ];
+
+    const _oldNormalizarAgenda370 = window.normalizarAgendaData;
+    window.normalizarAgendaData = function(data = {}) {
+        const base = typeof _oldNormalizarAgenda370 === 'function' ? _oldNormalizarAgenda370(data) : { ...(data || {}) };
+        let diasRecorrentes = [];
+        if (Array.isArray(data.diasRecorrentes)) diasRecorrentes = data.diasRecorrentes.map(String);
+        else if (typeof data.diasRecorrentes === 'string') diasRecorrentes = data.diasRecorrentes.split(',').map(v => String(v).trim()).filter(Boolean);
+
+        const statusPorDataRaw = data.statusPorData && typeof data.statusPorData === 'object' ? data.statusPorData : {};
+        return {
+            ...base,
+            diasRecorrentes,
+            statusPorData: statusPorDataRaw
+        };
+    };
+
+    window.obterMesContextoAgenda = function(dataRef = '') {
+        const exata = String(dataRef || (window.getAgendaDataFiltroExato ? window.getAgendaDataFiltroExato() : '') || '').trim();
+        if (exata) return exata.slice(0, 7);
+        if (typeof window.obterAgendaMesSelecionado === 'function') return window.obterAgendaMesSelecionado();
+        return window.getAgendaMesAtual ? window.getAgendaMesAtual() : new Date().toISOString().slice(0, 7);
+    };
+
+    window.gerarDatasRecorrentesNoMesAgenda = function(mes = '', diasSemana = []) {
+        const [ano, mesNum] = String(mes || '').split('-').map(Number);
+        if (!ano || !mesNum || !Array.isArray(diasSemana) || !diasSemana.length) return [];
+        const wanted = new Set(diasSemana.map(String));
+        const ultimoDia = new Date(ano, mesNum, 0).getDate();
+        const datas = [];
+        for (let dia = 1; dia <= ultimoDia; dia++) {
+            const d = new Date(ano, mesNum - 1, dia);
+            if (wanted.has(String(d.getDay()))) {
+                datas.push(`${ano}-${String(mesNum).padStart(2, '0')}-${String(dia).padStart(2, '0')}`);
+            }
+        }
+        return datas;
+    };
+
+    window.getAgendaDatasExecucao = function(data = {}, dataRef = '') {
+        const normalizada = window.normalizarAgendaData(data);
+        if (Array.isArray(normalizada.diasRecorrentes) && normalizada.diasRecorrentes.length) {
+            const mesContexto = window.obterMesContextoAgenda(dataRef);
+            return window.gerarDatasRecorrentesNoMesAgenda(mesContexto, normalizada.diasRecorrentes);
+        }
+        const set = new Set();
+        if (normalizada.dataPrincipal) set.add(normalizada.dataPrincipal);
+        (normalizada.datasExtras || []).forEach(dt => { if (dt) set.add(dt); });
+        return Array.from(set).sort();
+    };
+
+    window.getAgendaStatusNaData = function(data = {}, dataRef = '') {
+        const normalizada = window.normalizarAgendaData(data);
+        const chave = String(dataRef || '').trim();
+        if (chave && normalizada.statusPorData && normalizada.statusPorData[chave]) {
+            return String(normalizada.statusPorData[chave]).trim();
+        }
+        return String(normalizada.status || 'A fazer').trim();
+    };
+
+    window.estaConcluidaAgendaNaData = function(data = {}, dataRef = '') {
+        return window.agendaStatusConclusivos.includes(window.getAgendaStatusNaData(data, dataRef));
+    };
+
+    window.aplicarEstilosRecorrenciaAgenda = function() {
+        if (document.getElementById('agenda-style-370')) return;
+        const style = document.createElement('style');
+        style.id = 'agenda-style-370';
+        style.textContent = `
+            .agenda-recorrencia-box {
+                margin-bottom:16px;
+                padding:12px;
+                border:1px solid #dbe3ee;
+                border-radius:14px;
+                background:#f8fafc;
+            }
+            .agenda-recorrencia-title {
+                font-size:12px;
+                font-weight:700;
+                color:#334155;
+                margin-bottom:10px;
+            }
+            .agenda-recorrencia-grid {
+                display:grid;
+                grid-template-columns:repeat(4, minmax(0, 1fr));
+                gap:8px;
+            }
+            .agenda-recorrencia-item {
+                display:flex;
+                align-items:center;
+                gap:6px;
+                font-size:12px;
+                color:#334155;
+                background:#fff;
+                border:1px solid #e2e8f0;
+                border-radius:10px;
+                padding:8px;
+            }
+        `;
+        document.head.appendChild(style);
+    };
+
+    window.configurarRecorrenciaAgenda = function(docId = null) {
+        window.aplicarEstilosRecorrenciaAgenda();
+        const dataInput = document.getElementById('agenda-data-principal');
+        if (!dataInput) return;
+
+        let box = document.getElementById('agenda-recorrencia-box');
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'agenda-recorrencia-box';
+            box.className = 'agenda-recorrencia-box';
+            box.innerHTML = `
+                <div class="agenda-recorrencia-title">Repetir por dia da semana</div>
+                <div class="agenda-recorrencia-grid">
+                    ${window.diasSemanaRecorrenciaAgenda.map(d => `
+                        <label class="agenda-recorrencia-item">
+                            <input type="checkbox" class="agenda-check-recorrencia" value="${d.valor}">
+                            ${d.label}
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            dataInput.parentElement?.insertBefore(box, dataInput.nextSibling);
+        }
+
+        const item = docId ? (window.todosAgendaTrabalho || []).find(t => t.id === docId) : null;
+        const dias = item?.data?.diasRecorrentes || [];
+        box.querySelectorAll('.agenda-check-recorrencia').forEach(check => {
+            check.checked = dias.includes(check.value);
+        });
+    };
+
+    const _oldAbrirModalAgenda370 = window.abrirModalAgendaTrabalho;
+    window.abrirModalAgendaTrabalho = function(docId = null) {
+        if (typeof _oldAbrirModalAgenda370 === 'function') _oldAbrirModalAgenda370(docId);
+        setTimeout(() => {
+            window.configurarRecorrenciaAgenda(docId);
+        }, 60);
+    };
+
+    window.salvarAgendaTrabalho = async function() {
+        window.garantirCampoHorarioAgenda && window.garantirCampoHorarioAgenda();
+        const docId = document.getElementById('agenda-doc-id')?.value || '';
+        const titulo = String(document.getElementById('agenda-titulo')?.value || '').trim();
+        if (!titulo) {
+            alert('Informe o título da demanda.');
+            return;
+        }
+
+        const itemAntigo = docId ? ((window.todosAgendaTrabalho || []).find(t => t.id === docId) || null) : null;
+        const dataAntiga = itemAntigo?.data || {};
+        const historicoAntigo = Array.isArray(dataAntiga.historico) ? dataAntiga.historico : [];
+        const agoraIso = new Date().toISOString();
+        const diasRecorrentes = Array.from(document.querySelectorAll('.agenda-check-recorrencia:checked')).map(el => String(el.value));
+
+        const dados = {
+            titulo,
+            descricao: String(document.getElementById('agenda-descricao')?.value || '').trim(),
+            responsavel: String(document.getElementById('agenda-responsavel')?.value || '').trim(),
+            urgencia: String(document.getElementById('agenda-urgencia')?.value || 'Média').trim(),
+            status: String(document.getElementById('agenda-status')?.value || 'A fazer').trim(),
+            visibilidade: String(document.getElementById('agenda-visibilidade')?.value || 'ambos').trim(),
+            dataPrincipal: String(document.getElementById('agenda-data-principal')?.value || '').trim(),
+            datasExtras: String(document.getElementById('agenda-datas-extras')?.value || '').split(',').map(v => v.trim()).filter(Boolean),
+            horario: String(document.getElementById('agenda-horario')?.value || dataAntiga.horario || '').trim(),
+            temaEspecial: String(document.getElementById('agenda-tema-especial')?.value || '').trim(),
+            destaqueEspecial: !!document.getElementById('agenda-destaque-especial')?.checked,
+            link: String(document.getElementById('agenda-link')?.value || '').trim(),
+            iframeUrl: String(document.getElementById('agenda-iframe')?.value || '').trim(),
+            diasRecorrentes,
+            statusPorData: dataAntiga.statusPorData || {},
+            criadoEm: dataAntiga.criadoEm || agoraIso,
+            atualizadoEm: agoraIso
+        };
+
+        const novoHistorico = [...historicoAntigo, `${docId ? 'Atualizada' : 'Criada'} em ${new Date().toLocaleString('pt-BR')} por ${emailLogado || 'Gestor'}`];
+        dados.historico = novoHistorico.slice(-80);
+
+        try {
+            if (docId) {
+                await window.setDoc(window.doc(window.db, 'agenda_trabalho', docId), dados, { merge: true });
+            } else {
+                await window.addDoc(window.collection(window.db, 'agenda_trabalho'), dados);
+            }
+            if (typeof window.fecharModalAgendaTrabalho === 'function') window.fecharModalAgendaTrabalho();
+            setTimeout(() => window.renderizarAgendaTrabalho && window.renderizarAgendaTrabalho(), 120);
+        } catch (error) {
+            alert('Erro ao salvar demanda: ' + (error?.message || 'falha desconhecida'));
+        }
+    };
+
+    window.gerarCardAgendaTarefa = function(item = {}, opts = {}) {
+        window.aplicarEstilosAgendaAvancados();
+        window.aplicarEstilosAgendaConferencia();
+        window.aplicarEstiloResponsavelCompactoAgenda && window.aplicarEstiloResponsavelCompactoAgenda();
+
+        const dataRef = String(opts.dataRef || '').trim();
+        const data = window.normalizarAgendaData(item.data || {});
+        const podeEditar = opts.podeEditar !== false;
+        const visualUrl = data.link || data.iframeUrl || '';
+        const extraordinaria = !!data.destaqueEspecial;
+        const statusAtual = window.getAgendaStatusNaData(data, dataRef);
+        const statusVisual = window.getAgendaStatusVisual(statusAtual);
+        const collapseId = `agenda-collapse-${item.id}-${dataRef || 'base'}`.replace(/[^a-zA-Z0-9_-]/g, '');
+        const dataFormatada = window.formatarDataAgenda(dataRef || window.getAgendaDataExibicao(data));
+        const prazo = window.getAgendaPrazoInfo({ ...data, status: statusAtual });
+
+        return `
+            <div class="agenda-task-card ${extraordinaria ? 'agenda-task-card--extraordinaria' : ''} ${statusVisual.tone}" draggable="true" data-task-id="${item.id}">
+                <div class="agenda-task-header" onclick="window.toggleAgendaCard('${collapseId}')">
+                    <div class="agenda-task-header-main">
+                        <h5>${extraordinaria ? '<span class="agenda-raio"><i class="ri-flashlight-fill"></i></span>' : ''}${window.escapeHTML(data.titulo || 'Demanda')}</h5>
+                        <div class="agenda-task-header-date">${dataFormatada || 'Sem data definida'}${data.horario ? ` • ${window.escapeHTML(data.horario)}` : ''}</div>
+                        ${data.responsavel ? `<div class="agenda-task-responsavel-mini">Resp.: ${window.escapeHTML(data.responsavel)}</div>` : ''}
+                    </div>
+                    <div style="display:flex; align-items:flex-start; gap:8px;">
+                        ${podeEditar ? `
+                            <div class="agenda-task-actions" onclick="event.stopPropagation()">
+                                <button type="button" class="btn-action btn-edit" style="width:28px; height:28px; font-size:14px;" onclick="window.abrirModalAgendaTrabalho('${item.id}')" title="Editar demanda">
+                                    <i class="ri-pencil-line"></i>
+                                </button>
+                                <button type="button" class="btn-action btn-delete" style="width:28px; height:28px; font-size:14px;" onclick="window.excluirAgendaTrabalho('${item.id}')" title="Excluir demanda">
+                                    <i class="ri-delete-bin-6-line"></i>
+                                </button>
+                            </div>` : ''}
+                        <i class="ri-arrow-down-s-line agenda-task-chevron"></i>
+                    </div>
+                </div>
+                <div id="${collapseId}" class="agenda-task-body-collapsible">
+                    <p>${window.escapeHTML(data.descricao || 'Sem descrição.')}</p>
+                    ${data.temaEspecial ? `<p><strong>Tema:</strong> ${window.escapeHTML(data.temaEspecial)}</p>` : ''}
+                    <p><strong>Responsável:</strong> ${window.escapeHTML(data.responsavel || 'Não definido')}</p>
+                    <div class="agenda-task-meta">
+                        ${extraordinaria ? `<span class="agenda-mini-badge agenda-mini-badge-extraordinaria"><i class="ri-flashlight-fill"></i> Extraordinária</span>` : ''}
+                        <span class="agenda-mini-badge ${window.agendaCorUrgenciaClass(data.urgencia)}">${window.escapeHTML(data.urgencia)}</span>
+                        <span class="agenda-mini-badge">${window.escapeHTML(statusAtual)}</span>
+                        <span class="agenda-mini-badge">${window.escapeHTML(data.visibilidade)}</span>
+                        ${dataFormatada ? `<span class="agenda-mini-badge agenda-mini-badge-data"><i class="ri-calendar-line"></i> ${window.escapeHTML(dataFormatada)}</span>` : ''}
+                        ${data.horario ? `<span class="agenda-mini-badge agenda-mini-badge-horario"><i class="ri-time-line"></i> ${window.escapeHTML(data.horario)}</span>` : ''}
+                    </div>
+                    ${prazo ? `<div style="margin-top:10px;"><span class="agenda-prazo-chip ${prazo.tone}"><i class="ri-alarm-warning-line"></i> ${window.escapeHTML(prazo.texto)}</span></div>` : ''}
+                    ${visualUrl ? `<div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                        <button class="btn-hover color-9" style="height:30px; font-size:11px; padding:0 12px;" type="button" onclick="event.stopPropagation(); window.abrirPreviewAgenda('${window.escapeAttr(visualUrl)}','${window.escapeAttr(data.titulo)}')"><i class="ri-layout-window-line"></i> Visualizar</button>
+                    </div>` : ''}
+                </div>
+            </div>
+        `;
+    };
+
+    const _oldAplicarDnD370 = window.aplicarDnDAgenda;
+    window.aplicarDnDAgenda = function() {
+        if (typeof _oldAplicarDnD370 === 'function') _oldAplicarDnD370();
+
+        document.querySelectorAll('.agenda-board-column').forEach(col => {
+            const novo = col.cloneNode(true);
+            if (col.parentNode) col.parentNode.replaceChild(novo, col);
+        });
+
+        document.querySelectorAll('.agenda-task-card[data-task-id]').forEach(card => {
+            card.addEventListener('dragstart', () => { window.agendaDragTaskId = card.getAttribute('data-task-id'); });
+            card.addEventListener('dragend', () => { window.agendaDragTaskId = null; });
+        });
+
+        document.querySelectorAll('.agenda-board-column').forEach(col => {
+            col.addEventListener('dragover', (e) => { e.preventDefault(); col.classList.add('drag-over'); });
+            col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
+            col.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                col.classList.remove('drag-over');
+                const taskId = window.agendaDragTaskId;
+                const novoStatus = col.getAttribute('data-status');
+                const dataRef = window.getAgendaDataFiltroExato() || new Date().toISOString().slice(0,10);
+                if (!taskId || !novoStatus) return;
+                const item = (window.todosAgendaTrabalho || []).find(t => t.id === taskId);
+                if (!item) return;
+
+                const statusPorData = { ...(item.data.statusPorData || {}) };
+                statusPorData[dataRef] = novoStatus;
+
+                const hist = Array.isArray(item.data.historico) ? item.data.historico : [];
+                hist.push(`Status em ${dataRef} alterado para ${novoStatus} em ${new Date().toLocaleString('pt-BR')} por ${emailLogado || 'Gestor'}`);
+
+                try {
+                    await window.setDoc(window.doc(window.db, 'agenda_trabalho', taskId), {
+                        statusPorData,
+                        atualizadoEm: new Date().toISOString(),
+                        historico: hist.slice(-80)
+                    }, { merge: true });
+                } catch (error) {
+                    console.error(error);
+                    alert('Não foi possível atualizar o status desta ocorrência.');
+                }
+            });
+        });
+    };
+})();
