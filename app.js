@@ -9201,3 +9201,105 @@ window.addEventListener('DOMContentLoaded', () => {
         };
     }
 })();
+
+
+// ==========================================
+// CERTIFICADOS ENSINO 3.9.2 - DEDUP SOLICITAÇÃO MANUAL + FECHAR MODAL AO ATENDER
+// ==========================================
+(function() {
+    window.getChaveSolicitacaoCertificado = function(docId = '', aluno = '', tipo = '') {
+        return [String(docId || '').trim(), String(aluno || '').trim().toLowerCase(), String(tipo || '').trim().toLowerCase()].join('|');
+    };
+
+    window.getSolicitacoesCertificadoPendentes = function() {
+        if (!isAdmin) return [];
+        const email = String(emailLogado || '').trim().toLowerCase();
+        const mapa = new Map();
+        (window.todosTreinamentosData || []).forEach(item => {
+            const criadoPor = String(item.data['Criado Por Email'] || '').trim().toLowerCase();
+            if (criadoPor && criadoPor !== email) return;
+            (item.data.solicitacoes_certificado || []).forEach(raw => {
+                const obj = window.safeParseJSON(raw, null);
+                if (!obj || String(obj.status || 'pendente') !== 'pendente') return;
+                const chave = window.getChaveSolicitacaoCertificado(item.id, obj.aluno, obj.tipo);
+                const atual = mapa.get(chave);
+                const emAtual = atual ? new Date(atual.em || 0).getTime() : 0;
+                const emNovo = new Date(obj.em || 0).getTime();
+                if (!atual || emNovo >= emAtual) {
+                    mapa.set(chave, { docId: item.id, titulo: item.data['Título da Atividade'] || 'Treinamento', _requestKey: chave, ...obj });
+                }
+            });
+        });
+        return Array.from(mapa.values()).sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')));
+    };
+
+    window.solicitarAssinaturaManualCertificado = async function() {
+        const docId = document.getElementById('cert-docid')?.value || '';
+        const tipo = document.getElementById('cert-tipo')?.value || 'participacao';
+        const item = (window.todosTreinamentosData || []).find(t => t.id === docId);
+        if (!item || !window.alunoLogado) return;
+        const aluno = window.alunoLogado['Nome Completo do Colaborador'];
+        const chave = window.getChaveSolicitacaoCertificado(docId, aluno, tipo);
+        const jaExiste = (item.data.solicitacoes_certificado || []).some(raw => {
+            const obj = window.safeParseJSON(raw, null);
+            return obj && String(obj.status || 'pendente') === 'pendente' && window.getChaveSolicitacaoCertificado(docId, obj.aluno, obj.tipo) === chave;
+        });
+        if (jaExiste) {
+            alert('Já existe uma solicitação manual pendente para este certificado.');
+            return;
+        }
+        const solicitacao = JSON.stringify({
+            requestId: `cert-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            aluno,
+            tipo,
+            assinatura: 'manual',
+            em: new Date().toISOString(),
+            status: 'pendente'
+        });
+        try {
+            await window.updateDoc(window.doc(window.db, 'treinamentos', docId), {
+                solicitacoes_certificado: window.arrayUnion(solicitacao)
+            });
+            alert('Solicitação enviada para impressão e assinatura manual.');
+            window.fecharModalCertificadoTreinamento();
+        } catch (e) {
+            alert('Erro ao solicitar assinatura manual: ' + e.message);
+        }
+    };
+
+    window.marcarSolicitacaoCertificadoComoAtendida = async function(docId = '', idx = -1) {
+        const pendentes = window.getSolicitacoesCertificadoPendentes();
+        const alvo = pendentes[idx];
+        if (!alvo) return;
+        const item = (window.todosTreinamentosData || []).find(t => t.id === docId);
+        if (!item) return;
+        const atual = Array.isArray(item.data.solicitacoes_certificado) ? item.data.solicitacoes_certificado.slice() : [];
+        const chaveAlvo = alvo._requestKey || window.getChaveSolicitacaoCertificado(docId, alvo.aluno, alvo.tipo);
+        const novos = atual.map(raw => {
+            const obj = window.safeParseJSON(raw, null);
+            if (!obj) return raw;
+            const chaveAtual = window.getChaveSolicitacaoCertificado(docId, obj.aluno, obj.tipo);
+            if (String(obj.status || 'pendente') === 'pendente' && chaveAtual === chaveAlvo) {
+                obj.status = 'atendida';
+                obj.atendidaEm = new Date().toISOString();
+                return JSON.stringify(obj);
+            }
+            return raw;
+        });
+        try {
+            await window.setDoc(window.doc(window.db, 'treinamentos', docId), { solicitacoes_certificado: novos }, { merge: true });
+            setTimeout(() => {
+                const restantes = window.getSolicitacoesCertificadoPendentes();
+                if (!restantes.length) {
+                    const modal = document.getElementById('modal-solicitacoes-certificado');
+                    if (modal) modal.style.display = 'none';
+                } else {
+                    window.abrirCentralSolicitacoesCertificado();
+                }
+                window.renderizarAlertasCertificadosPendentes();
+            }, 120);
+        } catch (e) {
+            alert('Erro ao marcar solicitação como atendida: ' + e.message);
+        }
+    };
+})();
