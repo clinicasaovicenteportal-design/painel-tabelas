@@ -17,7 +17,9 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-    <link rel="stylesheet" href="style.css?v=3.9.2">
+    <link rel="stylesheet" href="style.css?v=4.2.0">
+    <link rel="stylesheet" href="visual-v2.css?v=4.2.0">
+    <link rel="stylesheet" href="login-ui.css?v=4.1.0">
 
     <style>
         .sidebar-nav { overflow-y: auto; max-height: 65vh; }
@@ -27,17 +29,197 @@
 </head>
 <body>
 
-    <div id="login-screen" class="screen">
-        <form id="form-login" class="login-box glass-effect" novalidate>
-            <img src="logo.png" alt="Logo" class="login-logo" onerror="this.style.display='none'">
-            <h2 class="text-primary">Painel de Gestão</h2>
-            <div class="input-group"><i class="ri-mail-line"></i><input type="email" id="email" placeholder="E-mail" required></div>
-            <div class="input-group"><i class="ri-lock-line"></i><input type="password" id="senha" placeholder="Senha" required onkeypress="if(event.key === 'Enter') window.efetuarLogin(event)"></div>
-            <button type="button" id="btn-login" class="btn-hover color-11 w-100" onclick="window.efetuarLogin(event)">Entrar no Painel</button>
-        </form>
+    
+    <div id="login-screen" class="screen csv-login-screen">
+        <div class="csv-login-layout">
+
+            <section class="csv-login-ad-panel" id="csv-login-ad-panel">
+                <span class="csv-ad-orb csv-ad-orb-one"></span>
+                <span class="csv-ad-orb csv-ad-orb-two"></span>
+
+                <header class="csv-ad-header">
+                    <div class="csv-ad-brand">
+                        <img src="logo.png" alt="Clínica Médica São Vicente">
+                        <div>
+                            <strong>Clínica Médica São Vicente</strong>
+                            <small>Portal interno</small>
+                        </div>
+                    </div>
+
+                    <span class="csv-ad-badge">
+                        <i class="ri-shield-check-line"></i>
+                        Ambiente seguro
+                    </span>
+                </header>
+
+                <div class="csv-ad-main">
+                    <div class="csv-ad-copy">
+                        <span class="csv-ad-kicker">Informação que aproxima</span>
+
+                        <h1 id="csv-ad-title">
+                            Tudo o que a equipe precisa, em um só lugar.
+                        </h1>
+
+                        <p id="csv-ad-text">
+                            Consulte informações, orientações, comunicados,
+                            treinamentos e recursos internos de forma rápida,
+                            organizada e segura.
+                        </p>
+
+                        <div class="csv-ad-placeholder">
+                            <i class="ri-image-add-line"></i>
+                            <div>
+                                <strong>Espaço preparado para campanhas e anúncios</strong>
+                                <span>
+                                    Este painel poderá receber banners institucionais,
+                                    avisos, datas importantes e comunicados internos.
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="csv-mascot-stage" aria-hidden="true">
+                        <div class="csv-mascot-wrap" id="csv-mascot">
+                            <div class="csv-mascot-shadow"></div>
+
+                            <div class="csv-mascot-antenna"></div>
+
+                            <div class="csv-mascot-head">
+                                <span class="csv-mascot-ear left"></span>
+                                <span class="csv-mascot-ear right"></span>
+
+                                <div class="csv-mascot-visor">
+                                    <div class="csv-mascot-eyes">
+                                        <span class="csv-mascot-eye">
+                                            <span class="csv-mascot-pupil"></span>
+                                        </span>
+
+                                        <span class="csv-mascot-eye">
+                                            <span class="csv-mascot-pupil"></span>
+                                        </span>
+                                    </div>
+
+                                    <span class="csv-mascot-mouth"></span>
+                                </div>
+                            </div>
+
+                            <div class="csv-mascot-body">
+                                <div class="csv-mascot-chest">
+                                    <img src="logo.png" alt="">
+                                </div>
+
+                                <span class="csv-mascot-light one"></span>
+                                <span class="csv-mascot-light two"></span>
+                            </div>
+
+                            <span class="csv-mascot-arm left"></span>
+                            <span class="csv-mascot-arm right"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="csv-ad-footer">
+                    <span><i class="ri-database-2-line"></i> Dados sincronizados</span>
+                    <span><i class="ri-wifi-off-line"></i> Consulta offline</span>
+                    <span><i class="ri-lock-2-line"></i> Acesso individual</span>
+                </footer>
+            </section>
+
+            <section class="csv-login-form-panel">
+                <form id="form-login" class="login-box csv-login-form" novalidate>
+
+                    <div class="csv-login-mobile-brand">
+                        <img src="logo.png" alt="Clínica Médica São Vicente">
+                        <div>
+                            <strong>Painel Clínico</strong>
+                            <small>Clínica Médica São Vicente</small>
+                        </div>
+                    </div>
+
+                    <span class="csv-login-eyebrow">
+                        <i class="ri-heart-pulse-line"></i>
+                        Portal CSV
+                    </span>
+
+                    <h2>Bem-vindo de volta.</h2>
+
+                    <p class="csv-login-description">
+                        Entre com seu acesso individual para consultar os recursos
+                        internos da Clínica Médica São Vicente.
+                    </p>
+
+                    <div class="input-group">
+                        <i class="ri-mail-line csv-field-icon"></i>
+
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="Seu e-mail"
+                            autocomplete="username"
+                            required
+                        >
+                    </div>
+
+                    <div class="input-group">
+                        <i class="ri-lock-line csv-field-icon"></i>
+
+                        <input
+                            type="password"
+                            id="senha"
+                            placeholder="Sua senha"
+                            autocomplete="current-password"
+                            required
+                            onkeypress="if(event.key === 'Enter') window.efetuarLogin(event)"
+                        >
+
+                        <button
+                            type="button"
+                            id="toggle-password"
+                            class="csv-toggle-password"
+                            aria-label="Mostrar senha"
+                            title="Mostrar ou ocultar senha"
+                        >
+                            <i class="ri-eye-line"></i>
+                        </button>
+                    </div>
+
+                    <div class="csv-login-options">
+                        <label class="csv-remember-line">
+                            <input type="checkbox" id="lembrar-acesso" checked>
+                            <span>Manter acesso neste dispositivo</span>
+                        </label>
+
+                        <span class="csv-secure-text">
+                            <i class="ri-shield-keyhole-line"></i>
+                            Acesso protegido
+                        </span>
+                    </div>
+
+                    <button
+                        type="button"
+                        id="btn-login"
+                        class="btn-hover color-11 csv-login-button"
+                        onclick="window.efetuarLogin(event)"
+                    >
+                        <span>Entrar no Painel</span>
+                        <i class="ri-arrow-right-line"></i>
+                    </button>
+
+                    <div id="csv-login-status" class="csv-login-status">
+                        Verificando conexão...
+                    </div>
+
+                    <div class="csv-login-version">
+                        Painel Clínico 4.1
+                    </div>
+                </form>
+            </section>
+        </div>
     </div>
 
-    <div id="dashboard-screen" class="screen" style="display: none;">
+    <div id="csv-login-transition" aria-hidden="true"></div>
+
+<div id="dashboard-screen" class="screen" style="display: none;">
         <aside class="sidebar">
             <div class="sidebar-header">
                 <img src="logo.png" alt="Logo" class="sidebar-logo" onerror="this.style.display='none'">
@@ -81,51 +263,276 @@
                 </div>
             </header>
 
-            <section id="tab-home" class="tab-content active">
-                <div class="home-hero-stack">
-                    <div class="home-top-bar">
-                        <div class="relogio-digital" id="relogio">00:00:00</div>
-                        <div id="frase-motivacional" class="frase-motivacional">Organize, acompanhe e resolva com clareza.</div>
+            
+            <section id="tab-home" class="tab-content active csv-home-page">
+
+                <div class="csv-home-hero">
+
+                    <div class="csv-home-hero-copy">
+                        <div class="csv-home-hero-content">
+                            <span class="csv-home-kicker">
+                                <i class="ri-heart-pulse-line"></i>
+                                Central Clínica São Vicente
+                            </span>
+
+                            <h2>Informação clínica organizada para uma rotina mais simples.</h2>
+
+                            <p>
+                                Encontre rapidamente médicos, procedimentos, convênios,
+                                contatos, comunicados e materiais internos em um ambiente
+                                integrado e seguro.
+                            </p>
+
+                            <div class="home-banner csv-home-banner" id="banner-area">
+                                <div id="banner-content">
+                                    <h2>Bem-vindo ao Painel Clínico</h2>
+                                </div>
+                            </div>
+
+                            <div class="csv-home-actions">
+                                <button
+                                    type="button"
+                                    class="csv-home-primary-action"
+                                    onclick="window.irParaAba('boletins')"
+                                >
+                                    <i class="ri-notification-3-line"></i>
+                                    Ver comunicados
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="csv-home-secondary-action"
+                                    onclick="window.irParaAba('corpo-clinico')"
+                                >
+                                    <i class="ri-team-line"></i>
+                                    Consultar corpo clínico
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="weather-widget weather-widget--home">
-                        <div class="weather-info">
-                            <h3 id="weather-city"><i class="ri-map-pin-line"></i> Araucária, PR</h3>
-                            <div id="weather-desc" class="weather-desc">Atualizando clima...</div>
-                            <div class="flex-start">
-                                <div class="weather-temp"><span id="weather-deg">--</span>°C</div>
-                                <div class="weather-icon flex-gap-10"><i id="weather-icon-class" class="ri-sun-cloudy-line fs-40"></i></div>
+                    <aside class="csv-home-live-panel">
+
+                        <div class="csv-home-time-card">
+                            <span class="csv-home-time-label">Horário local</span>
+
+                            <div class="relogio-digital" id="relogio">
+                                00:00:00
                             </div>
-                            <div class="weather-mini-stats">
-                                <span><i class="ri-drop-line"></i> <strong id="weather-humidity">--%</strong></span>
-                                <span><i class="ri-windy-line"></i> <strong id="weather-wind">-- km/h</strong></span>
-                                <span><i class="ri-temp-hot-line"></i> <strong id="weather-feel">-- °C</strong></span>
-                                <span class="weather-status-pill" id="weather-status">Clima</span>
+
+                            <div id="frase-motivacional" class="frase-motivacional">
+                                Organize, acompanhe e resolva com clareza.
                             </div>
+                        </div>
+
+                        <div class="weather-widget weather-widget--home csv-home-weather">
+                            <div class="weather-info">
+
+                                <h3 id="weather-city">
+                                    <i class="ri-map-pin-line"></i>
+                                    Araucária, PR
+                                </h3>
+
+                                <div id="weather-desc" class="weather-desc">
+                                    Atualizando clima...
+                                </div>
+
+                                <div class="flex-start">
+                                    <div class="weather-temp">
+                                        <span id="weather-deg">--</span>°C
+                                    </div>
+
+                                    <div class="weather-icon flex-gap-10">
+                                        <i
+                                            id="weather-icon-class"
+                                            class="ri-sun-cloudy-line fs-40"
+                                        ></i>
+                                    </div>
+                                </div>
+
+                                <div class="weather-mini-stats">
+                                    <span>
+                                        <i class="ri-drop-line"></i>
+                                        <strong id="weather-humidity">--%</strong>
+                                    </span>
+
+                                    <span>
+                                        <i class="ri-windy-line"></i>
+                                        <strong id="weather-wind">-- km/h</strong>
+                                    </span>
+
+                                    <span>
+                                        <i class="ri-temp-hot-line"></i>
+                                        <strong id="weather-feel">-- °C</strong>
+                                    </span>
+
+                                    <span class="weather-status-pill" id="weather-status">
+                                        Clima
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+
+                <div class="csv-home-search-wrap">
+                    <div class="search-container">
+                        <i class="ri-search-line search-icon-global"></i>
+
+                        <input
+                            type="text"
+                            id="input-pesquisa-global"
+                            class="search-input search-input-global"
+                            placeholder="Pesquisar médicos, exames, convênios, contatos e procedimentos..."
+                        >
+                    </div>
+
+                    <span class="csv-home-search-label">
+                        Pesquisa em todo o sistema
+                    </span>
+                </div>
+
+                <div
+                    id="resultados-globais"
+                    class="cards-grid resultados-globais-box"
+                    style="display: none;"
+                ></div>
+
+                <div class="csv-home-section-heading">
+                    <div>
+                        <span>Acesso rápido</span>
+                        <h3>O que você procura hoje?</h3>
+                        <p>
+                            Acesse as áreas mais utilizadas do painel sem precisar
+                            percorrer todo o menu lateral.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="csv-home-services">
+
+                    <div
+                        class="shortcut-card csv-service-card"
+                        onclick="window.irParaAba('boletins')"
+                    >
+                        <div>
+                            <div class="csv-service-icon">
+                                <i class="ri-alarm-warning-line"></i>
+                            </div>
+
+                            <div class="shortcut-title">Boletins Gerais</div>
+                            <small>Normas, avisos e comunicados importantes.</small>
+                        </div>
+                    </div>
+
+                    <div
+                        class="shortcut-card csv-service-card"
+                        onclick="window.irParaAba('corpo-clinico')"
+                    >
+                        <div>
+                            <div class="csv-service-icon">
+                                <i class="ri-team-fill"></i>
+                            </div>
+
+                            <div class="shortcut-title">Corpo Clínico</div>
+                            <small>Profissionais, especialidades e informações.</small>
+                        </div>
+                    </div>
+
+                    <div
+                        class="shortcut-card csv-service-card"
+                        onclick="window.irParaAba('institutos')"
+                    >
+                        <div>
+                            <div class="csv-service-icon">
+                                <i class="ri-building-line"></i>
+                            </div>
+
+                            <div class="shortcut-title">Tabela Instituto</div>
+                            <small>Tabelas, profissionais e códigos internos.</small>
+                        </div>
+                    </div>
+
+                    <div
+                        class="shortcut-card csv-service-card"
+                        onclick="window.abrirSubAba('ramais'); window.irParaAba('contatos');"
+                    >
+                        <div>
+                            <div class="csv-service-icon">
+                                <i class="ri-phone-fill"></i>
+                            </div>
+
+                            <div class="shortcut-title">Ramais Internos</div>
+                            <small>Contatos rápidos de setores e unidades.</small>
+                        </div>
+                    </div>
+
+                    <div
+                        class="shortcut-card csv-service-card"
+                        onclick="window.irParaAba('convenios')"
+                    >
+                        <div>
+                            <div class="csv-service-icon">
+                                <i class="ri-shield-cross-fill"></i>
+                            </div>
+
+                            <div class="shortcut-title">Convênios</div>
+                            <small>Códigos, serviços aceitos e orientações.</small>
+                        </div>
+                    </div>
+
+                    <div
+                        class="shortcut-card csv-service-card"
+                        onclick="window.irParaAba('ensino')"
+                    >
+                        <div>
+                            <div class="csv-service-icon">
+                                <i class="ri-graduation-cap-line"></i>
+                            </div>
+
+                            <div class="shortcut-title">Ensino</div>
+                            <small>Treinamentos, atividades e materiais internos.</small>
                         </div>
                     </div>
                 </div>
 
-                <div class="search-container">
-                    <i class="ri-search-line search-icon-global"></i>
-                    <input type="text" id="input-pesquisa-global" class="search-input search-input-global" placeholder="Pesquisar em todo o sistema (Exames, Médicos, Convênios)...">
-                </div>
-                <div id="resultados-globais" class="cards-grid resultados-globais-box" style="display: none;"></div>
+                <div class="csv-home-info-row">
 
-                <div class="home-banner" id="banner-area">
-                    <div id="banner-content"><h2>Bem-vindo ao Painel Clínico</h2></div>
-                </div>
+                    <article class="csv-home-info-card">
+                        <h4>Um portal feito para a rotina da equipe</h4>
 
-                <h2 class="section-subtitle">Acesso Rápido</h2>
-                <div class="home-grid">
-                    <div class="shortcut-card" onclick="window.irParaAba('boletins')"><div class="shortcut-icon"><i class="ri-alarm-warning-line"></i></div><div class="shortcut-title">Boletins Gerais</div></div>
-                    <div class="shortcut-card" onclick="window.irParaAba('corpo-clinico')"><div class="shortcut-icon"><i class="ri-team-fill"></i></div><div class="shortcut-title">Corpo Clínico</div></div>
-                    <div class="shortcut-card" onclick="window.irParaAba('institutos')"><div class="shortcut-icon"><i class="ri-building-line"></i></div><div class="shortcut-title">Tabela Instituto</div></div>
-                    <div class="shortcut-card" onclick="window.abrirSubAba('ramais'); window.irParaAba('contatos');"><div class="shortcut-icon"><i class="ri-phone-fill"></i></div><div class="shortcut-title">Ramais Internos</div></div>
+                        <p>
+                            O Painel Clínico reúne informações que antes estavam
+                            espalhadas em diferentes documentos, mensagens e setores.
+                            Utilize a pesquisa ou os atalhos para encontrar tudo com
+                            mais rapidez.
+                        </p>
+
+                        <div class="csv-home-info-pills">
+                            <span><i class="ri-search-line"></i> Busca integrada</span>
+                            <span><i class="ri-device-line"></i> Responsivo</span>
+                            <span><i class="ri-refresh-line"></i> Sincronização automática</span>
+                        </div>
+                    </article>
+
+                    <article class="csv-home-info-card csv-blue-card">
+                        <h4>Acesso mesmo durante instabilidades</h4>
+
+                        <p>
+                            Após o primeiro carregamento, o dispositivo mantém a
+                            estrutura do sistema e as informações já consultadas
+                            disponíveis localmente.
+                        </p>
+
+                        <div class="csv-home-info-pills">
+                            <span><i class="ri-wifi-off-line"></i> Modo offline</span>
+                            <span><i class="ri-database-2-line"></i> Cache local</span>
+                        </div>
+                    </article>
                 </div>
             </section>
 
-            <section id="tab-ajustes" class="tab-content" style="display: none;">
+<section id="tab-ajustes" class="tab-content" style="display: none;">
                 <div class="card settings-card">
                     <h2 class="settings-title">Configurações do Sistema</h2>
                     <label class="form-label">Aviso Animado na Tela Inicial (Banner)</label>
@@ -1031,7 +1438,9 @@
     </div>
 
 
- <script type="module" src="app.js?v=4.0.1"></script>
+ <script src="login-ui.js?v=4.1.0"></script>
+    <script src="visual-v2.js?v=4.2.0"></script>
+    <script type="module" src="app.js?v=4.2.0"></script>
 
 </body>
 </html>
