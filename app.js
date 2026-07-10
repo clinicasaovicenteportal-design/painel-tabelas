@@ -184,7 +184,19 @@ let loginEmAndamento = false;
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
-        try { const regs = await navigator.serviceWorker.getRegistrations(); for (const reg of regs) await reg.unregister(); } catch (err) { }
+        try {
+            const registration = await navigator.serviceWorker.register('./sw.js', {
+                scope: './'
+            });
+
+            console.log('Modo offline ativado:', registration.scope);
+
+            registration.addEventListener('updatefound', () => {
+                console.log('Nova versão offline encontrada.');
+            });
+        } catch (error) {
+            console.error('Erro ao ativar o modo offline:', error);
+        }
     });
 }
 

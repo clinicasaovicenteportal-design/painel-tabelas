@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tabelas-app-v4.0.0';
+const CACHE_NAME = 'painel-csv-v4.0.1';
 
 // Ficheiros que queremos guardar no dispositivo
 const urlsToCache = [
@@ -45,6 +45,20 @@ self.addEventListener('fetch', event => {
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone)).catch(err => console.warn('Falha ao salvar no cache:', err));
         return networkResponse;
       })
-      .catch(() => caches.match(event.request))
+      .catch(async () => {
+        const cachedResponse = await caches.match(event.request, {
+          ignoreSearch: true
+        });
+
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        if (event.request.mode === 'navigate') {
+          return caches.match('./index.html');
+        }
+
+        return Response.error();
+      })
   );
 });
