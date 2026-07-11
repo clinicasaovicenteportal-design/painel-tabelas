@@ -16,7 +16,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_INTELLIGENCE_VERSION = "7.1.0";
+const CSV_INTELLIGENCE_VERSION = "7.1.1";
 const app = getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -1361,12 +1361,16 @@ function installReadOverride() {
 }
 
 function bindDirectNavigation() {
-  document
-    .querySelector('.nav-btn[data-tab="boletins-privados"]')
-    ?.addEventListener("click", () => {
-      setTimeout(renderAdminDashboard, 40);
-      setTimeout(renderAdminDashboard, 350);
-    });
+  const button = document.querySelector(
+    '.nav-btn[data-tab="boletins-privados"]'
+  );
+
+  if (!button || button.dataset.csvIntelBound === "1") return;
+
+  button.dataset.csvIntelBound = "1";
+  button.addEventListener("click", () => {
+    setTimeout(() => scheduleRefresh(20), 50);
+  });
 }
 
 function cleanup() {
@@ -1376,11 +1380,31 @@ function cleanup() {
   intel.unsubscribers = [];
 }
 
+let refreshTimer = null;
+
 function refreshAll() {
   installReadOverride();
   renderHomeCard();
-  renderAdminDashboard();
+
+  const directTab = document.getElementById("tab-boletins-privados");
+
+  if (
+    intel.isAdmin &&
+    directTab?.classList.contains("active")
+  ) {
+    renderAdminDashboard();
+  }
+
   renderCollaboratorAlert();
+}
+
+function scheduleRefresh(delay = 90) {
+  clearTimeout(refreshTimer);
+
+  refreshTimer = setTimeout(() => {
+    refreshTimer = null;
+    refreshAll();
+  }, delay);
 }
 
 function subscribe() {
@@ -1392,7 +1416,7 @@ function subscribe() {
         id: item.id,
         data: item.data()
       }));
-      refreshAll();
+      scheduleRefresh();
     })
   );
 
@@ -1403,7 +1427,7 @@ function subscribe() {
           id: item.id,
           data: item.data()
         }));
-        refreshAll();
+        scheduleRefresh();
       })
     );
   } else {
@@ -1426,7 +1450,7 @@ function subscribe() {
         collectionName: "boletins",
         data: item.data()
       }));
-      refreshAll();
+      scheduleRefresh();
     })
   );
 
@@ -1444,7 +1468,7 @@ function subscribe() {
         collectionName: "boletins-privados",
         data: item.data()
       }));
-      refreshAll();
+      scheduleRefresh();
     })
   );
 
@@ -1461,7 +1485,7 @@ function subscribe() {
         id: item.id,
         data: item.data()
       }));
-      refreshAll();
+      scheduleRefresh();
     })
   );
 
@@ -1478,7 +1502,7 @@ function subscribe() {
         id: item.id,
         data: item.data()
       }));
-      refreshAll();
+      scheduleRefresh();
     })
   );
 
@@ -1494,7 +1518,7 @@ function subscribe() {
           id: item.id,
           data: item.data()
         }));
-        refreshAll();
+        scheduleRefresh();
       })
     );
   }
@@ -1524,22 +1548,14 @@ async function handleAuth(user) {
   installReadOverride();
   subscribe();
 
-  [120, 500, 1200].forEach((delay) => {
-    setTimeout(refreshAll, delay);
+  [120, 500].forEach((delay) => {
+    setTimeout(() => scheduleRefresh(30), delay);
   });
 }
 
 function init() {
   bindDirectNavigation();
   installReadOverride();
-
-  new MutationObserver(() => {
-    installReadOverride();
-    renderHomeCard();
-  }).observe(document.documentElement, {
-    childList: true,
-    subtree: true
-  });
 
   onAuthStateChanged(auth, handleAuth);
 

@@ -1,6 +1,6 @@
 {
-  "version": "7.1.0",
-  "message": "Nova central de informativos direcionados, prazos de leitura, alertas, releituras, relatórios e alteração administrativa de acesso.",
+  "version": "7.1.1",
+  "message": "Correção de desempenho: removido o ciclo contínuo de renderização, reduzidas atualizações repetidas do Firebase e otimizado o painel de informativos.",
   "force": false,
   "publishedAt": "2026-07-11"
 }
