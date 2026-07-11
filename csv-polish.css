@@ -1,0 +1,436 @@
+/* CSV POLISH 6.1.0 — restaura transições, tema e gestão de equipe */
+
+:root {
+  --cp-bg:#f3f6fa;
+  --cp-surface:#fff;
+  --cp-soft:#f7f9fc;
+  --cp-text:#172033;
+  --cp-muted:#718096;
+  --cp-border:#e2e8f0;
+  --cp-primary:#8b252c;
+  --cp-primary-dark:#5a1419;
+  --cp-blue:#285da8;
+  --cp-purple:#7357bd;
+  --cp-green:#22a66f;
+  --cp-shadow:0 20px 55px rgba(31,43,66,.09);
+  --cp-shadow-hover:0 25px 62px rgba(31,43,66,.15);
+}
+
+html[data-theme="dark"] {
+  color-scheme:dark;
+  --cp-bg:#0f1724;
+  --cp-surface:#182231;
+  --cp-soft:#202c3d;
+  --cp-text:#edf2f9;
+  --cp-muted:#a8b3c5;
+  --cp-border:#2d3a4d;
+  --cp-shadow:0 22px 56px rgba(0,0,0,.27);
+  --cp-shadow-hover:0 28px 70px rgba(0,0,0,.38);
+  --bg-color:#0f1724;
+  --surface-color:#182231;
+  --text-main:#edf2f9;
+  --text-muted:#a8b3c5;
+  --border-color:#2d3a4d;
+  --shadow-soft:0 18px 45px rgba(0,0,0,.24);
+}
+
+body,.main-content,.sidebar,.top-header,.card,.chart-box,.modal-box,
+.csv-home-live-panel,.csv-home-search-wrap,.csv-home-info-card,
+#tab-home .csv-service-card {
+  transition:background-color .32s ease,border-color .32s ease,
+    color .32s ease,box-shadow .32s ease;
+}
+
+.tab-content.csv-polish-enter {
+  animation:csvPolishTabIn .48s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes csvPolishTabIn {
+  from {opacity:0;transform:translateY(14px) scale(.994);filter:blur(2px)}
+  to {opacity:1;transform:none;filter:blur(0)}
+}
+
+.nav-btn {
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  transition:transform .22s ease,background-color .22s ease,
+    color .22s ease,box-shadow .22s ease,border-color .22s ease!important;
+}
+
+.nav-btn::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  opacity:0;
+  transform:translateX(-35%);
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.16),transparent);
+  transition:opacity .25s ease,transform .5s ease;
+}
+
+.nav-btn:hover {transform:translateX(4px)}
+.nav-btn:hover::after {opacity:1;transform:translateX(35%)}
+.nav-btn.active {box-shadow:0 12px 28px rgba(139,37,44,.22)}
+
+.btn-hover,.csv2-button,.csv-home-primary-action,.csv-home-secondary-action,
+.csv2-filter-pills button,.csv-polish-button {
+  transition:transform .2s ease,box-shadow .2s ease,
+    background-color .2s ease,border-color .2s ease,color .2s ease!important;
+}
+
+.btn-hover:hover,.csv2-button:hover,.csv-home-primary-action:hover,
+.csv-home-secondary-action:hover,.csv-polish-button:hover {
+  transform:translateY(-3px);
+}
+
+.btn-hover:active,.csv2-button:active,.csv-home-primary-action:active,
+.csv-home-secondary-action:active,.csv-polish-button:active {
+  transform:translateY(0) scale(.98);
+}
+
+.shortcut-card,.csv-service-card,.card,.csv2-team-summary article,
+.csv2-bulletin-summary article,.csv2-team-row,.csv2-bulletin-card {
+  transition:transform .24s ease,box-shadow .24s ease,
+    border-color .24s ease,background-color .24s ease!important;
+}
+
+.shortcut-card:hover,#tab-home .csv-service-card:hover,
+.csv2-team-summary article:hover,.csv2-bulletin-summary article:hover,
+.csv2-bulletin-card:hover {
+  transform:translateY(-5px);
+  box-shadow:var(--cp-shadow-hover);
+}
+
+/* Botão claro/escuro */
+.csv-polish-theme-toggle {
+  min-height:44px;
+  padding:0 15px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  border:1px solid var(--cp-border);
+  border-radius:15px;
+  color:var(--cp-text);
+  background:rgba(255,255,255,.88);
+  box-shadow:0 12px 28px rgba(30,43,69,.08);
+  backdrop-filter:blur(18px);
+  cursor:pointer;
+  font:800 11px inherit;
+  white-space:nowrap;
+  transition:.22s ease;
+}
+
+.csv-polish-theme-toggle:hover {
+  color:var(--cp-primary);
+  border-color:rgba(139,37,44,.3);
+  transform:translateY(-2px);
+  box-shadow:0 17px 32px rgba(30,43,69,.13);
+}
+
+.csv-polish-theme-toggle i {font-size:17px}
+
+/* Escuro no sistema existente */
+html[data-theme="dark"] body,
+html[data-theme="dark"] .main-content {
+  color:var(--cp-text);
+  background:var(--cp-bg)!important;
+}
+
+html[data-theme="dark"] .sidebar,
+html[data-theme="dark"] .top-header,
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .chart-box,
+html[data-theme="dark"] .modal-box,
+html[data-theme="dark"] .agenda-view-panel,
+html[data-theme="dark"] .agenda-operadores-card,
+html[data-theme="dark"] .ramal-unidade-bloco,
+html[data-theme="dark"] .csv-home-live-panel,
+html[data-theme="dark"] .csv-home-search-wrap,
+html[data-theme="dark"] .csv-home-info-card,
+html[data-theme="dark"] #tab-home .csv-service-card {
+  color:var(--cp-text)!important;
+  background:var(--cp-surface)!important;
+  border-color:var(--cp-border)!important;
+}
+
+html[data-theme="dark"] .top-header h1,
+html[data-theme="dark"] .shortcut-title,
+html[data-theme="dark"] .csv-home-section-heading h3,
+html[data-theme="dark"] .csv-home-info-card h4,
+html[data-theme="dark"] .card h2,
+html[data-theme="dark"] .card h3,
+html[data-theme="dark"] .card h4,
+html[data-theme="dark"] .modal-header h3 {color:#f8fafc!important}
+
+html[data-theme="dark"] .text-muted,
+html[data-theme="dark"] .csv-home-section-heading p,
+html[data-theme="dark"] .csv-home-search-label {color:var(--cp-muted)!important}
+
+html[data-theme="dark"] .form-input,
+html[data-theme="dark"] .search-input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  color:var(--cp-text)!important;
+  background:#111827!important;
+  border-color:#334155!important;
+}
+
+html[data-theme="dark"] .nav-btn {color:#aeb9cb}
+html[data-theme="dark"] .nav-btn:hover {color:#fff;background:#202b3e}
+html[data-theme="dark"] .nav-btn.active {
+  color:#fff;background:linear-gradient(135deg,#6b1a21,#9d3039)
+}
+html[data-theme="dark"] .badge {color:#e5e7eb;background:#293548}
+
+html[data-theme="dark"] #tab-home .csv-home-weather {
+  background:#111827!important;border-color:#334155!important
+}
+html[data-theme="dark"] #tab-home .csv-home-weather .weather-info h3,
+html[data-theme="dark"] #tab-home .csv-home-weather .weather-temp {
+  color:#dce8ff!important
+}
+html[data-theme="dark"] #tab-home .csv-home-weather .weather-mini-stats span {
+  color:#d9e1ee;background:#172033;border-color:#334155
+}
+html[data-theme="dark"] .csv-polish-theme-toggle {
+  color:#eef2f7;background:rgba(24,34,49,.9);border-color:#334155
+}
+
+/* Gestão de equipe modernizada */
+#tab-colaboradores .csv2-team-root {
+  width:100%;
+  animation:csvPolishTabIn .5s cubic-bezier(.2,.8,.2,1) both;
+}
+
+#tab-colaboradores .csv2-page-header {
+  padding:27px 29px;
+  align-items:center;
+  border:1px solid var(--cp-border);
+  border-radius:27px;
+  background:radial-gradient(circle at 92% 8%,rgba(115,87,189,.14),transparent 28%),
+    linear-gradient(135deg,var(--cp-surface),var(--cp-soft));
+  box-shadow:var(--cp-shadow);
+}
+
+#tab-colaboradores .csv2-page-header h2 {font-size:clamp(28px,3vw,42px)}
+#tab-colaboradores .csv2-team-summary {gap:15px}
+
+#tab-colaboradores .csv2-team-summary article {
+  min-height:132px;padding:22px;border-radius:23px;
+  background:radial-gradient(circle at 100% 0%,rgba(139,37,44,.07),transparent 45%),
+    var(--cp-surface);
+}
+#tab-colaboradores .csv2-team-summary article:nth-child(2) {
+  background:radial-gradient(circle at 100% 0%,rgba(40,93,168,.11),transparent 45%),
+    var(--cp-surface);
+}
+#tab-colaboradores .csv2-team-summary article:nth-child(3) {
+  background:radial-gradient(circle at 100% 0%,rgba(231,153,52,.12),transparent 45%),
+    var(--cp-surface);
+}
+#tab-colaboradores .csv2-team-summary article:nth-child(4) {
+  background:radial-gradient(circle at 100% 0%,rgba(34,166,111,.12),transparent 45%),
+    var(--cp-surface);
+}
+
+#tab-colaboradores .csv2-team-panel {
+  overflow:hidden;border-radius:27px;box-shadow:var(--cp-shadow)
+}
+#tab-colaboradores .csv2-team-toolbar {
+  padding:20px;
+  background:linear-gradient(135deg,var(--cp-surface),var(--cp-soft))
+}
+#tab-colaboradores .csv2-team-list {padding:10px 20px 22px}
+#tab-colaboradores .csv2-team-row {
+  margin-top:12px;border-radius:19px;background:var(--cp-surface)
+}
+#tab-colaboradores .csv2-team-row:hover {
+  transform:translateY(-2px);
+  border-color:rgba(139,37,44,.24);
+  box-shadow:0 15px 35px rgba(32,45,70,.09)
+}
+#tab-colaboradores .csv2-team-row.is-open {
+  transform:none;border-color:rgba(139,37,44,.36);
+  box-shadow:0 20px 45px rgba(32,45,70,.12)
+}
+#tab-colaboradores .csv2-team-row-summary {min-height:84px;padding:14px 18px}
+#tab-colaboradores .csv2-team-avatar {
+  width:48px;height:48px;border-radius:17px;
+  box-shadow:0 10px 22px rgba(115,87,189,.25)
+}
+#tab-colaboradores .csv2-team-row-details {
+  background:radial-gradient(circle at 95% 5%,rgba(40,93,168,.06),transparent 30%),
+    var(--cp-soft)
+}
+#tab-colaboradores .csv2-team-row.is-open .csv2-team-row-details {
+  padding:23px 20px 20px
+}
+#tab-colaboradores .csv2-team-edit-grid label {
+  padding:13px;border:1px solid var(--cp-border);
+  border-radius:16px;background:var(--cp-surface)
+}
+#tab-colaboradores .csv2-team-row-details .form-input {
+  min-height:48px;padding:0 14px;border-radius:13px;background:var(--cp-soft)
+}
+#tab-colaboradores .csv2-row-permissions {
+  padding:19px;border-radius:19px;background:var(--cp-surface)
+}
+#tab-colaboradores .csv2-account-active {
+  min-height:46px;padding:0 14px;border:1px solid var(--cp-border);
+  border-radius:14px;background:var(--cp-surface)
+}
+
+.csv2-permission-item,.csv2-permission-all {
+  transition:transform .2s ease,border-color .2s ease,
+    background-color .2s ease,box-shadow .2s ease
+}
+.csv2-permission-item:hover,.csv2-permission-all:hover {
+  transform:translateY(-2px);
+  border-color:rgba(115,87,189,.38);
+  box-shadow:0 10px 22px rgba(32,45,70,.07)
+}
+.csv2-permission-item:has(input:checked) {
+  color:var(--cp-primary);
+  border-color:rgba(139,37,44,.28);
+  background:rgba(139,37,44,.075)
+}
+.csv2-permission-all:has(input:checked) {
+  border-color:rgba(115,87,189,.36);
+  background:rgba(115,87,189,.12)
+}
+
+/* Modal moderno */
+.csv-polish-modal {
+  position:fixed;inset:0;z-index:100500;display:none;
+  align-items:center;justify-content:center;padding:24px;
+  background:rgba(10,18,31,.62);backdrop-filter:blur(12px)
+}
+.csv-polish-modal.is-open {display:flex;animation:csvOverlayIn .22s ease both}
+.csv-polish-modal-card {
+  width:min(920px,100%);max-height:92vh;overflow:auto;position:relative;
+  border:1px solid rgba(255,255,255,.72);border-radius:30px;
+  background:radial-gradient(circle at 100% 0%,rgba(115,87,189,.12),transparent 28%),
+    var(--cp-surface);
+  box-shadow:0 40px 110px rgba(5,12,24,.32);
+  animation:csvModalIn .42s cubic-bezier(.2,.8,.2,1) both
+}
+.csv-polish-modal-head {
+  padding:28px 30px 23px;display:flex;align-items:flex-start;
+  justify-content:space-between;gap:20px;border-bottom:1px solid var(--cp-border)
+}
+.csv-polish-modal-head h2 {
+  margin:8px 0 6px;color:var(--cp-text);font-size:clamp(25px,3vw,38px);
+  letter-spacing:-.04em
+}
+.csv-polish-modal-head p {
+  max-width:650px;margin:0;color:var(--cp-muted);font-size:12px;line-height:1.65
+}
+.csv-polish-close {
+  width:43px;height:43px;display:grid;place-items:center;flex:0 0 auto;
+  border:1px solid var(--cp-border);border-radius:14px;color:var(--cp-text);
+  background:var(--cp-soft);cursor:pointer;font-size:20px;transition:.2s ease
+}
+.csv-polish-close:hover {color:#fff;background:var(--cp-primary);transform:rotate(6deg)}
+.csv-polish-form {padding:26px 30px 30px}
+.csv-polish-form-section {
+  margin-bottom:20px;padding:20px;border:1px solid var(--cp-border);
+  border-radius:21px;background:var(--cp-soft)
+}
+.csv-polish-form-section-title {
+  margin-bottom:15px;display:flex;align-items:center;gap:10px;
+  color:var(--cp-text);font-size:13px;font-weight:800
+}
+.csv-polish-form-section-title i {
+  width:36px;height:36px;display:grid;place-items:center;border-radius:12px;
+  color:#fff;background:linear-gradient(145deg,var(--cp-purple),#9d75d4)
+}
+.csv-polish-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.csv-polish-field {display:block}
+.csv-polish-field.full {grid-column:1/-1}
+.csv-polish-field>span {
+  display:block;margin-bottom:7px;color:var(--cp-text);font-size:10px;font-weight:800
+}
+.csv-polish-field input,.csv-polish-field select {
+  width:100%;min-height:52px;padding:0 15px;border:1px solid var(--cp-border);
+  border-radius:15px;outline:none;color:var(--cp-text);background:var(--cp-surface);
+  font-family:inherit;font-size:12px;transition:.2s ease
+}
+.csv-polish-field input:focus,.csv-polish-field select:focus {
+  border-color:var(--cp-primary);box-shadow:0 0 0 4px rgba(139,37,44,.09);
+  transform:translateY(-1px)
+}
+.csv-polish-switch {
+  min-height:58px;padding:12px 14px;display:flex;align-items:center;gap:12px;
+  border:1px solid var(--cp-border);border-radius:16px;cursor:pointer;
+  background:var(--cp-surface)
+}
+.csv-polish-switch input {width:19px;height:19px;accent-color:var(--cp-primary)}
+.csv-polish-switch strong,.csv-polish-switch small {display:block}
+.csv-polish-switch strong {color:var(--cp-text);font-size:11px}
+.csv-polish-switch small {margin-top:2px;color:var(--cp-muted);font-size:9px}
+.csv-polish-permissions {
+  display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:9px
+}
+.csv-polish-permission {
+  min-height:54px;padding:10px;display:flex;align-items:center;gap:9px;
+  border:1px solid var(--cp-border);border-radius:14px;cursor:pointer;
+  color:var(--cp-text);background:var(--cp-surface);
+  font-size:9px;font-weight:700;transition:.2s ease
+}
+.csv-polish-permission:hover {transform:translateY(-2px);border-color:rgba(115,87,189,.35)}
+.csv-polish-permission:has(input:checked) {
+  color:var(--cp-primary);border-color:rgba(139,37,44,.32);
+  background:rgba(139,37,44,.075)
+}
+.csv-polish-permission input {accent-color:var(--cp-primary)}
+.csv-polish-form-actions {
+  display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap
+}
+.csv-polish-button {
+  min-height:48px;padding:0 19px;display:inline-flex;align-items:center;
+  justify-content:center;gap:8px;border-radius:15px;border:1px solid transparent;
+  cursor:pointer;font-family:inherit;font-size:11px;font-weight:800
+}
+.csv-polish-button.primary {
+  color:#fff;background:linear-gradient(135deg,var(--cp-primary-dark),
+    var(--cp-primary),#b83d46);box-shadow:0 14px 28px rgba(139,37,44,.24)
+}
+.csv-polish-button.secondary {
+  color:var(--cp-text);background:var(--cp-surface);border-color:var(--cp-border)
+}
+.csv-polish-form-message {
+  min-height:20px;margin:13px 0 0;text-align:right;
+  color:var(--cp-muted);font-size:10px;font-weight:700
+}
+.csv-polish-form-message.error {color:#d9434d}
+.csv-polish-form-message.success {color:#22a66f}
+
+@keyframes csvOverlayIn {from{opacity:0}to{opacity:1}}
+@keyframes csvModalIn {
+  from{opacity:0;transform:translateY(28px) scale(.97)}
+  to{opacity:1;transform:none}
+}
+
+@media (max-width:1000px) {
+  #tab-colaboradores .csv2-team-edit-grid {grid-template-columns:repeat(2,minmax(160px,1fr))}
+  .csv-polish-permissions {grid-template-columns:repeat(2,minmax(150px,1fr))}
+}
+
+@media (max-width:720px) {
+  .csv-polish-theme-toggle span {display:none}
+  .csv-polish-theme-toggle {width:44px;padding:0}
+  #tab-colaboradores .csv2-page-header {
+    padding:22px;align-items:flex-start;flex-direction:column
+  }
+  #tab-colaboradores .csv2-team-summary {grid-template-columns:repeat(2,1fr)}
+  #tab-colaboradores .csv2-team-row-summary {
+    grid-template-columns:45px minmax(0,1fr) auto 24px
+  }
+  #tab-colaboradores .csv2-team-login {display:none}
+  .csv-polish-grid,.csv-polish-permissions {grid-template-columns:1fr}
+  .csv-polish-modal {padding:10px}
+  .csv-polish-modal-card {border-radius:23px}
+  .csv-polish-modal-head,.csv-polish-form {padding-left:20px;padding-right:20px}
+}

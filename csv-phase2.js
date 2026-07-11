@@ -23,7 +23,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_PHASE2_VERSION = "6.0.1";
+const CSV_PHASE2_VERSION = "6.1.0";
 const INTERNAL_DOMAIN = "acesso.csv.app";
 const app = getApp();
 const auth = getAuth(app);
@@ -555,7 +555,11 @@ function ensureTeamManager() {
     `;
 
     document.getElementById("csv2-add-collaborator-button")?.addEventListener("click", () => {
-      if (typeof window.abrirModal === "function") window.abrirModal("colaboradores");
+      if (typeof window.csvPolishOpenCollaborator === "function") {
+        window.csvPolishOpenCollaborator();
+      } else if (typeof window.abrirModal === "function") {
+        window.abrirModal("colaboradores");
+      }
     });
     document.getElementById("csv2-bulk-access-button")?.addEventListener("click", openBulkAccessModal);
     document.getElementById("csv2-team-search")?.addEventListener("input", (event) => {
@@ -1735,7 +1739,11 @@ function subscribeData() {
 
 function bindNavigation() {
   document.querySelector('.nav-btn[data-tab="boletins"]')?.addEventListener("click", () => setTimeout(ensureBulletinExperience, 30));
-  document.querySelector('.nav-btn[data-tab="colaboradores"]')?.addEventListener("click", () => setTimeout(ensureTeamManager, 30));
+  document.querySelector('.nav-btn[data-tab="colaboradores"]')?.addEventListener("click", () => {
+    setTimeout(ensureTeamManager, 30);
+    setTimeout(ensureTeamManager, 320);
+    setTimeout(renderTeamManager, 700);
+  });
 }
 
 async function handleAuth(user) {
@@ -1773,13 +1781,22 @@ async function handleAuth(user) {
     roundRobotLogo();
     bindNavigation();
     ensureBulletinExperience();
-    if (state.isAdmin) ensureTeamManager();
+    if (state.isAdmin) {
+      ensureTeamManager();
+      setTimeout(ensureTeamManager, 250);
+      setTimeout(ensureTeamManager, 850);
+      setTimeout(renderTeamManager, 1100);
+    }
     subscribeData();
     console.log(`CSV Phase 2 ${CSV_PHASE2_VERSION} carregada`, profile);
   } catch (error) {
     console.error("CSV fase 2: não foi possível carregar o perfil", error);
   }
 }
+
+window.csv2EnsureTeamManager = ensureTeamManager;
+window.csv2RenderTeamManager = renderTeamManager;
+window.csv2EnsureBulletinExperience = ensureBulletinExperience;
 
 function init() {
   keepNavigationClean();
