@@ -1,0 +1,380 @@
+/* CSV Weather Glass UI 6.3.0
+   Atualização visual: clima 3D e botões glass
+*/
+
+:root {
+  --csv-glass-bg: linear-gradient(180deg, rgba(255,255,255,.38), rgba(255,255,255,.14));
+  --csv-glass-border: rgba(255,255,255,.55);
+  --csv-glass-shadow: 0 14px 32px rgba(18, 30, 58, .12), inset 0 1px 0 rgba(255,255,255,.32);
+  --csv-glass-shadow-hover: 0 22px 42px rgba(18, 30, 58, .18), inset 0 1px 0 rgba(255,255,255,.4);
+  --csv-glass-blur: blur(18px) saturate(165%);
+  --csv-weather-blue: linear-gradient(135deg, #5eb0ff 0%, #2f7cf7 44%, #2a5dcf 100%);
+  --csv-weather-night: linear-gradient(135deg, #5a6cf0 0%, #4152d7 52%, #3243b7 100%);
+  --csv-weather-soft: linear-gradient(135deg, #f8f7f2 0%, #ece8df 100%);
+  --csv-weather-sun: radial-gradient(circle at 30% 30%, #ffe88d 0%, #ffc72f 58%, #f6a300 100%);
+  --csv-weather-cloud: linear-gradient(180deg, #ffffff 0%, #edf4ff 100%);
+  --csv-weather-rain: linear-gradient(180deg, #5ad6ff 0%, #1ea1ff 100%);
+}
+
+html[data-theme="dark"] {
+  --csv-glass-bg: linear-gradient(180deg, rgba(35,46,70,.58), rgba(20,30,47,.32));
+  --csv-glass-border: rgba(255,255,255,.12);
+  --csv-glass-shadow: 0 16px 34px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.04);
+  --csv-glass-shadow-hover: 0 24px 45px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.07);
+  --csv-weather-soft: linear-gradient(135deg, #1e2738 0%, #253146 100%);
+}
+
+/* --------------------------------------------------
+   Botões com efeito glass
+-------------------------------------------------- */
+
+.csv2-button,
+.csv-polish-button,
+.csv-polish-theme-toggle,
+.csv-home-primary-action,
+.csv-home-secondary-action,
+#tab-home .csv-home-search-wrap .csv-home-search-label,
+#csv2-person-bulletin-filters button,
+#csv2-admin-bulletin-filters button,
+.csv2-modal-actions button,
+.csv2-modal-actions a,
+.csv2-target-option,
+.csv2-target-search,
+.csv2-filter-pills button {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--csv-glass-border) !important;
+  background: var(--csv-glass-bg) !important;
+  box-shadow: var(--csv-glass-shadow) !important;
+  backdrop-filter: var(--csv-glass-blur);
+  -webkit-backdrop-filter: var(--csv-glass-blur);
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background-color .22s ease !important;
+}
+
+.csv2-button::before,
+.csv-polish-button::before,
+.csv-polish-theme-toggle::before,
+.csv-home-primary-action::before,
+.csv-home-secondary-action::before,
+#csv2-person-bulletin-filters button::before,
+#csv2-admin-bulletin-filters button::before,
+.csv2-filter-pills button::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0));
+  pointer-events: none;
+}
+
+.csv2-button:hover,
+.csv-polish-button:hover,
+.csv-polish-theme-toggle:hover,
+.csv-home-primary-action:hover,
+.csv-home-secondary-action:hover,
+#csv2-person-bulletin-filters button:hover,
+#csv2-admin-bulletin-filters button:hover,
+.csv2-filter-pills button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--csv-glass-shadow-hover) !important;
+}
+
+.csv2-button.primary,
+.csv-polish-button.primary,
+.csv-home-primary-action {
+  color: #fff !important;
+  background:
+    linear-gradient(135deg, rgba(139,37,44,.88), rgba(192,66,76,.78)) !important;
+  border-color: rgba(255,255,255,.2) !important;
+}
+
+.csv2-button.secondary,
+.csv-polish-button.secondary,
+.csv-home-secondary-action {
+  color: var(--cp-text, #172033) !important;
+}
+
+html[data-theme="dark"] .csv2-button.secondary,
+html[data-theme="dark"] .csv-polish-button.secondary,
+html[data-theme="dark"] .csv-home-secondary-action,
+html[data-theme="dark"] .csv-polish-theme-toggle {
+  color: #edf2f9 !important;
+}
+
+.nav-btn {
+  transition: transform .22s ease, box-shadow .22s ease, background .22s ease !important;
+}
+.nav-btn.active {
+  box-shadow: 0 14px 28px rgba(139,37,44,.20) !important;
+}
+
+/* --------------------------------------------------
+   Previsão do tempo 3D
+-------------------------------------------------- */
+
+#tab-home .csv-home-weather,
+#tab-home .weather-card,
+#tab-home .home-weather-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 30px !important;
+  border: 1px solid rgba(255,255,255,.32) !important;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255,255,255,.28), transparent 30%),
+    linear-gradient(145deg, rgba(255,255,255,.20), rgba(255,255,255,.06)),
+    var(--csv-weather-blue) !important;
+  box-shadow:
+    0 22px 46px rgba(37, 87, 179, .18),
+    inset 0 1px 0 rgba(255,255,255,.25),
+    inset 0 -18px 32px rgba(0,0,0,.08) !important;
+  backdrop-filter: blur(14px) saturate(145%);
+  -webkit-backdrop-filter: blur(14px) saturate(145%);
+}
+
+#tab-home .csv-home-weather::before,
+#tab-home .weather-card::before,
+#tab-home .home-weather-card::before {
+  content: "";
+  position: absolute;
+  inset: auto -8% -35% auto;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.18), rgba(255,255,255,0) 72%);
+  pointer-events: none;
+}
+
+#tab-home .csv-home-weather::after,
+#tab-home .weather-card::after,
+#tab-home .home-weather-card::after {
+  content: "";
+  position: absolute;
+  top: -16px;
+  left: -10px;
+  width: 148px;
+  height: 76px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255,255,255,.30), rgba(255,255,255,0));
+  filter: blur(8px);
+  opacity: .6;
+  pointer-events: none;
+}
+
+#tab-home .csv-home-weather .weather-info h3,
+#tab-home .weather-card .weather-info h3,
+#tab-home .home-weather-card .weather-info h3 {
+  color: rgba(255,255,255,.92) !important;
+  text-shadow: 0 3px 10px rgba(10,20,40,.18);
+}
+
+#tab-home .csv-home-weather .weather-temp,
+#tab-home .weather-card .weather-temp,
+#tab-home .home-weather-card .weather-temp {
+  color: #fff !important;
+  font-size: clamp(52px, 6vw, 68px) !important;
+  line-height: 1 !important;
+  letter-spacing: -0.06em;
+  font-weight: 900 !important;
+  text-shadow:
+    0 8px 16px rgba(5, 12, 28, .16),
+    0 2px 0 rgba(255,255,255,.1);
+}
+
+#tab-home .csv-home-weather .weather-condition,
+#tab-home .csv-home-weather p,
+#tab-home .weather-card p,
+#tab-home .home-weather-card p {
+  color: rgba(255,255,255,.86) !important;
+}
+
+#tab-home .csv-home-weather .weather-mini-stats span,
+#tab-home .weather-card .weather-mini-stats span,
+#tab-home .home-weather-card .weather-mini-stats span {
+  color: rgba(255,255,255,.96) !important;
+  border: 1px solid rgba(255,255,255,.24) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.08)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 8px 18px rgba(0,0,0,.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+#tab-home .csv-home-weather .weather-icon,
+#tab-home .weather-card .weather-icon,
+#tab-home .home-weather-card .weather-icon {
+  position: relative;
+  width: 132px;
+  min-width: 132px;
+  height: 104px;
+  display: grid;
+  place-items: center;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(255,255,255,.22), transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.02));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.24),
+    0 16px 30px rgba(4,18,50,.15);
+}
+
+#tab-home .csv-home-weather .weather-icon::before,
+#tab-home .weather-card .weather-icon::before,
+#tab-home .home-weather-card .weather-icon::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--csv-weather-sun);
+  box-shadow:
+    0 0 0 7px rgba(255, 195, 49, .12),
+    0 12px 24px rgba(255, 175, 31, .34);
+  z-index: 1;
+}
+
+#tab-home .csv-home-weather .weather-icon::after,
+#tab-home .weather-card .weather-icon::after,
+#tab-home .home-weather-card .weather-icon::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 26px;
+  width: 58px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--csv-weather-cloud);
+  box-shadow:
+    -18px 8px 0 2px #f4f8ff,
+    -7px -8px 0 2px #ffffff,
+    0 14px 20px rgba(16, 42, 87, .16);
+  z-index: 2;
+}
+
+#tab-home .csv-home-weather .weather-icon img,
+#tab-home .csv-home-weather .weather-icon i,
+#tab-home .csv-home-weather .weather-icon svg,
+#tab-home .weather-card .weather-icon img,
+#tab-home .weather-card .weather-icon i,
+#tab-home .weather-card .weather-icon svg,
+#tab-home .home-weather-card .weather-icon img,
+#tab-home .home-weather-card .weather-icon i,
+#tab-home .home-weather-card .weather-icon svg {
+  position: relative;
+  z-index: 5;
+  transform: scale(1.16);
+  filter: drop-shadow(0 14px 14px rgba(0,0,0,.14));
+}
+
+#tab-home .csv-home-weather .weather-icon .ri-cloudy-line,
+#tab-home .csv-home-weather .weather-icon .ri-cloud-windy-line,
+#tab-home .csv-home-weather .weather-icon .ri-sun-cloudy-line,
+#tab-home .csv-home-weather .weather-icon .ri-sun-line,
+#tab-home .csv-home-weather .weather-icon .ri-cloudy-2-line,
+#tab-home .csv-home-weather .weather-icon .ri-thunderstorms-line,
+#tab-home .csv-home-weather .weather-icon .ri-heavy-showers-line,
+#tab-home .weather-card .weather-icon .ri-cloudy-line,
+#tab-home .weather-card .weather-icon .ri-cloud-windy-line,
+#tab-home .weather-card .weather-icon .ri-sun-cloudy-line,
+#tab-home .weather-card .weather-icon .ri-sun-line,
+#tab-home .weather-card .weather-icon .ri-cloudy-2-line,
+#tab-home .weather-card .weather-icon .ri-thunderstorms-line,
+#tab-home .weather-card .weather-icon .ri-heavy-showers-line {
+  font-size: 56px !important;
+  color: #fff !important;
+}
+
+html[data-theme="dark"] #tab-home .csv-home-weather,
+html[data-theme="dark"] #tab-home .weather-card,
+html[data-theme="dark"] #tab-home .home-weather-card {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255,255,255,.12), transparent 30%),
+    linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.02)),
+    var(--csv-weather-night) !important;
+  border-color: rgba(255,255,255,.14) !important;
+  box-shadow:
+    0 22px 46px rgba(0, 0, 0, .26),
+    inset 0 1px 0 rgba(255,255,255,.08),
+    inset 0 -18px 32px rgba(0,0,0,.16) !important;
+}
+
+/* card de clima secundário caso exista */
+#tab-home .csv-home-live-panel .weather-mini-card,
+#tab-home .csv-home-info-card.glass-weather {
+  border-radius: 24px !important;
+  border: 1px solid rgba(255,255,255,.22) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.07)),
+    var(--csv-weather-soft) !important;
+  box-shadow: var(--csv-glass-shadow) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Tabs/pílulas glass */
+#csv2-person-bulletin-filters button.active,
+#csv2-admin-bulletin-filters button.active,
+.csv2-filter-pills button.active {
+  color: #fff !important;
+  background:
+    linear-gradient(135deg, rgba(115,87,189,.88), rgba(98,164,255,.64)) !important;
+  border-color: rgba(255,255,255,.20) !important;
+}
+
+/* Pesquisa principal levemente glass */
+#tab-home .csv-home-search-wrap {
+  border: 1px solid rgba(255,255,255,.26) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.36), rgba(255,255,255,.16)) !important;
+  box-shadow: var(--csv-glass-shadow) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+html[data-theme="dark"] #tab-home .csv-home-search-wrap {
+  border-color: rgba(255,255,255,.10) !important;
+  background:
+    linear-gradient(180deg, rgba(31,41,59,.72), rgba(17,24,39,.46)) !important;
+}
+
+/* Responsivo */
+@media (max-width: 900px) {
+  #tab-home .csv-home-weather .weather-icon,
+  #tab-home .weather-card .weather-icon,
+  #tab-home .home-weather-card .weather-icon {
+    width: 112px;
+    min-width: 112px;
+    height: 90px;
+  }
+
+  #tab-home .csv-home-weather .weather-temp,
+  #tab-home .weather-card .weather-temp,
+  #tab-home .home-weather-card .weather-temp {
+    font-size: clamp(40px, 8vw, 56px) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  #tab-home .csv-home-weather .weather-icon,
+  #tab-home .weather-card .weather-icon,
+  #tab-home .home-weather-card .weather-icon {
+    width: 94px;
+    min-width: 94px;
+    height: 78px;
+    border-radius: 22px;
+  }
+
+  #tab-home .csv-home-weather .weather-icon::before,
+  #tab-home .weather-card .weather-icon::before,
+  #tab-home .home-weather-card .weather-icon::before {
+    width: 30px;
+    height: 30px;
+  }
+
+  #tab-home .csv-home-weather .weather-icon::after,
+  #tab-home .weather-card .weather-icon::after,
+  #tab-home .home-weather-card .weather-icon::after {
+    width: 46px;
+    height: 26px;
+  }
+}
