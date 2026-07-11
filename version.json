@@ -1,6 +1,6 @@
 {
-  "version": "7.1.1",
-  "message": "Correção de desempenho: removido o ciclo contínuo de renderização, reduzidas atualizações repetidas do Firebase e otimizado o painel de informativos.",
+  "version": "7.2.0",
+  "message": "Correção da leitura dos boletins, menu lateral adaptável, pesquisa cruzada de convênios e novo painel tecnológico de controle de ativos.",
   "force": false,
   "publishedAt": "2026-07-11"
 }

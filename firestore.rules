@@ -139,6 +139,11 @@ service cloud.firestore {
       allow create, update, delete: if canManageClinicalSchedule();
     }
 
+    match /inventarios_ativos/{inventoryId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
     match /boletins/{bulletinId} {
       allow read: if signedIn();
       allow create, delete: if isAdmin();
@@ -215,6 +220,7 @@ service cloud.firestore {
           'remocoes',
           'senhas',
           'ativos',
+          'inventarios_ativos',
           'locais',
           'setores',
           'especialidades',

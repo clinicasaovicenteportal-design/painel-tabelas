@@ -14,7 +14,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_CLINICAL_VERSION = "7.0.0";
+const CSV_CLINICAL_VERSION = "7.2.0";
 const app = getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -44,6 +44,7 @@ const state = {
   selectedDoctorId: "",
   selectedHealthPlanKey: "",
   healthPlanSearch: "",
+  healthPlanSearchMode: "all",
   calendarMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 };
 
@@ -1367,10 +1368,22 @@ function ensureHealthPlanTab() {
 
       <section class="csv-plan-layout">
         <aside class="csv-plan-sidebar">
-          <label class="csv-directory-search">
-            <i class="ri-search-line"></i>
-            <input id="csv-plan-search" placeholder="Pesquisar convênio...">
-          </label>
+          <div class="csv-plan-search-tools">
+            <label class="csv-directory-search">
+              <i class="ri-search-line"></i>
+              <input id="csv-plan-search" placeholder="Convênio, procedimento, código ou profissional...">
+            </label>
+            <select id="csv-plan-search-mode">
+              <option value="all">Pesquisar em tudo</option>
+              <option value="plan">Somente convênios</option>
+              <option value="procedure">Somente procedimentos</option>
+              <option value="code">Somente códigos</option>
+              <option value="professional">Somente profissionais</option>
+            </select>
+            <div id="csv-plan-search-summary" class="csv-plan-search-summary">
+              Digite um procedimento para descobrir todos os convênios que oferecem o serviço.
+            </div>
+          </div>
           <div class="csv-plan-list" id="csv-plan-list"></div>
         </aside>
 
@@ -1385,19 +1398,110 @@ function ensureHealthPlanTab() {
     renderHealthPlanTab();
   });
 
+  document.getElementById("csv-plan-search-mode")?.addEventListener("change", (event) => {
+    state.healthPlanSearchMode = event.target.value;
+    renderHealthPlanTab();
+  });
+
   renderHealthPlanTab();
+}
+
+function healthPlanSearchFields(plan) {
+  const procedures = plan.procedures || [];
+  const linkedDoctors = doctorsForHealthPlan(plan.name);
+  const professionalNames = unique([
+    ...linkedDoctors.map((person) => person.name),
+    ...(plan.manualProfessionals || [])
+  ]);
+
+  return {
+    plan: normalizeText([
+      plan.name,
+      plan.description,
+      plan.rules,
+      plan.particularities,
+      plan.documents,
+      plan.authorization,
+      plan.contacts
+    ].join(" ")),
+    procedure: normalizeText(
+      procedures.map((item) =>
+        `${item.name || ""} ${item.note || ""}`
+      ).join(" ")
+    ),
+    code: normalizeText(
+      procedures.map((item) => item.code || "").join(" ")
+    ),
+    professional: normalizeText(professionalNames.join(" "))
+  };
+}
+
+function matchingProcedures(plan) {
+  const query = normalizeText(state.healthPlanSearch);
+  if (!query) return plan.procedures || [];
+
+  return (plan.procedures || []).filter((item) =>
+    normalizeText([
+      item.code,
+      item.name,
+      item.note
+    ].join(" ")).includes(query)
+  );
+}
+
+function healthPlanMatchesSearch(plan) {
+  const query = normalizeText(state.healthPlanSearch);
+  if (!query) return true;
+
+  const fields = healthPlanSearchFields(plan);
+  const mode = state.healthPlanSearchMode || "all";
+
+  if (mode === "plan") return fields.plan.includes(query);
+  if (mode === "procedure") return fields.procedure.includes(query);
+  if (mode === "code") return fields.code.includes(query);
+  if (mode === "professional") {
+    return fields.professional.includes(query);
+  }
+
+  return Object.values(fields).some((value) =>
+    value.includes(query)
+  );
 }
 
 function renderHealthPlanTab() {
   ensureHealthPlanTab();
   const plans = aggregateHealthPlans();
-  const filtered = plans.filter((plan) =>
-    !state.healthPlanSearch ||
-    normalizeText(plan.name).includes(normalizeText(state.healthPlanSearch))
-  );
+  const filtered = plans.filter(healthPlanMatchesSearch);
 
-  if (!state.selectedHealthPlanKey || !plans.some((plan) => plan.key === state.selectedHealthPlanKey)) {
-    state.selectedHealthPlanKey = plans[0]?.key || "";
+  const searchInput = document.getElementById("csv-plan-search");
+  if (
+    searchInput &&
+    searchInput.value !== state.healthPlanSearch
+  ) {
+    searchInput.value = state.healthPlanSearch;
+  }
+
+  const modeSelect = document.getElementById("csv-plan-search-mode");
+  if (modeSelect) {
+    modeSelect.value = state.healthPlanSearchMode || "all";
+  }
+
+  const summary = document.getElementById("csv-plan-search-summary");
+  if (summary) {
+    const query = String(state.healthPlanSearch || "").trim();
+    summary.innerHTML = query
+      ? `<strong>${filtered.length}</strong> convênio(s) encontrado(s) para “${esc(query)}”.`
+      : "Digite um procedimento para descobrir todos os convênios que oferecem o serviço.";
+  }
+
+  if (
+    !state.selectedHealthPlanKey ||
+    !filtered.some((plan) => plan.key === state.selectedHealthPlanKey)
+  ) {
+    state.selectedHealthPlanKey =
+      filtered[0]?.key ||
+      (!state.healthPlanSearch ? plans[0]?.key : "") ||
+      "";
   }
 
   const list = document.getElementById("csv-plan-list");
@@ -1406,7 +1510,13 @@ function renderHealthPlanTab() {
       list.innerHTML = `<div class="csv-plan-empty-list"><i class="ri-shield-search-line"></i><span>Nenhum convênio encontrado.</span></div>`;
     } else {
       list.innerHTML = filtered.map((plan) => {
-        const procedureCount = unique(plan.procedures.map((item) => item.name)).length;
+        const procedureCount =
+          unique(plan.procedures.map((item) => item.name)).length;
+        const matchedCount =
+          state.healthPlanSearch
+            ? matchingProcedures(plan).length
+            : 0;
+
         return `
           <button type="button" class="csv-plan-list-item ${state.selectedHealthPlanKey === plan.key ? "active" : ""}"
             data-plan-key="${esc(plan.key)}">
@@ -1416,6 +1526,9 @@ function renderHealthPlanTab() {
             <span>
               <strong>${esc(plan.name)}</strong>
               <small>${procedureCount} ${procedureCount === 1 ? "procedimento" : "procedimentos"}</small>
+              ${matchedCount
+                ? `<em class="csv-plan-match"><i class="ri-search-eye-line"></i>${matchedCount} serviço(s) correspondente(s)</em>`
+                : ""}
             </span>
             <i class="ri-arrow-right-s-line"></i>
           </button>
@@ -1492,11 +1605,22 @@ function renderSelectedHealthPlan(plan) {
         <div class="csv-procedure-table">
           ${procedures.length ? `
             <div class="csv-procedure-row header"><span>Código</span><span>Procedimento</span><span>Observação</span></div>
-            ${procedures.map((item) => `
-              <div class="csv-procedure-row">
+            ${procedures.map((item, index) => `
+              <div
+                class="csv-procedure-row"
+                role="button"
+                tabindex="0"
+                onclick="window.csvOpenProcedureDetail('${esc(plan.key)}', ${index})"
+                onkeydown="if(event.key === 'Enter' || event.key === ' '){event.preventDefault();window.csvOpenProcedureDetail('${esc(plan.key)}', ${index});}"
+              >
                 <span>${esc(item.code || "—")}</span>
                 <strong>${esc(item.name)}</strong>
-                <small>${esc(item.note || "Sem observações")}</small>
+                <small>
+                  ${esc(item.note || "Sem observações")}
+                  <em class="csv-procedure-open">
+                    <i class="ri-arrow-right-up-line"></i> Ver detalhes
+                  </em>
+                </small>
               </div>
             `).join("")}
           ` : `<div class="csv-plan-panel-empty">Nenhum procedimento cadastrado.</div>`}
@@ -1552,6 +1676,82 @@ function renderSelectedHealthPlan(plan) {
     </div>
   `;
 }
+
+window.csvOpenProcedureDetail = function(planKey, procedureIndex) {
+  const plan = healthPlanByKey(planKey);
+  const procedure = plan?.procedures?.[Number(procedureIndex)];
+
+  if (!plan || !procedure) return;
+
+  const linkedDoctors = doctorsForHealthPlan(plan.name);
+  const professionalNames = unique([
+    ...linkedDoctors.map((person) => person.name),
+    ...(plan.manualProfessionals || [])
+  ]);
+
+  const modal = ensureModal();
+
+  modal.innerHTML = `
+    <div class="csv-clinical-modal-card csv-form-modal">
+      <button
+        type="button"
+        class="csv-modal-close"
+        onclick="window.csvClinicalCloseModal()"
+      >
+        <i class="ri-close-line"></i>
+      </button>
+
+      <div class="csv-procedure-detail-hero">
+        <i class="ri-file-list-3-line"></i>
+        <div>
+          <small>Procedimento coberto por ${esc(plan.name)}</small>
+          <h2>${esc(procedure.name || "Serviço")}</h2>
+          <p>Código ${esc(procedure.code || "não informado")}</p>
+        </div>
+      </div>
+
+      <div class="csv-procedure-detail-grid">
+        <article>
+          <span>Convênio</span>
+          <strong>${esc(plan.name)}</strong>
+        </article>
+        <article>
+          <span>Código</span>
+          <strong>${esc(procedure.code || "Não informado")}</strong>
+        </article>
+        <article>
+          <span>Observação do serviço</span>
+          <strong>${esc(procedure.note || "Sem observações específicas.")}</strong>
+        </article>
+        <article>
+          <span>Autorização</span>
+          <strong>${esc(plan.authorization || "Consulte a recepção.")}</strong>
+        </article>
+        <article>
+          <span>Documentos necessários</span>
+          <strong>${esc(plan.documents || "Não informado.")}</strong>
+        </article>
+        <article>
+          <span>Particularidades</span>
+          <strong>${esc(plan.particularities || plan.rules || "Nenhuma particularidade cadastrada.")}</strong>
+        </article>
+      </div>
+
+      <div class="csv-procedure-detail-professionals">
+        <h3>Profissionais vinculados</h3>
+        <div>
+          ${professionalNames.length
+            ? professionalNames.map((name) =>
+                `<span><i class="ri-user-heart-line"></i>${esc(name)}</span>`
+              ).join("")
+            : "<span>Nenhum profissional vinculado.</span>"}
+        </div>
+      </div>
+    </div>
+  `;
+
+  modal.classList.add("is-open");
+};
 
 function healthPlanByKey(key) {
   return aggregateHealthPlans().find((plan) => plan.key === key);

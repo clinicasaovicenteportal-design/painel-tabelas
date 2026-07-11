@@ -23,7 +23,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_PHASE2_VERSION = "7.1.0";
+const CSV_PHASE2_VERSION = "7.2.0";
 const INTERNAL_DOMAIN = "acesso.csv.app";
 const app = getApp();
 const auth = getAuth(app);
@@ -138,7 +138,25 @@ function readNames(item) {
 }
 
 function hasRead(item, name) {
-  return readNames(item).has(String(name || "").trim());
+  const normalizedName = normalizeText(name);
+
+  if (readNames(item).has(String(name || "").trim())) {
+    return true;
+  }
+
+  const structured =
+    window.csvBulletinIntelligence?.readings || [];
+
+  return structured.some((entry) => {
+    const data = entry?.data || {};
+
+    return (
+      data.bulletinId === item?.id &&
+      (!data.collectionName ||
+        data.collectionName === item?.collectionName) &&
+      normalizeText(data.nome || "") === normalizedName
+    );
+  });
 }
 
 function collaboratorName(item) {
@@ -2199,6 +2217,7 @@ async function handleAuth(user) {
 window.csv2EnsureTeamManager = ensureTeamManager;
 window.csv2RenderTeamManager = renderTeamManager;
 window.csv2EnsureBulletinExperience = ensureBulletinExperience;
+window.csv2RefreshBulletins = renderBulletins;
 
 function init() {
   keepNavigationClean();

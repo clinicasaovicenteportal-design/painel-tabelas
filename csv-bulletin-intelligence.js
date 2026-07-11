@@ -16,7 +16,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_INTELLIGENCE_VERSION = "7.1.1";
+const CSV_INTELLIGENCE_VERSION = "7.2.0";
 const app = getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -1270,65 +1270,93 @@ async function markReadOrRequest(key) {
     sector: currentSector()
   };
 
-  if (isRead(item, person)) return;
-
-  const requestRef = doc(
-    db,
-    "solicitacoes-releitura",
-    rereadId(item, person.uid)
-  );
-  const requestSnapshot = await getDoc(requestRef);
-  const requestData = requestSnapshot.exists()
-    ? requestSnapshot.data()
-    : null;
-
-  const deadline = effectiveDeadline(
-    item,
-    requestData ? { data: requestData } : null
-  );
-  const remaining = daysUntil(deadline);
-  const overdue = remaining !== null && remaining < 0;
-
-  if (overdue && requestData?.status !== "aprovada") {
-    if (requestData?.status === "pendente") {
-      alert("Sua solicitação de releitura já foi enviada e aguarda análise da gestão.");
-      return;
-    }
-
-    await setDoc(
-      requestRef,
-      {
-        uid: person.uid,
-        nome: person.name,
-        setor: person.sector,
-        bulletinId: item.id,
-        collectionName: item.collectionName,
-        titulo: bulletinTitle(item),
-        prazoOriginal: bulletinDeadline(item),
-        status: "pendente",
-        solicitadaEm: serverTimestamp(),
-        solicitadaEmIso: new Date().toISOString()
-      },
-      { merge: true }
-    );
-
-    alert(
-      "O prazo deste informativo terminou. Uma solicitação de releitura foi enviada à gestão e será registrada como ocorrência de atraso."
-    );
+  if (isRead(item, person)) {
+    window.csv2RefreshBulletins?.();
     return;
   }
 
-  const legacyRecord =
-    `${person.name} (${new Date().toLocaleString("pt-BR")} | Por: ${profile.email || intel.user.email})`;
+  const activeButton =
+    document.activeElement?.closest?.("button") || null;
+  const originalButtonHtml = activeButton?.innerHTML || "";
 
-  await updateDoc(
-    doc(db, item.collectionName, item.id),
-    { leituras: arrayUnion(legacyRecord) }
-  );
+  if (activeButton) {
+    activeButton.disabled = true;
+    activeButton.innerHTML =
+      '<i class="ri-loader-4-line ri-spin"></i> Registrando...';
+  }
 
-  await setDoc(
-    doc(db, "leituras-informativos", readingId(item, person.uid)),
-    {
+  try {
+    const existingRequest = rereadRequest(item, person.uid);
+    const requestData = existingRequest?.data || null;
+    const requestRef = doc(
+      db,
+      "solicitacoes-releitura",
+      rereadId(item, person.uid)
+    );
+
+    const deadline = effectiveDeadline(
+      item,
+      existingRequest || null
+    );
+    const remaining = daysUntil(deadline);
+    const overdue = remaining !== null && remaining < 0;
+
+    if (overdue && requestData?.status !== "aprovada") {
+      if (requestData?.status === "pendente") {
+        alert(
+          "Sua solicitação de releitura já foi enviada e aguarda análise da gestão."
+        );
+        return;
+      }
+
+      await setDoc(
+        requestRef,
+        {
+          uid: person.uid,
+          nome: person.name,
+          setor: person.sector,
+          bulletinId: item.id,
+          collectionName: item.collectionName,
+          titulo: bulletinTitle(item),
+          prazoOriginal: bulletinDeadline(item),
+          status: "pendente",
+          solicitadaEm: serverTimestamp(),
+          solicitadaEmIso: new Date().toISOString()
+        },
+        { merge: true }
+      );
+
+      intel.rereadRequests = [
+        ...intel.rereadRequests.filter(
+          (entry) => entry.id !== rereadId(item, person.uid)
+        ),
+        {
+          id: rereadId(item, person.uid),
+          data: {
+            uid: person.uid,
+            nome: person.name,
+            setor: person.sector,
+            bulletinId: item.id,
+            collectionName: item.collectionName,
+            titulo: bulletinTitle(item),
+            prazoOriginal: bulletinDeadline(item),
+            status: "pendente",
+            solicitadaEmIso: new Date().toISOString()
+          }
+        }
+      ];
+
+      window.csv2RefreshBulletins?.();
+      scheduleRefresh(20);
+
+      alert(
+        "O prazo deste informativo terminou. A solicitação de releitura foi enviada à gestão."
+      );
+      return;
+    }
+
+    const readingKey = readingId(item, person.uid);
+    const readingPayload = {
       uid: person.uid,
       nome: person.name,
       setor: person.sector,
@@ -1340,19 +1368,83 @@ async function markReadOrRequest(key) {
       lidoEmIso: new Date().toISOString(),
       dentroDoPrazo: !overdue,
       reaberturaUsada: requestData?.status === "aprovada"
-    },
-    { merge: true }
-  );
+    };
 
-  if (requestData?.status === "aprovada") {
+    /*
+     * O registro estruturado é salvo primeiro.
+     * Assim, uma falha no campo legado "leituras" não impede
+     * a confirmação principal da leitura.
+     */
     await setDoc(
-      requestRef,
-      {
-        status: "concluida",
-        concluidaEm: serverTimestamp()
-      },
+      doc(db, "leituras-informativos", readingKey),
+      readingPayload,
       { merge: true }
     );
+
+    const legacyRecord =
+      `${person.name} (${new Date().toLocaleString("pt-BR")} | Por: ${profile.email || intel.user.email})`;
+
+    try {
+      await updateDoc(
+        doc(db, item.collectionName, item.id),
+        { leituras: arrayUnion(legacyRecord) }
+      );
+    } catch (legacyError) {
+      console.warn(
+        "A leitura estruturada foi salva, mas o campo legado não pôde ser atualizado:",
+        legacyError
+      );
+    }
+
+    item.data = item.data || {};
+    item.data.leituras = Array.isArray(item.data.leituras)
+      ? item.data.leituras
+      : [];
+
+    if (!legacyReadNames(item).has(person.name)) {
+      item.data.leituras.push(legacyRecord);
+    }
+
+    intel.readings = [
+      ...intel.readings.filter((entry) => entry.id !== readingKey),
+      {
+        id: readingKey,
+        data: {
+          ...readingPayload,
+          lidoEm: null
+        }
+      }
+    ];
+
+    if (requestData?.status === "aprovada") {
+      await setDoc(
+        requestRef,
+        {
+          status: "concluida",
+          concluidaEm: serverTimestamp()
+        },
+        { merge: true }
+      );
+    }
+
+    window.csv2RefreshBulletins?.();
+    scheduleRefresh(20);
+
+    alert("Leitura registrada com sucesso.");
+  } catch (error) {
+    console.error("Não foi possível registrar a leitura:", error);
+
+    const message =
+      error?.code === "permission-denied"
+        ? "O Firestore bloqueou o registro. Publique as regras desta atualização."
+        : error?.message || "Falha desconhecida.";
+
+    alert(`Não foi possível marcar como lido: ${message}`);
+  } finally {
+    if (activeButton) {
+      activeButton.disabled = false;
+      activeButton.innerHTML = originalButtonHtml;
+    }
   }
 }
 
@@ -1393,6 +1485,15 @@ function refreshAll() {
     directTab?.classList.contains("active")
   ) {
     renderAdminDashboard();
+  }
+
+  if (
+    !intel.isAdmin &&
+    document
+      .getElementById("tab-boletins")
+      ?.classList.contains("active")
+  ) {
+    window.csv2RefreshBulletins?.();
   }
 
   renderCollaboratorAlert();
