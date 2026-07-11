@@ -1,6 +1,6 @@
 {
-  "version": "7.0.0",
-  "message": "A exibição das fotos do Corpo Clínico foi corrigida, com melhor suporte para links compartilhados do Google Drive e prévia antes de salvar.",
+  "version": "7.1.0",
+  "message": "Nova central de informativos direcionados, prazos de leitura, alertas, releituras, relatórios e alteração administrativa de acesso.",
   "force": false,
   "publishedAt": "2026-07-11"
 }

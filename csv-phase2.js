@@ -23,7 +23,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_PHASE2_VERSION = "6.9.0";
+const CSV_PHASE2_VERSION = "7.1.0";
 const INTERNAL_DOMAIN = "acesso.csv.app";
 const app = getApp();
 const auth = getAuth(app);
@@ -673,8 +673,15 @@ function renderTeamManager() {
           <div class="csv2-team-edit-grid">
             <label><span>Nome completo</span><input class="form-input" data-field="name" value="${esc(item.name)}"></label>
             <label><span>Setor</span><input class="form-input" data-field="sector" value="${esc(item.sector)}"></label>
-            <label><span>Usuário de acesso</span><input class="form-input" data-field="username" value="${esc(username)}" ${user ? "disabled" : ""}></label>
-            <label class="csv2-password-field" style="${user ? "display:none" : ""}"><span>Senha inicial</span><input class="form-input" data-field="password" type="password" minlength="8" placeholder="Mínimo de 8 caracteres"></label>
+            <label>
+              <span>${user ? "Novo usuário de acesso" : "Usuário de acesso"}</span>
+              <input class="form-input" data-field="username" value="${esc(username)}">
+              ${user ? `<small class="csv2-credential-help">Para trocar a senha, informe também um novo usuário. O acesso anterior será bloqueado.</small>` : ""}
+            </label>
+            <label class="csv2-password-field">
+              <span>${user ? "Nova senha de acesso" : "Senha inicial"}</span>
+              <input class="form-input" data-field="password" type="password" minlength="8" placeholder="${user ? "Preencha somente para substituir o acesso" : "Mínimo de 8 caracteres"}">
+            </label>
           </div>
 
           <div class="csv2-row-permissions" data-permission-container="${key}">
@@ -687,6 +694,7 @@ function renderTeamManager() {
           <div class="csv2-row-actions">
             ${user ? `
               <button type="button" class="csv2-button secondary" onclick="window.csv2SaveTeamRow('${key}')"><i class="ri-save-line"></i> Salvar alterações</button>
+              <button type="button" class="csv2-button credentials" onclick="window.csv2ReplaceTeamCredentials('${key}')"><i class="ri-key-2-line"></i> Alterar login e senha</button>
             ` : `
               <button type="button" class="csv2-button primary" onclick="window.csv2CreateTeamAccess('${key}')"><i class="ri-user-add-line"></i> Criar login e salvar</button>
             `}
@@ -923,6 +931,138 @@ window.csv2SaveTeamRow = async function(key) {
 };
 
 
+
+window.csv2ReplaceTeamCredentials = async function(key) {
+  if (!state.isAdmin) return;
+
+  const record = findRenderedTeamRecord(key);
+  const row = renderedTeamRow(key);
+
+  if (!record || !row || !record.userId) return;
+
+  const currentUsername = normalize(
+    record.userData?.usuario ||
+    record.collaboratorData?.usuarioAuth ||
+    ""
+  );
+  const newUsername = normalize(
+    row.querySelector('[data-field="username"]')?.value || ""
+  );
+  const newPassword =
+    row.querySelector('[data-field="password"]')?.value || "";
+  const name =
+    row.querySelector('[data-field="name"]')?.value.trim() || "";
+  const sector =
+    row.querySelector('[data-field="sector"]')?.value.trim() || "";
+  const active =
+    row.querySelector('[data-field="active"]')?.checked !== false;
+  const prefix = `csv2-row-perm-${key}`;
+  const permissions = selectedPermissions(row, prefix);
+  const message = row.querySelector("[data-row-message]");
+
+  if (!newUsername || !newPassword) {
+    message.textContent =
+      "Informe o novo usuário e uma nova senha com pelo menos 8 caracteres.";
+    message.className = "csv2-row-message error";
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    message.textContent =
+      "A nova senha precisa ter pelo menos 8 caracteres.";
+    message.className = "csv2-row-message error";
+    return;
+  }
+
+  if (newUsername === currentUsername) {
+    message.textContent =
+      "Por segurança, a troca administrativa de senha exige também um novo usuário de acesso.";
+    message.className = "csv2-row-message error";
+    return;
+  }
+
+  if (await usernameExists(newUsername, record.userId)) {
+    message.textContent =
+      "Este novo usuário já está vinculado a outra pessoa.";
+    message.className = "csv2-row-message error";
+    return;
+  }
+
+  const confirmed = confirm(
+    `Substituir o acesso de ${name}?\n\n` +
+    `Novo usuário: @${newUsername}\n` +
+    "O login anterior será bloqueado e não poderá mais acessar o portal."
+  );
+
+  if (!confirmed) return;
+
+  const button = row.querySelector(".csv2-button.credentials");
+  const original = button?.innerHTML;
+
+  if (button) {
+    button.disabled = true;
+    button.innerHTML =
+      '<i class="ri-loader-4-line ri-spin"></i> Alterando acesso...';
+  }
+
+  try {
+    const result = await createAuthAndProfile({
+      collaboratorId: record.collaboratorId || record.userId,
+      name,
+      sector,
+      username: newUsername,
+      password: newPassword,
+      permissions,
+      active
+    });
+
+    await setDoc(
+      doc(db, "usuarios", record.userId),
+      {
+        ativo: false,
+        removido: true,
+        permissoes: [],
+        credenciaisSubstituidasPor: result.uid,
+        credenciaisSubstituidasEm: serverTimestamp(),
+        atualizadoEm: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    message.textContent =
+      `Acesso substituído. O novo usuário é @${result.username}. O login antigo foi bloqueado.`;
+    message.className = "csv2-row-message success";
+
+    row.querySelector('[data-field="password"]').value = "";
+
+    setTimeout(renderTeamManager, 650);
+  } catch (error) {
+    console.error("Troca de credenciais:", error);
+
+    const known = {
+      "auth/email-already-in-use":
+        "Este usuário já existe no Firebase Authentication.",
+      "auth/invalid-credential":
+        "Já existe uma conta técnica com este usuário. Escolha outro nome de acesso.",
+      "auth/weak-password":
+        "A nova senha é muito fraca.",
+      "permission-denied":
+        "O Firestore bloqueou a alteração. Publique as regras desta atualização."
+    };
+
+    message.textContent =
+      known[error?.code] ||
+      error?.message ||
+      "Não foi possível substituir o login.";
+    message.className = "csv2-row-message error";
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.innerHTML = original;
+    }
+  }
+};
+
 window.csv2RemoveTeamMember = async function(key) {
   if (!state.isAdmin) return;
 
@@ -1115,6 +1255,62 @@ function bulletinTitle(item) {
 
 function bulletinDate(item) {
   return String(item?.data?.["Data de Publicação"] || item?.data?.dataPublicacao || "");
+}
+
+function bulletinDeadline(item) {
+  return String(
+    item?.data?.prazoLeitura ||
+    item?.data?.["Prazo para Leitura"] ||
+    ""
+  ).trim();
+}
+
+function deadlineDays(item) {
+  const deadline = parseDate(bulletinDeadline(item));
+  const today = parseDate(dateToday());
+
+  if (!bulletinDeadline(item) || !deadline.getTime()) return null;
+
+  return Math.ceil(
+    (deadline.getTime() - today.getTime()) / 86400000
+  );
+}
+
+function deadlineBadgeMarkup(item, read = false) {
+  const deadline = bulletinDeadline(item);
+
+  if (!deadline) return "";
+
+  const days = deadlineDays(item);
+  const formatted = parseDate(deadline).toLocaleDateString("pt-BR");
+
+  if (read) {
+    return `<span class="csv2-deadline-badge done">Prazo ${formatted}</span>`;
+  }
+
+  if (days !== null && days < 0) {
+    return `<span class="csv2-deadline-badge overdue">Prazo vencido</span>`;
+  }
+
+  if (
+    days !== null &&
+    days <= Number(item?.data?.diasAviso || 2)
+  ) {
+    return `<span class="csv2-deadline-badge near">Vence ${formatted}</span>`;
+  }
+
+  return `<span class="csv2-deadline-badge">Prazo ${formatted}</span>`;
+}
+
+function deadlineExpired(item) {
+  const days = deadlineDays(item);
+  return days !== null && days < 0;
+}
+
+function datePlusDays(days = 3) {
+  const date = new Date();
+  date.setDate(date.getDate() + Number(days || 0));
+  return date.toISOString().slice(0, 10);
 }
 
 function bulletinType(item) {
@@ -1442,7 +1638,7 @@ function renderBulletins() {
       <section class="csv2-bulletin-list-card">
         <div class="csv2-list-heading">
           <div><strong>Meus informativos</strong><span>Gerais e direcionados em ordem da publicação mais recente.</span></div>
-          <div class="csv2-filter-pills" id="csv2-person-bulletin-filters"><button class="active" data-filter="all">Todos</button><button data-filter="pending">Pendentes</button><button data-filter="read">Lidos</button></div>
+          <div class="csv2-filter-pills" id="csv2-person-bulletin-filters"><button class="active" data-filter="all">Todos</button><button data-filter="direct">Direcionados</button><button data-filter="pending">Pendentes</button><button data-filter="read">Lidos</button></div>
         </div>
         <div id="csv2-bulletin-list" class="csv2-bulletin-list"></div>
       </section>
@@ -1470,23 +1666,25 @@ function bulletinCard(item, admin = false) {
   const read = !admin && hasRead(item, state.profile.name);
   const targetText = audienceLabel(item);
   const description = bulletinDescription(item);
+  const deadline = bulletinDeadline(item);
+  const overdue = !admin && !read && deadlineExpired(item);
 
   return `
     <article class="csv2-bulletin-card ${!admin && read ? "is-read" : ""} ${!admin && !read ? "is-pending" : ""}">
       <div class="csv2-media-icon"><i class="${mediaIcon(mediaType)}"></i></div>
       <div class="csv2-bulletin-main">
-        <div class="csv2-bulletin-tags"><span>${esc(bulletinType(item))}</span><span>${esc(mediaType)}</span>${!admin ? `<span class="${read ? "done" : "pending"}">${read ? "Lido" : "Pendente"}</span>` : ""}</div>
+        <div class="csv2-bulletin-tags"><span>${esc(bulletinType(item))}</span><span>${esc(mediaType)}</span>${deadlineBadgeMarkup(item, read)}${!admin ? `<span class="${read ? "done" : overdue ? "overdue" : "pending"}">${read ? "Lido" : overdue ? "Prazo vencido" : "Pendente"}</span>` : ""}</div>
         <h3>${esc(title)}</h3>
         <p>${esc(description || "Informativo sem descrição adicional.")}</p>
-        <div class="csv2-bulletin-meta"><span><i class="ri-calendar-line"></i>${esc(bulletinDate(item) || "Sem data")}</span><span><i class="ri-user-received-2-line"></i>${esc(targetText)}</span></div>
+        <div class="csv2-bulletin-meta"><span><i class="ri-calendar-line"></i>${esc(bulletinDate(item) || "Sem data")}</span>${deadline ? `<span><i class="ri-timer-line"></i>Leitura até ${esc(parseDate(deadline).toLocaleDateString("pt-BR"))}</span>` : ""}<span><i class="ri-user-received-2-line"></i>${esc(targetText)}</span></div>
       </div>
       ${admin ? `
         <div class="csv2-admin-read-box"><strong>${stats.rate}%</strong><span>${stats.read}/${stats.total} leituras</span><div><i style="width:${stats.rate}%"></i></div></div>
       ` : ""}
       <div class="csv2-bulletin-actions">
         <button type="button" onclick="window.csv2OpenBulletin('${key}')"><i class="ri-eye-line"></i> Abrir</button>
-        ${!admin && !read ? `<button type="button" class="primary" onclick="window.csv2MarkRead('${key}')"><i class="ri-check-double-line"></i> Marcar como lido</button>` : ""}
-        ${admin ? `<button type="button" onclick="window.csv2EditBulletin('${key}')"><i class="ri-edit-line"></i> Editar</button><button type="button" class="danger" onclick="window.csv2DeleteBulletin('${key}')"><i class="ri-delete-bin-line"></i> Excluir</button>` : ""}
+        ${!admin && !read ? `<button type="button" class="primary" onclick="window.csv2MarkRead('${key}')"><i class="${overdue ? "ri-refresh-line" : "ri-check-double-line"}"></i> ${overdue ? "Solicitar releitura" : "Marcar como lido"}</button>` : ""}
+        ${admin ? `<button type="button" onclick="window.csvBulletinOpenReadStatus('${key}')"><i class="ri-group-line"></i> Leitores</button><button type="button" onclick="window.csv2EditBulletin('${key}')"><i class="ri-edit-line"></i> Editar</button><button type="button" class="danger" onclick="window.csv2DeleteBulletin('${key}')"><i class="ri-delete-bin-line"></i> Excluir</button>` : ""}
       </div>
     </article>
   `;
@@ -1518,6 +1716,7 @@ function renderPersonalBulletinList() {
     const read = hasRead(item, state.profile.name);
     if (filter === "read") return read;
     if (filter === "pending") return !read;
+    if (filter === "direct") return item.kind === "Direcionado";
     return true;
   });
   container.innerHTML = items.length ? items.map((item) => bulletinCard(item, false)).join("") : '<div class="csv2-empty"><i class="ri-inbox-line"></i><strong>Nenhum informativo nesta visualização</strong><span>Altere o filtro ou aguarde uma nova publicação.</span></div>';
@@ -1533,6 +1732,10 @@ function materialEmbedUrl(url) {
   if (/\.(pdf|doc|docx|ppt|pptx|xls|xlsx)(\?|#|$)/i.test(raw)) return `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(raw)}`;
   return raw;
 }
+
+window.csv2GetDisplayItem = function(key) {
+  return state.displayItems.get(key) || null;
+};
 
 window.csv2OpenBulletin = function(key) {
   const item = state.displayItems.get(key);
@@ -1611,15 +1814,29 @@ function openBulletinForm(item = null) {
       <p>Defina o conteúdo, a mídia e exatamente quem poderá visualizar.</p>
 
       <form id="csv2-bulletin-form">
-        <div class="csv2-form-grid two">
+        <div class="csv2-form-grid three">
           <label><span>Título</span><input id="csv2-b-title" class="form-input" required value="${esc(bulletinTitle(item || {})) === "Informativo" && !item ? "" : esc(bulletinTitle(item || {}))}"></label>
           <label><span>Data de publicação</span><input id="csv2-b-date" type="date" class="form-input" required value="${esc(bulletinDate(item || {}) || dateToday())}"></label>
+          <label><span>Prazo para leitura</span><input id="csv2-b-deadline" type="date" class="form-input" required value="${esc(bulletinDeadline(item || {}) || datePlusDays(3))}"></label>
         </div>
 
         <div class="csv2-form-grid three">
           <label><span>Classificação</span><select id="csv2-b-type" class="form-input">${["Informativo", "Aviso", "Urgente", "Norma", "Regra", "Comunicado"].map((type) => `<option ${bulletinType(item || {}) === type ? "selected" : ""}>${type}</option>`).join("")}</select></label>
           <label><span>Formato</span><select id="csv2-b-media" class="form-input">${[["texto","Texto"],["video","Vídeo"],["documento","Documento / PDF"],["audio","Áudio"],["link","Link externo"]].map(([value,label]) => `<option value="${value}" ${bulletinMediaType(item || {}) === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
           <label><span>Público</span><select id="csv2-b-audience" class="form-input"><option value="todos" ${audienceType === "todos" ? "selected" : ""}>Toda a empresa</option><option value="setores" ${audienceType === "setores" ? "selected" : ""}>Setores específicos</option><option value="pessoas" ${audienceType === "pessoas" ? "selected" : ""}>Pessoas específicas</option></select></label>
+        </div>
+
+        <div class="csv2-form-grid two">
+          <label>
+            <span>Avisar antes do vencimento</span>
+            <select id="csv2-b-warning-days" class="form-input">
+              ${[1,2,3,5].map((days) => `<option value="${days}" ${Number(data.diasAviso || 2) === days ? "selected" : ""}>${days} dia(s) antes</option>`).join("")}
+            </select>
+          </label>
+          <label class="csv2-required-read">
+            <input id="csv2-b-required" type="checkbox" ${data.leituraObrigatoria !== false ? "checked" : ""}>
+            <span><strong>Leitura obrigatória</strong><small>Ativa prazos, alertas e acompanhamento individual.</small></span>
+          </label>
         </div>
 
         <label><span>Descrição / mensagem</span><textarea id="csv2-b-description" class="form-input csv2-textarea" required placeholder="Escreva a orientação principal do informativo...">${esc(bulletinDescription(item || {}))}</textarea></label>
@@ -1671,6 +1888,9 @@ async function saveBulletin(event, existingItem = null) {
   const message = document.getElementById("csv2-b-form-message");
   const title = document.getElementById("csv2-b-title").value.trim();
   const date = document.getElementById("csv2-b-date").value;
+  const deadline = document.getElementById("csv2-b-deadline").value;
+  const warningDays = Number(document.getElementById("csv2-b-warning-days").value || 2);
+  const requiredRead = document.getElementById("csv2-b-required").checked;
   const type = document.getElementById("csv2-b-type").value;
   const mediaType = document.getElementById("csv2-b-media").value;
   const audienceType = document.getElementById("csv2-b-audience").value;
@@ -1679,7 +1899,7 @@ async function saveBulletin(event, existingItem = null) {
   const sectors = [...form.querySelectorAll('input[name="csv2-target-sector"]:checked')].map((input) => input.value);
   const people = [...form.querySelectorAll('input[name="csv2-target-person"]:checked')].map((input) => input.value);
 
-  if (!title || !date || !description) return alert("Preencha título, data e descrição.");
+  if (!title || !date || !deadline || !description) return alert("Preencha título, data, prazo de leitura e descrição.");
   if (mediaType !== "texto" && !mediaUrl) return alert("Informe o link do material selecionado.");
   if (audienceType === "setores" && !sectors.length) return alert("Selecione pelo menos um setor.");
   if (audienceType === "pessoas" && !people.length) return alert("Selecione pelo menos uma pessoa.");
@@ -1698,6 +1918,9 @@ async function saveBulletin(event, existingItem = null) {
     midiaTipo: mediaType,
     midiaUrl: mediaUrl,
     publicoTipo: audienceType,
+    prazoLeitura: deadline,
+    leituraObrigatoria: requiredRead,
+    diasAviso: warningDays,
     atualizadoEm: serverTimestamp(),
     atualizadoPor: state.profile.email
   };
@@ -1711,10 +1934,19 @@ async function saveBulletin(event, existingItem = null) {
       await Promise.all(currentDocs.filter((item) => !people.includes(item.data?.["Para qual Colaborador?"])).map((item) => deleteDoc(doc(db, "boletins-privados", item.id))));
 
       for (const person of people) {
+        const recipient = activeCollaborators().find(
+          (entry) =>
+            normalizeText(entry.name) === normalizeText(person)
+        );
+
         const payload = {
           ...common,
           "Título do Documento": title,
           "Para qual Colaborador?": person,
+          destinatarioUid:
+            recipient?.user?.id ||
+            recipient?.raw?.data?.uidAuth ||
+            "",
           publicoPessoas: [person],
           publicoSetores: [],
           grupoPublicacaoId: groupId

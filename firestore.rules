@@ -65,6 +65,19 @@ service cloud.firestore {
         .hasOnly(['leituras']);
     }
 
+    function ownStructuredRecord(data) {
+      return signedIn() &&
+        data.uid != null &&
+        data.uid == request.auth.uid;
+    }
+
+    function onlyNoticeViewedChanged() {
+      return request.resource.data
+        .diff(resource.data)
+        .affectedKeys()
+        .hasOnly(['visualizadoEm']);
+    }
+
     function privateBulletinForCurrentUser(data) {
       return isAdmin() ||
         (
@@ -143,6 +156,47 @@ service cloud.firestore {
         );
     }
 
+    match /leituras-informativos/{recordId} {
+      allow read: if isAdmin() || ownStructuredRecord(resource.data);
+
+      allow create: if isAdmin() ||
+        (
+          ownStructuredRecord(request.resource.data) &&
+          request.resource.data.bulletinId is string &&
+          request.resource.data.collectionName is string
+        );
+
+      allow update: if isAdmin() ||
+        (
+          ownStructuredRecord(resource.data) &&
+          ownStructuredRecord(request.resource.data)
+        );
+
+      allow delete: if isAdmin();
+    }
+
+    match /solicitacoes-releitura/{requestId} {
+      allow read: if isAdmin() || ownStructuredRecord(resource.data);
+
+      allow create: if
+        ownStructuredRecord(request.resource.data) &&
+        request.resource.data.status == 'pendente';
+
+      allow update, delete: if isAdmin();
+    }
+
+    match /avisos-leitura/{noticeId} {
+      allow read: if isAdmin() || ownStructuredRecord(resource.data);
+      allow create, delete: if isAdmin();
+
+      allow update: if isAdmin() ||
+        (
+          ownStructuredRecord(resource.data) &&
+          ownStructuredRecord(request.resource.data) &&
+          onlyNoticeViewedChanged()
+        );
+    }
+
     match /{collectionName}/{document=**} {
       allow read: if signedIn() &&
         collectionName in [
@@ -161,16 +215,10 @@ service cloud.firestore {
           'remocoes',
           'senhas',
           'ativos',
-          'agenda-trabalho',
-          'agenda',
-          'tarefas',
           'locais',
           'setores',
           'especialidades',
-          'motivos',
-          'treinamentos',
-          'ensino',
-          'rh'
+          'motivos'
         ];
 
       allow create, update, delete: if isAdmin();
