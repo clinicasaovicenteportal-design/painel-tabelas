@@ -2,6 +2,7 @@ import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebase
 import {
   getAuth,
   onAuthStateChanged,
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -22,7 +23,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_PHASE2_VERSION = "6.0.0";
+const CSV_PHASE2_VERSION = "6.0.1";
 const INTERNAL_DOMAIN = "acesso.csv.app";
 const app = getApp();
 const auth = getAuth(app);
@@ -228,6 +229,148 @@ function findUserForCollaborator(record) {
   return state.users.find((item) => normalizeText(item.data?.nome) === normalizeText(record.name)) || null;
 }
 
+
+function setPhase2LoginStatus(message, kind = "") {
+  const status = document.getElementById("csv-login-status");
+  if (!status) return;
+  status.className = `csv-login-status${kind ? ` ${kind}` : ""}`;
+  status.innerHTML = message;
+}
+
+function installPhase2Login() {
+  const button = document.getElementById("btn-login");
+  const form = document.getElementById("form-login");
+  const loginInput = document.getElementById("email");
+  const passwordInput = document.getElementById("senha");
+
+  if (!button || !loginInput || !passwordInput) return;
+
+  loginInput.placeholder = "Usuário ou e-mail";
+  loginInput.setAttribute("autocomplete", "username");
+
+  const loginHandler = async (event) => {
+    event?.preventDefault?.();
+
+    if (button.dataset.csv2Loading === "1") return;
+
+    const login = loginInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!login || !password) {
+      setPhase2LoginStatus(
+        '<i class="ri-error-warning-line"></i> Informe o usuário e a senha.',
+        "error"
+      );
+      return;
+    }
+
+    const email = internalEmail(login);
+    const original = button.innerHTML;
+
+    button.dataset.csv2Loading = "1";
+    button.disabled = true;
+    button.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Entrando...';
+    setPhase2LoginStatus(
+      '<i class="ri-shield-keyhole-line"></i> Validando acesso...',
+      ""
+    );
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error("CSV Fase 2 — erro de login:", error);
+      setPhase2LoginStatus(
+        '<i class="ri-error-warning-line"></i> Usuário ou senha incorretos.',
+        "error"
+      );
+    } finally {
+      button.dataset.csv2Loading = "0";
+      button.disabled = false;
+      button.innerHTML = original;
+    }
+  };
+
+  window.efetuarLogin = loginHandler;
+  button.onclick = loginHandler;
+  if (form) form.onsubmit = loginHandler;
+}
+
+function applyPhase2Permissions() {
+  if (!state.profile) return;
+
+  const permissions = new Set(
+    Array.isArray(state.profile.permissions)
+      ? state.profile.permissions
+      : []
+  );
+
+  document.querySelectorAll(".sidebar-nav .nav-btn[data-tab]").forEach((button) => {
+    const tab = button.dataset.tab || "";
+
+    const adminOnlyTabs = new Set([
+      "colaboradores",
+      "ajustes",
+      "ativos",
+      "boletins-privados",
+      "treinamentos",
+      "ensino",
+      "rh"
+    ]);
+
+    let visible = false;
+
+    if (HIDDEN_NAV_TABS.includes(tab)) {
+      visible = false;
+    } else if (state.isAdmin) {
+      visible = true;
+    } else if (tab === "home") {
+      visible = true;
+    } else if (adminOnlyTabs.has(tab)) {
+      visible = false;
+    } else {
+      visible = permissions.has(tab);
+    }
+
+    button.style.display = visible ? "" : "none";
+
+    if (!button.dataset.csv2PermissionGuard) {
+      button.dataset.csv2PermissionGuard = "1";
+      button.addEventListener("click", (event) => {
+        if (!state.profile || state.isAdmin) return;
+
+        const requested = button.dataset.tab || "";
+        const currentPermissions = new Set(state.profile.permissions || []);
+        const allowed =
+          requested === "home" ||
+          (!HIDDEN_NAV_TABS.includes(requested) &&
+            !adminOnlyTabs.has(requested) &&
+            currentPermissions.has(requested));
+
+        if (!allowed) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          alert("Seu acesso não permite abrir esta área.");
+        }
+      }, true);
+    }
+  });
+
+  document.querySelectorAll(".admin-only").forEach((element) => {
+    element.style.display = state.isAdmin ? "" : "none";
+  });
+
+  const badge = document.getElementById("user-role-badge");
+  if (badge) {
+    badge.textContent = state.isAdmin
+      ? "Gestão Administrador"
+      : `${state.profile.name} • ${state.profile.sector}`;
+  }
+
+  const accessButton = document.getElementById("csv-nav-acessos");
+  if (accessButton) accessButton.style.display = "none";
+}
+
+
 async function loadProfile(user) {
   if (!user) return null;
   const snapshot = await getDoc(doc(db, "usuarios", user.uid));
@@ -270,36 +413,63 @@ function cleanupListeners() {
   state.unsubscribers = [];
 }
 
+
 function hideObsoleteNavigation() {
   HIDDEN_NAV_TABS.forEach((tabId) => {
     document.querySelectorAll(`.nav-btn[data-tab="${tabId}"]`).forEach((button) => {
-      button.classList.add("csv2-hidden-nav");
-      button.style.setProperty("display", "none", "important");
+      if (!button.classList.contains("csv2-hidden-nav")) {
+        button.classList.add("csv2-hidden-nav");
+      }
+      if (button.style.display !== "none") {
+        button.style.setProperty("display", "none", "important");
+      }
     });
   });
 
   const accessButton = document.getElementById("csv-nav-acessos");
   if (accessButton) {
-    accessButton.classList.add("csv2-hidden-nav");
-    accessButton.style.setProperty("display", "none", "important");
+    if (!accessButton.classList.contains("csv2-hidden-nav")) {
+      accessButton.classList.add("csv2-hidden-nav");
+    }
+    if (accessButton.style.display !== "none") {
+      accessButton.style.setProperty("display", "none", "important");
+    }
   }
 
   const bulletinButton = document.querySelector('.nav-btn[data-tab="boletins"]');
-  if (bulletinButton) bulletinButton.innerHTML = '<i class="ri-megaphone-line"></i> Boletins Gerais';
+  if (
+    bulletinButton &&
+    !bulletinButton.textContent.includes("Boletins Gerais")
+  ) {
+    bulletinButton.innerHTML =
+      '<i class="ri-megaphone-line"></i> Boletins Gerais';
+  }
 }
 
 function keepNavigationClean() {
   hideObsoleteNavigation();
+
   const nav = document.querySelector(".sidebar-nav");
   if (!nav || nav.dataset.csv2Observed) return;
+
   nav.dataset.csv2Observed = "1";
-  new MutationObserver(hideObsoleteNavigation).observe(nav, {
+
+  let scheduled = false;
+  new MutationObserver(() => {
+    if (scheduled) return;
+    scheduled = true;
+
+    requestAnimationFrame(() => {
+      scheduled = false;
+      hideObsoleteNavigation();
+      if (state.profile) applyPhase2Permissions();
+    });
+  }).observe(nav, {
     childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ["style", "class"]
+    subtree: true
   });
 }
+
 
 function roundRobotLogo() {
   document.documentElement.classList.add("csv2-round-robot-logo");
@@ -1579,10 +1749,27 @@ async function handleAuth(user) {
 
   try {
     const profile = await loadProfile(user);
-    if (!profile) return;
+
+    if (!profile) {
+      alert("Este login ainda não possui um perfil de acesso no painel.");
+      await signOut(auth);
+      return;
+    }
+
+    if (!profile.active && !profile.admin) {
+      alert("Este acesso está desativado. Procure a gestão da clínica.");
+      await signOut(auth);
+      return;
+    }
+
     state.profile = profile;
     state.isAdmin = profile.admin === true;
+
     keepNavigationClean();
+    applyPhase2Permissions();
+
+    setTimeout(applyPhase2Permissions, 100);
+    setTimeout(applyPhase2Permissions, 700);
     roundRobotLogo();
     bindNavigation();
     ensureBulletinExperience();
@@ -1597,6 +1784,7 @@ async function handleAuth(user) {
 function init() {
   keepNavigationClean();
   roundRobotLogo();
+  installPhase2Login();
   onAuthStateChanged(auth, handleAuth);
   window.addEventListener("click", (event) => {
     const modal = event.target.closest(".csv2-modal");
