@@ -15,9 +15,52 @@ const configuracaoAbas = {
     'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' },
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'], campoAgrupador: 'Convênio', icone: 'ri-shield-cross-fill' },
 
-    'ultrassom': { titulo: 'Exame de Ultrassom', campos: ['Exame', 'Código', 'Profissionais que realizam (Opcional)', 'Restrição de Idade', 'Observação'], campoAgrupador: 'Exame', icone: 'ri-pulse-line' },
+    'ultrassom': {
+        titulo: 'Exame de Ultrassom',
+        campos: [
+            'Exame',
+            'Código',
+            'Região do Corpo',
+            'Sub-região / Órgão',
+            'Público (Masculino, Feminino, Infantil, Todos)',
+            'Descrição',
+            'Como é feito',
+            'Preparação / Observações',
+            'Duração Média',
+            'Profissionais que realizam (Opcional)',
+            'Restrição de Idade',
+            'Imagem de Referência (Link)',
+            'Observação'
+        ],
+        campoAgrupador: 'Exame',
+        icone: 'ri-pulse-line'
+    },
     'consultas': { titulo: 'Consulta / Procedimento', campos: ['Tipo', 'Código', 'Descrição', 'Valor', 'Profissionais que realizam (Opcional)', 'Observações'], campoAgrupador: 'Tipo', icone: 'ri-stethoscope-line' },
-    'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Categoria do Exame', 'Código', 'Descrição', 'Valor', 'Prazo de Laudo', 'Profissionais que realizam (Opcional)', 'Onde encontrar resultado', 'Observações', 'Convênios'], campoAgrupador: 'Categoria do Exame', icone: 'ri-body-scan-line' },
+    'exames-imagem': {
+        titulo: 'Exame de Imagem',
+        campos: [
+            'Categoria do Exame',
+            'Nome do Exame',
+            'Código',
+            'Região do Corpo',
+            'Sub-região / Órgão',
+            'Público (Masculino, Feminino, Infantil, Todos)',
+            'Descrição',
+            'Como é feito',
+            'Preparação / Observações',
+            'Duração Média',
+            'Radiação',
+            'Valor',
+            'Prazo de Laudo',
+            'Profissionais que realizam (Opcional)',
+            'Onde encontrar resultado',
+            'Imagem de Referência (Link)',
+            'Convênios',
+            'Observações'
+        ],
+        campoAgrupador: 'Categoria do Exame',
+        icone: 'ri-body-scan-line'
+    },
 
     'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor ou Informacao', 'O que está incluso', 'Observações', 'Pacotes', 'Kit'], campoAgrupador: 'Pacotes', icone: 'ri-first-aid-kit-line' },
     'institutos': { titulo: 'Instituto Tabela', campos: ['Número da Tabela', 'Valor da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'], campoAgrupador: 'Número da Tabela', icone: 'ri-building-line' },
@@ -179,7 +222,7 @@ window.obterAvaliacoesPerfilDisponiveis = function(nomeColaborador = '', setorCo
 };
 
 let chartBoletinsInst = null; let chartPrivadosInst = null; let chartHomeInst = null; let chartPrivadosGeralInst = null;
-const APP_VERSION = '7.2.2';
+const APP_VERSION = '7.3.0';
 let loginEmAndamento = false;
 
 if ('serviceWorker' in navigator) {

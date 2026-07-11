@@ -1,0 +1,1332 @@
+/* =========================================================
+   CSV IMAGING ATLAS 7.3.0
+   Atlas 3D de Exames de Imagem
+   ========================================================= */
+
+:root {
+  --img-bg: #f4f7fb;
+  --img-surface: #ffffff;
+  --img-surface-soft: #f7f9fc;
+  --img-text: #182033;
+  --img-muted: #75819a;
+  --img-border: #e3e9f2;
+  --img-primary: #2f6df6;
+  --img-primary-2: #6d5ae6;
+  --img-primary-soft: #edf3ff;
+  --img-burgundy: #99272f;
+  --img-green: #2eae76;
+  --img-yellow: #e9a83b;
+  --img-danger: #db5863;
+  --img-shadow: 0 18px 45px rgba(39, 54, 86, .08);
+  --img-shadow-hover: 0 24px 55px rgba(39, 54, 86, .14);
+}
+
+#tab-exames-imagem {
+  overflow: visible;
+}
+
+.csv-imaging-atlas {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: var(--img-text);
+  animation: csvImagingEnter .45s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes csvImagingEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* =========================================================
+   CABEÇALHO
+   ========================================================= */
+
+.csv-imaging-header {
+  padding: 24px 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(47, 109, 246, .12);
+  border-radius: 27px;
+  background:
+    radial-gradient(circle at 92% -12%, rgba(109, 90, 230, .20), transparent 34%),
+    radial-gradient(circle at 70% 130%, rgba(47, 109, 246, .10), transparent 36%),
+    linear-gradient(135deg, rgba(255,255,255,.99), rgba(247,249,255,.97));
+  box-shadow: var(--img-shadow);
+}
+
+.csv-imaging-header::after {
+  content: "";
+  width: 240px;
+  height: 240px;
+  position: absolute;
+  right: -115px;
+  bottom: -170px;
+  border: 34px solid rgba(47,109,246,.045);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.csv-imaging-header-copy {
+  max-width: 680px;
+  position: relative;
+  z-index: 1;
+}
+
+.csv-imaging-eyebrow {
+  padding: 7px 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 999px;
+  color: #5067c9;
+  background: rgba(47,109,246,.09);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.csv-imaging-header h2 {
+  margin: 11px 0 7px;
+  color: var(--img-text);
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1;
+  letter-spacing: -.045em;
+}
+
+.csv-imaging-header p {
+  max-width: 650px;
+  margin: 0;
+  color: var(--img-muted);
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.csv-imaging-header-actions {
+  min-width: min(100%, 520px);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 9px;
+  position: relative;
+  z-index: 1;
+}
+
+.csv-imaging-search {
+  min-width: min(100%, 350px);
+  flex: 1;
+  position: relative;
+}
+
+.csv-imaging-search > i {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--img-muted);
+  font-size: 16px;
+}
+
+.csv-imaging-search input {
+  width: 100%;
+  height: 47px;
+  padding: 0 58px 0 42px;
+  border: 1px solid var(--img-border);
+  border-radius: 15px;
+  outline: none;
+  color: var(--img-text);
+  background: rgba(255,255,255,.82);
+  box-shadow: 0 10px 24px rgba(39,54,86,.045);
+  font: 500 9px/1 Poppins, sans-serif;
+  transition: .2s ease;
+}
+
+.csv-imaging-search input:focus {
+  border-color: rgba(47,109,246,.38);
+  box-shadow: 0 0 0 4px rgba(47,109,246,.08);
+}
+
+.csv-imaging-search kbd {
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 5px 7px;
+  border: 1px solid var(--img-border);
+  border-radius: 8px;
+  color: var(--img-muted);
+  background: var(--img-surface-soft);
+  font: 700 7px/1 Poppins, sans-serif;
+}
+
+.csv-imaging-action,
+.csv-imaging-ultrasound-button,
+.csv-imaging-clear {
+  min-height: 44px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 14px;
+  font: 800 8px/1 Poppins, sans-serif;
+  cursor: pointer;
+  transition:
+    transform .2s ease,
+    box-shadow .2s ease,
+    border-color .2s ease;
+}
+
+.csv-imaging-action:hover,
+.csv-imaging-ultrasound-button:hover,
+.csv-imaging-clear:hover {
+  transform: translateY(-2px);
+}
+
+.csv-imaging-action.secondary {
+  border: 1px solid var(--img-border);
+  color: var(--img-text);
+  background: rgba(255,255,255,.78);
+  box-shadow: 0 10px 24px rgba(39,54,86,.05);
+}
+
+.csv-imaging-action.primary {
+  border: 1px solid rgba(255,255,255,.2);
+  color: #fff;
+  background: linear-gradient(145deg, #2f6df6, #6d5ae6);
+  box-shadow: 0 14px 29px rgba(47,109,246,.23);
+}
+
+/* =========================================================
+   INDICADORES
+   ========================================================= */
+
+.csv-imaging-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.csv-imaging-summary article {
+  min-height: 118px;
+  padding: 18px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--img-border);
+  border-radius: 21px;
+  background: var(--img-surface);
+  box-shadow: 0 13px 34px rgba(39,54,86,.055);
+}
+
+.csv-imaging-summary article::after {
+  content: "";
+  width: 96px;
+  height: 96px;
+  position: absolute;
+  right: -29px;
+  bottom: -34px;
+  border-radius: 50%;
+  background: rgba(47,109,246,.06);
+}
+
+.csv-imaging-summary article.featured {
+  color: #fff;
+  border-color: transparent;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255,255,255,.17), transparent 35%),
+    linear-gradient(145deg, #18213d, #283665);
+}
+
+.csv-imaging-summary span,
+.csv-imaging-summary strong,
+.csv-imaging-summary small {
+  display: block;
+}
+
+.csv-imaging-summary span {
+  color: var(--img-muted);
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.csv-imaging-summary strong {
+  margin-top: 7px;
+  color: var(--img-text);
+  font-size: 29px;
+  line-height: 1;
+}
+
+.csv-imaging-summary small {
+  margin-top: 6px;
+  color: var(--img-muted);
+  font-size: 7px;
+}
+
+.csv-imaging-summary article > i {
+  position: relative;
+  z-index: 1;
+  color: rgba(47,109,246,.26);
+  font-size: 30px;
+}
+
+.csv-imaging-summary .featured span,
+.csv-imaging-summary .featured small {
+  color: rgba(255,255,255,.68);
+}
+
+.csv-imaging-summary .featured strong {
+  color: #fff;
+}
+
+.csv-imaging-summary .featured > i {
+  color: rgba(255,255,255,.30);
+}
+
+/* =========================================================
+   ÁREA PRINCIPAL
+   ========================================================= */
+
+.csv-imaging-workspace {
+  display: grid;
+  grid-template-columns:
+    minmax(205px, .47fr)
+    minmax(520px, 1.48fr)
+    minmax(290px, .72fr);
+  gap: 13px;
+  align-items: stretch;
+}
+
+.csv-imaging-modalities,
+.csv-imaging-viewer-card,
+.csv-imaging-detail {
+  border: 1px solid var(--img-border);
+  border-radius: 25px;
+  background: var(--img-surface);
+  box-shadow: var(--img-shadow);
+}
+
+.csv-imaging-panel-heading span,
+.csv-imaging-panel-heading strong {
+  display: block;
+}
+
+.csv-imaging-panel-heading span {
+  color: var(--img-primary);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.csv-imaging-panel-heading strong {
+  margin-top: 4px;
+  color: var(--img-text);
+  font-size: 12px;
+}
+
+/* Modalidades */
+
+.csv-imaging-modalities {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+#csv-imaging-modality-list {
+  display: grid;
+  gap: 8px;
+}
+
+#csv-imaging-modality-list > button {
+  width: 100%;
+  min-height: 61px;
+  padding: 9px 10px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--img-border);
+  border-radius: 16px;
+  color: var(--img-text);
+  background: var(--img-surface-soft);
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+#csv-imaging-modality-list > button:hover {
+  transform: translateX(3px);
+  border-color: rgba(47,109,246,.25);
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(39,54,86,.065);
+}
+
+#csv-imaging-modality-list > button.active {
+  border-color: rgba(47,109,246,.32);
+  background:
+    linear-gradient(135deg, rgba(47,109,246,.09), rgba(109,90,230,.08));
+  box-shadow: inset 3px 0 0 var(--img-primary);
+}
+
+.csv-imaging-modality-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  color: var(--img-primary);
+  background: rgba(47,109,246,.09);
+  font-size: 18px;
+}
+
+#csv-imaging-modality-list strong,
+#csv-imaging-modality-list small {
+  display: block;
+}
+
+#csv-imaging-modality-list strong {
+  color: var(--img-text);
+  font-size: 9px;
+}
+
+#csv-imaging-modality-list small {
+  margin-top: 3px;
+  color: var(--img-muted);
+  font-size: 7px;
+}
+
+#csv-imaging-modality-list > button > i {
+  color: var(--img-muted);
+}
+
+.csv-imaging-ultrasound-button {
+  width: 100%;
+  margin-top: auto;
+  border: 1px dashed rgba(47,109,246,.28);
+  color: var(--img-primary);
+  background: rgba(47,109,246,.055);
+}
+
+/* Visualizador */
+
+.csv-imaging-viewer-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.csv-imaging-viewer-topbar {
+  padding: 13px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--img-border);
+}
+
+.csv-imaging-audience-tabs,
+.csv-imaging-view-tabs {
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 13px;
+  background: var(--img-surface-soft);
+}
+
+.csv-imaging-audience-tabs button,
+.csv-imaging-view-tabs button {
+  min-height: 37px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--img-muted);
+  background: transparent;
+  font: 700 8px/1 Poppins, sans-serif;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.csv-imaging-audience-tabs button.active,
+.csv-imaging-view-tabs button.active {
+  color: #fff;
+  background: linear-gradient(145deg, #2f6df6, #6d5ae6);
+  box-shadow: 0 9px 20px rgba(47,109,246,.20);
+}
+
+.csv-imaging-view-tabs button {
+  min-height: 32px;
+  padding: 0 9px;
+  font-size: 7px;
+}
+
+.csv-imaging-viewer-stage {
+  height: clamp(540px, 64vh, 720px);
+  overflow: hidden;
+  position: relative;
+  background:
+    radial-gradient(circle at 50% 43%, rgba(47,109,246,.08), transparent 34%),
+    radial-gradient(circle at 62% 28%, rgba(109,90,230,.07), transparent 28%),
+    linear-gradient(180deg, #fbfcff, #f7f9fd);
+}
+
+.csv-imaging-stage-grid {
+  position: absolute;
+  inset: 0;
+  opacity: .42;
+  background-image:
+    linear-gradient(rgba(47,109,246,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(47,109,246,.055) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(circle at center, #000 25%, transparent 78%);
+  pointer-events: none;
+}
+
+.csv-imaging-viewer-stage::before {
+  content: "";
+  width: min(70%, 500px);
+  aspect-ratio: 1;
+  position: absolute;
+  left: 50%;
+  top: 49%;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(47,109,246,.16);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 32px rgba(47,109,246,.025),
+    0 0 0 64px rgba(109,90,230,.018);
+  pointer-events: none;
+}
+
+#csv-imaging-three-host {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: grab;
+}
+
+#csv-imaging-three-host:active {
+  cursor: grabbing;
+}
+
+#csv-imaging-three-host canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.csv-imaging-viewer-status {
+  position: absolute;
+  left: 17px;
+  top: 17px;
+  z-index: 5;
+  padding: 11px 12px;
+  border: 1px solid rgba(255,255,255,.65);
+  border-radius: 14px;
+  background: rgba(255,255,255,.68);
+  box-shadow: 0 12px 30px rgba(39,54,86,.07);
+  backdrop-filter: blur(15px);
+  pointer-events: none;
+}
+
+.csv-imaging-viewer-status span,
+.csv-imaging-viewer-status strong,
+.csv-imaging-viewer-status small {
+  display: block;
+}
+
+.csv-imaging-viewer-status span {
+  color: var(--img-primary);
+  font-size: 7px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.csv-imaging-viewer-status strong {
+  margin-top: 3px;
+  color: var(--img-text);
+  font-size: 11px;
+}
+
+.csv-imaging-viewer-status small {
+  margin-top: 4px;
+  color: var(--img-muted);
+  font-size: 6px;
+}
+
+.csv-imaging-hotspot-label {
+  position: absolute;
+  left: 50%;
+  bottom: 17px;
+  z-index: 5;
+  transform: translateX(-50%);
+  padding: 9px 13px;
+  border: 1px solid rgba(255,255,255,.7);
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(145deg, rgba(31,43,82,.91), rgba(57,53,111,.91));
+  box-shadow: 0 13px 28px rgba(31,43,82,.18);
+  backdrop-filter: blur(12px);
+  font-size: 7px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.csv-imaging-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.csv-imaging-fallback.visible {
+  display: flex;
+}
+
+.csv-imaging-fallback svg {
+  width: min(72%, 350px);
+  max-height: 90%;
+  filter: drop-shadow(0 24px 35px rgba(39,54,86,.12));
+}
+
+.csv-imaging-fallback .body-part {
+  fill: url(#csvBodyGradient);
+  stroke: rgba(47,109,246,.20);
+  stroke-width: 2;
+}
+
+.csv-imaging-fallback .body-shadow {
+  fill: rgba(31,43,82,.08);
+}
+
+.csv-imaging-fallback p {
+  margin: -5px 0 0;
+  color: var(--img-muted);
+  font-size: 8px;
+}
+
+.csv-imaging-region-toolbar {
+  padding: 15px 16px 16px;
+  border-top: 1px solid var(--img-border);
+}
+
+#csv-imaging-region-chips {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+#csv-imaging-region-chips button {
+  min-height: 34px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--img-border);
+  border-radius: 999px;
+  color: var(--img-muted);
+  background: var(--img-surface-soft);
+  font: 700 7px/1 Poppins, sans-serif;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+#csv-imaging-region-chips button:hover,
+#csv-imaging-region-chips button.active {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(145deg, #2f6df6, #6d5ae6);
+  box-shadow: 0 9px 20px rgba(47,109,246,.18);
+}
+
+#csv-imaging-region-chips small {
+  min-width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  color: inherit;
+  background: rgba(255,255,255,.17);
+  font-size: 6px;
+}
+
+/* Detalhes */
+
+.csv-imaging-detail {
+  min-width: 0;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: auto;
+  max-height: calc(clamp(540px, 64vh, 720px) + 138px);
+}
+
+.csv-imaging-detail-top {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(47,109,246,.075), rgba(109,90,230,.06));
+}
+
+.csv-imaging-detail-image {
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 15px;
+  color: var(--img-primary);
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(39,54,86,.08);
+}
+
+.csv-imaging-detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.csv-imaging-detail-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  background:
+    radial-gradient(circle at 70% 20%, rgba(109,90,230,.16), transparent 40%),
+    var(--img-primary-soft);
+}
+
+.csv-imaging-detail-badge {
+  padding: 5px 7px;
+  display: inline-flex;
+  border-radius: 8px;
+  color: var(--img-primary);
+  background: rgba(47,109,246,.10);
+  font-size: 6px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.csv-imaging-detail-top h3 {
+  margin: 7px 0 5px;
+  color: var(--img-text);
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.csv-imaging-detail-top p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--img-muted);
+  font-size: 7px;
+}
+
+.csv-imaging-detail-section > span,
+.csv-imaging-related > span {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--img-text);
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.csv-imaging-detail-section > p {
+  margin: 0;
+  color: var(--img-muted);
+  font-size: 8px;
+  line-height: 1.7;
+}
+
+.csv-imaging-observation {
+  padding: 11px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid rgba(47,109,246,.10);
+  border-radius: 13px;
+  color: var(--img-primary);
+  background: rgba(47,109,246,.045);
+}
+
+.csv-imaging-observation p {
+  margin: 0;
+  color: var(--img-muted);
+  font-size: 7px;
+  line-height: 1.6;
+}
+
+.csv-imaging-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+
+.csv-imaging-detail-metrics article {
+  padding: 10px 7px;
+  border: 1px solid var(--img-border);
+  border-radius: 13px;
+  background: var(--img-surface-soft);
+  text-align: center;
+}
+
+.csv-imaging-detail-metrics i {
+  color: var(--img-primary);
+  font-size: 15px;
+}
+
+.csv-imaging-detail-metrics span,
+.csv-imaging-detail-metrics strong {
+  display: block;
+}
+
+.csv-imaging-detail-metrics span {
+  margin-top: 5px;
+  color: var(--img-muted);
+  font-size: 6px;
+}
+
+.csv-imaging-detail-metrics strong {
+  margin-top: 3px;
+  color: var(--img-text);
+  font-size: 7px;
+}
+
+.csv-imaging-detail-section.compact ul {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+  list-style: none;
+}
+
+.csv-imaging-detail-section.compact li {
+  padding: 8px 9px;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  border-radius: 11px;
+  color: var(--img-muted);
+  background: var(--img-surface-soft);
+  font-size: 7px;
+  line-height: 1.5;
+}
+
+.csv-imaging-detail-section.compact li i {
+  color: var(--img-primary);
+  font-size: 13px;
+}
+
+.csv-imaging-related {
+  display: grid;
+  gap: 7px;
+}
+
+.csv-imaging-related > button {
+  width: 100%;
+  padding: 9px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--img-border);
+  border-radius: 13px;
+  color: var(--img-text);
+  background: var(--img-surface-soft);
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.csv-imaging-related > button > i:first-child {
+  width: 33px;
+  height: 33px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--img-primary);
+  background: var(--img-primary-soft);
+}
+
+.csv-imaging-related strong,
+.csv-imaging-related small {
+  display: block;
+}
+
+.csv-imaging-related strong {
+  color: var(--img-text);
+  font-size: 7px;
+}
+
+.csv-imaging-related small {
+  margin-top: 2px;
+  color: var(--img-muted);
+  font-size: 6px;
+}
+
+.csv-imaging-empty-detail {
+  min-height: 460px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.csv-imaging-empty-detail > i {
+  width: 70px;
+  height: 70px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  color: var(--img-primary);
+  background: var(--img-primary-soft);
+  font-size: 31px;
+}
+
+.csv-imaging-empty-detail h3 {
+  margin: 15px 0 7px;
+  color: var(--img-text);
+  font-size: 14px;
+}
+
+.csv-imaging-empty-detail p {
+  max-width: 240px;
+  margin: 0;
+  color: var(--img-muted);
+  font-size: 8px;
+  line-height: 1.6;
+}
+
+.csv-imaging-empty-detail button {
+  margin-top: 14px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(145deg, #2f6df6, #6d5ae6);
+  font: 800 8px/1 Poppins, sans-serif;
+  cursor: pointer;
+}
+
+/* =========================================================
+   LISTA DE PROCEDIMENTOS
+   ========================================================= */
+
+.csv-imaging-browser {
+  padding: 20px;
+  border: 1px solid var(--img-border);
+  border-radius: 25px;
+  background: var(--img-surface);
+  box-shadow: var(--img-shadow);
+}
+
+.csv-imaging-browser-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.csv-imaging-browser-heading span {
+  color: var(--img-primary);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.csv-imaging-browser-heading h3 {
+  margin: 5px 0 4px;
+  color: var(--img-text);
+  font-size: 16px;
+}
+
+.csv-imaging-browser-heading p {
+  margin: 0;
+  color: var(--img-muted);
+  font-size: 8px;
+}
+
+.csv-imaging-clear {
+  border: 1px solid var(--img-border);
+  color: var(--img-text);
+  background: var(--img-surface-soft);
+}
+
+#csv-imaging-procedure-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+  gap: 10px;
+}
+
+.csv-imaging-procedure-card {
+  min-height: 95px;
+  padding: 13px;
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr) auto;
+  align-items: center;
+  gap: 11px;
+  border: 1px solid var(--img-border);
+  border-radius: 17px;
+  color: var(--img-text);
+  background: var(--img-surface-soft);
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.csv-imaging-procedure-card:hover,
+.csv-imaging-procedure-card.active {
+  transform: translateY(-3px);
+  border-color: rgba(47,109,246,.27);
+  background: #fff;
+  box-shadow: 0 15px 32px rgba(39,54,86,.08);
+}
+
+.csv-imaging-procedure-card.active {
+  box-shadow:
+    inset 4px 0 0 var(--img-primary),
+    0 15px 32px rgba(39,54,86,.08);
+}
+
+.csv-imaging-procedure-icon {
+  width: 45px;
+  height: 45px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--img-primary);
+  background:
+    linear-gradient(145deg, rgba(47,109,246,.11), rgba(109,90,230,.11));
+  font-size: 20px;
+}
+
+.csv-imaging-procedure-copy {
+  min-width: 0;
+}
+
+.csv-imaging-procedure-copy small,
+.csv-imaging-procedure-copy strong,
+.csv-imaging-procedure-copy em {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.csv-imaging-procedure-copy small {
+  color: var(--img-primary);
+  font-size: 6px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.csv-imaging-procedure-copy strong {
+  margin-top: 5px;
+  color: var(--img-text);
+  font-size: 9px;
+}
+
+.csv-imaging-procedure-copy em {
+  margin-top: 5px;
+  color: var(--img-muted);
+  font-size: 6px;
+  font-style: normal;
+}
+
+.csv-imaging-procedure-arrow {
+  width: 29px;
+  height: 29px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--img-primary);
+  background: var(--img-primary-soft);
+}
+
+.csv-imaging-empty-results {
+  grid-column: 1 / -1;
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 1px dashed var(--img-border);
+  border-radius: 18px;
+  color: var(--img-muted);
+  background: var(--img-surface-soft);
+  text-align: center;
+}
+
+.csv-imaging-empty-results i {
+  font-size: 30px;
+  color: var(--img-primary);
+}
+
+.csv-imaging-empty-results strong,
+.csv-imaging-empty-results span {
+  display: block;
+}
+
+.csv-imaging-empty-results strong {
+  margin-top: 10px;
+  color: var(--img-text);
+  font-size: 11px;
+}
+
+.csv-imaging-empty-results span {
+  margin-top: 5px;
+  font-size: 7px;
+}
+
+.csv-imaging-disclaimer {
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  border: 1px solid rgba(47,109,246,.11);
+  border-radius: 16px;
+  color: var(--img-muted);
+  background: rgba(47,109,246,.045);
+  font-size: 7px;
+  line-height: 1.6;
+}
+
+.csv-imaging-disclaimer i {
+  color: var(--img-primary);
+  font-size: 15px;
+}
+
+/* =========================================================
+   MODO ESCURO
+   ========================================================= */
+
+html[data-theme="dark"] {
+  --img-bg: #121623;
+  --img-surface: #1a2030;
+  --img-surface-soft: #202738;
+  --img-text: #f2f5fb;
+  --img-muted: #9ba7bd;
+  --img-border: #2d364a;
+  --img-primary-soft: rgba(47,109,246,.13);
+  --img-shadow: 0 18px 45px rgba(0,0,0,.20);
+}
+
+html[data-theme="dark"] .csv-imaging-header {
+  background:
+    radial-gradient(circle at 92% -12%, rgba(109,90,230,.22), transparent 34%),
+    linear-gradient(135deg, #1a2030, #1d2335);
+}
+
+html[data-theme="dark"] .csv-imaging-search input,
+html[data-theme="dark"] .csv-imaging-action.secondary {
+  color: var(--img-text);
+  background: rgba(255,255,255,.035);
+}
+
+html[data-theme="dark"] .csv-imaging-viewer-stage {
+  background:
+    radial-gradient(circle at 50% 43%, rgba(47,109,246,.10), transparent 35%),
+    radial-gradient(circle at 62% 28%, rgba(109,90,230,.10), transparent 28%),
+    linear-gradient(180deg, #161c29, #111722);
+}
+
+html[data-theme="dark"] .csv-imaging-viewer-status {
+  border-color: rgba(255,255,255,.07);
+  background: rgba(22,28,41,.70);
+}
+
+html[data-theme="dark"] .csv-imaging-procedure-card:hover,
+html[data-theme="dark"] .csv-imaging-procedure-card.active,
+html[data-theme="dark"] #csv-imaging-modality-list > button:hover {
+  background: #232b3d;
+}
+
+/* =========================================================
+   RESPONSIVO
+   ========================================================= */
+
+@media (max-width: 1450px) {
+  .csv-imaging-workspace {
+    grid-template-columns:
+      minmax(200px, .43fr)
+      minmax(480px, 1.25fr)
+      minmax(275px, .64fr);
+  }
+
+  .csv-imaging-header {
+    align-items: flex-start;
+  }
+
+  .csv-imaging-header-actions {
+    min-width: 440px;
+  }
+}
+
+@media (max-width: 1220px) {
+  .csv-imaging-workspace {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .csv-imaging-detail {
+    grid-column: 1 / -1;
+    max-height: none;
+  }
+
+  .csv-imaging-detail {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    align-items: start;
+  }
+
+  .csv-imaging-detail-top,
+  .csv-imaging-detail-metrics,
+  .csv-imaging-related {
+    grid-column: 1 / -1;
+  }
+
+  .csv-imaging-summary {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .csv-imaging-header {
+    flex-direction: column;
+  }
+
+  .csv-imaging-header-actions {
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-start;
+  }
+
+  .csv-imaging-search {
+    min-width: 100%;
+  }
+
+  .csv-imaging-workspace {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .csv-imaging-modalities {
+    order: 2;
+  }
+
+  .csv-imaging-viewer-card {
+    order: 1;
+  }
+
+  .csv-imaging-detail {
+    order: 3;
+  }
+
+  #csv-imaging-modality-list {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+
+  .csv-imaging-viewer-stage {
+    height: 620px;
+  }
+}
+
+@media (max-width: 680px) {
+  .csv-imaging-header,
+  .csv-imaging-browser {
+    padding: 17px;
+    border-radius: 20px;
+  }
+
+  .csv-imaging-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .csv-imaging-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .csv-imaging-action {
+    width: 100%;
+  }
+
+  .csv-imaging-viewer-topbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .csv-imaging-audience-tabs,
+  .csv-imaging-view-tabs {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .csv-imaging-audience-tabs button,
+  .csv-imaging-view-tabs button {
+    flex: 1;
+    white-space: nowrap;
+  }
+
+  .csv-imaging-viewer-stage {
+    height: 550px;
+  }
+
+  #csv-imaging-modality-list {
+    grid-template-columns: 1fr;
+  }
+
+  .csv-imaging-detail {
+    display: flex;
+  }
+
+  .csv-imaging-browser-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  #csv-imaging-procedure-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .csv-imaging-detail-metrics {
+    grid-template-columns: 1fr;
+  }
+}

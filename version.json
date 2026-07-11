@@ -1,6 +1,6 @@
 {
-  "version": "7.2.2",
-  "message": "Informativos Diretos corrigidos: painel administrativo moderno passa a abrir corretamente, gráfico geral por colaborador e relatório individual totalmente renovado.",
+  "version": "7.3.0",
+  "message": "Nova aba Exames de Imagem com atlas humano 3D, modelos masculino, feminino e infantil, pesquisa, filtros corporais e atualização automática dos procedimentos cadastrados.",
   "force": false,
   "publishedAt": "2026-07-11"
 }

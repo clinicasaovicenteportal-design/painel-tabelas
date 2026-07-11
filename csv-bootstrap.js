@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.2.2";
+const VERSION = "7.3.0";
 const MAX_ATTEMPTS = 160;
 const WAIT_MS = 75;
 
@@ -73,6 +73,9 @@ async function start() {
   console.log("CSV Bootstrap: iniciando Corpo Clínico e Convênios...");
   await import(`./csv-clinical-directory.js?v=${VERSION}`);
 
+  console.log("CSV Bootstrap: iniciando Atlas 3D de Exames de Imagem...");
+  await import(`./csv-imaging-atlas.js?v=${VERSION}`);
+
   console.log("CSV Bootstrap: iniciando Controle de Ativos...");
   await import(`./csv-assets-dashboard.js?v=${VERSION}`);
 
@@ -100,6 +103,10 @@ async function start() {
 
     if (activeTab === "boletins") {
       window.csv2EnsureBulletinExperience?.();
+    }
+
+    if (activeTab === "exames-imagem") {
+      window.csvImagingClearFilters?.();
     }
   };
 
