@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.2.0";
+const VERSION = "7.2.1";
 const MAX_ATTEMPTS = 160;
 const WAIT_MS = 75;
 
@@ -84,6 +84,9 @@ async function start() {
 
   console.log("CSV Bootstrap: iniciando inteligência de informativos...");
   await import(`./csv-bulletin-intelligence.js?v=${VERSION}`);
+
+  console.log("CSV Bootstrap: aplicando visual moderno aos Informativos Diretos...");
+  await import(`./csv-direct-modern.js?v=${VERSION}`);
 
   console.log(`CSV Bootstrap ${VERSION}: carregamento concluído.`);
 

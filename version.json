@@ -1,6 +1,6 @@
 {
-  "version": "7.2.0",
-  "message": "Correção da leitura dos boletins, menu lateral adaptável, pesquisa cruzada de convênios e novo painel tecnológico de controle de ativos.",
+  "version": "7.2.1",
+  "message": "Novo visual clean e contemporâneo para Informativos Diretos, com painel de indicadores, gráfico escuro, pesquisa, filtros e cards individuais modernizados.",
   "force": false,
   "publishedAt": "2026-07-11"
 }

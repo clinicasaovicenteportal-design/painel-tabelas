@@ -9,7 +9,7 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_ASSETS_VERSION = "7.2.0";
+const CSV_ASSETS_VERSION = "7.2.1";
 const app = getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);

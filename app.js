@@ -179,7 +179,7 @@ window.obterAvaliacoesPerfilDisponiveis = function(nomeColaborador = '', setorCo
 };
 
 let chartBoletinsInst = null; let chartPrivadosInst = null; let chartHomeInst = null; let chartPrivadosGeralInst = null;
-const APP_VERSION = '7.2.0';
+const APP_VERSION = '7.2.1';
 let loginEmAndamento = false;
 
 if ('serviceWorker' in navigator) {
