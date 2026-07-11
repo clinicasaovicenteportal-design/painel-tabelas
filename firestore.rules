@@ -1,0 +1,162 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function authEmail() {
+      return signedIn() && request.auth.token.email != null
+        ? request.auth.token.email
+        : "";
+    }
+
+    function legacyAdmin() {
+      return signedIn() && authEmail().matches('.*@clinica\\.com$');
+    }
+
+    function profileExists() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+
+    function profile() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return legacyAdmin() ||
+        (profileExists() && profile().data.admin == true);
+    }
+
+    function ownUser(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function currentName() {
+      return profileExists() && profile().data.nome != null
+        ? profile().data.nome
+        : "";
+    }
+
+    function currentSector() {
+      return profileExists() && profile().data.setor != null
+        ? profile().data.setor
+        : "";
+    }
+
+    function onlyReadingsChanged() {
+      return request.resource.data
+        .diff(resource.data)
+        .affectedKeys()
+        .hasOnly(['leituras']);
+    }
+
+    function privateBulletinForCurrentUser(data) {
+      return isAdmin() ||
+        (
+          signedIn() &&
+          (
+            (
+              data.keys().hasAny(['destinatarioUid']) &&
+              data.destinatarioUid == request.auth.uid
+            ) ||
+            (
+              data.keys().hasAny(['destinatarioUids']) &&
+              data.destinatarioUids is list &&
+              request.auth.uid in data.destinatarioUids
+            ) ||
+            (
+              data.keys().hasAny(['Para qual Colaborador?']) &&
+              data['Para qual Colaborador?'] == currentName()
+            ) ||
+            (
+              data.keys().hasAny(['paraPessoas']) &&
+              data.paraPessoas is list &&
+              currentName() in data.paraPessoas
+            ) ||
+            (
+              data.keys().hasAny(['paraSetores']) &&
+              data.paraSetores is list &&
+              currentSector() in data.paraSetores
+            )
+          )
+        );
+    }
+
+    match /usuarios/{uid} {
+      allow read: if isAdmin() || ownUser(uid);
+
+      allow create: if isAdmin() ||
+        (
+          ownUser(uid) &&
+          request.resource.data.admin == false &&
+          request.resource.data.usuario is string &&
+          request.resource.data.nome is string
+        );
+
+      allow update, delete: if isAdmin();
+    }
+
+    match /colaboradores/{collaboratorId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /boletins/{bulletinId} {
+      allow read: if signedIn();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() ||
+        (signedIn() && onlyReadingsChanged());
+    }
+
+    match /boletins-privados/{bulletinId} {
+      allow read: if privateBulletinForCurrentUser(resource.data);
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() ||
+        (
+          privateBulletinForCurrentUser(resource.data) &&
+          onlyReadingsChanged()
+        );
+    }
+
+    match /{collectionName}/{document=**} {
+      allow read: if signedIn() &&
+        collectionName in [
+          'corpo-clinico',
+          'convenios',
+          'ultrassom',
+          'consultas',
+          'pacotes',
+          'exames-imagem',
+          'institutos',
+          'contatos',
+          'contatos-gerais',
+          'contatos-convenios',
+          'ramais',
+          'emails',
+          'remocoes',
+          'senhas',
+          'ativos',
+          'agenda-trabalho',
+          'agenda',
+          'tarefas',
+          'configuracoes',
+          'locais',
+          'setores',
+          'especialidades',
+          'motivos',
+          'treinamentos',
+          'ensino',
+          'rh'
+        ];
+
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "6.2.0";
+const VERSION = "6.4.0";
 const MAX_ATTEMPTS = 160;
 const WAIT_MS = 75;
 

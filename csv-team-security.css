@@ -1,0 +1,36 @@
+/* CSV 6.4.0 — segurança e ações da equipe */
+
+.csv2-button.danger {
+  color: #b4232d !important;
+  border-color: rgba(180,35,45,.22) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.48), rgba(255,235,237,.54)) !important;
+}
+
+.csv2-button.danger:hover {
+  color: #fff !important;
+  border-color: rgba(180,35,45,.38) !important;
+  background:
+    linear-gradient(135deg, rgba(145,24,33,.94), rgba(218,65,77,.88)) !important;
+  box-shadow: 0 16px 32px rgba(180,35,45,.20) !important;
+}
+
+.csv2-row-message.permission-warning {
+  margin-top: 12px;
+  padding: 11px 13px;
+  border: 1px solid rgba(214,143,31,.24);
+  border-radius: 13px;
+  color: #9a6411;
+  background: rgba(255,235,188,.48);
+}
+
+html[data-theme="dark"] .csv2-button.danger {
+  color: #ff9ba3 !important;
+  background: linear-gradient(180deg, rgba(93,28,35,.45), rgba(62,24,30,.32)) !important;
+}
+
+html[data-theme="dark"] .csv2-row-message.permission-warning {
+  color: #ffd789;
+  border-color: rgba(255,211,124,.18);
+  background: rgba(122,79,14,.22);
+}

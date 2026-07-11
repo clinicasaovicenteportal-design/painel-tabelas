@@ -23,7 +23,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_PHASE2_VERSION = "6.1.0";
+const CSV_PHASE2_VERSION = "6.4.0";
 const INTERNAL_DOMAIN = "acesso.csv.app";
 const app = getApp();
 const auth = getAuth(app);
@@ -32,6 +32,7 @@ const db = getFirestore(app);
 const creatorName = "csv-phase2-account-creator";
 const creatorApp = getApps().find((item) => item.name === creatorName) || initializeApp(app.options, creatorName);
 const creatorAuth = getAuth(creatorApp);
+const creatorDb = getFirestore(creatorApp);
 
 const ACCESS_AREAS = [
   { id: "boletins", label: "Boletins e informativos", icon: "ri-megaphone-line" },
@@ -165,7 +166,7 @@ function activeCollaborators() {
 
   state.users.forEach((item) => {
     const data = item.data || {};
-    if (data.admin || !data.nome) return;
+    if (data.admin || data.removido === true || !data.nome) return;
     const key = normalizeText(data.nome);
     const existing = map.get(key) || {};
     map.set(key, {
@@ -202,7 +203,7 @@ function allCollaboratorsMerged() {
 
   state.users.forEach((item) => {
     const data = item.data || {};
-    if (data.admin || !data.nome) return;
+    if (data.admin || data.removido === true || !data.nome) return;
     const key = normalizeText(data.nome);
     const existing = map.get(key) || {
       collaboratorId: item.id,
@@ -295,6 +296,24 @@ function installPhase2Login() {
   if (form) form.onsubmit = loginHandler;
 }
 
+
+function applyHomeShortcutPermissions() {
+  const home = document.getElementById("tab-home");
+  if (!home || !state.profile) return;
+
+  const permissions = new Set(state.profile.permissions || []);
+
+  home.querySelectorAll("[onclick]").forEach((element) => {
+    const handler = element.getAttribute("onclick") || "";
+    const match = handler.match(/irParaAba\(['"]([^'"]+)['"]\)/);
+    if (!match) return;
+
+    const tab = match[1];
+    const allowed = state.isAdmin || tab === "home" || permissions.has(tab);
+    element.style.display = allowed ? "" : "none";
+  });
+}
+
 function applyPhase2Permissions() {
   if (!state.profile) return;
 
@@ -319,10 +338,10 @@ function applyPhase2Permissions() {
 
     let visible = false;
 
-    if (HIDDEN_NAV_TABS.includes(tab)) {
-      visible = false;
-    } else if (state.isAdmin) {
+    if (state.isAdmin) {
       visible = true;
+    } else if (HIDDEN_NAV_TABS.includes(tab)) {
+      visible = false;
     } else if (tab === "home") {
       visible = true;
     } else if (adminOnlyTabs.has(tab)) {
@@ -367,7 +386,9 @@ function applyPhase2Permissions() {
   }
 
   const accessButton = document.getElementById("csv-nav-acessos");
-  if (accessButton) accessButton.style.display = "none";
+  if (accessButton) accessButton.style.display = state.isAdmin ? "" : "none";
+
+  applyHomeShortcutPermissions();
 }
 
 
@@ -415,6 +436,20 @@ function cleanupListeners() {
 
 
 function hideObsoleteNavigation() {
+  if (state.isAdmin) {
+    document.querySelectorAll(".sidebar-nav .nav-btn[data-tab]").forEach((button) => {
+      button.classList.remove("csv2-hidden-nav");
+      button.style.removeProperty("display");
+    });
+
+    const adminAccessButton = document.getElementById("csv-nav-acessos");
+    if (adminAccessButton) {
+      adminAccessButton.classList.remove("csv2-hidden-nav");
+      adminAccessButton.style.removeProperty("display");
+    }
+
+    return;
+  }
   HIDDEN_NAV_TABS.forEach((tabId) => {
     document.querySelectorAll(`.nav-btn[data-tab="${tabId}"]`).forEach((button) => {
       if (!button.classList.contains("csv2-hidden-nav")) {
@@ -656,6 +691,7 @@ function renderTeamManager() {
               <button type="button" class="csv2-button primary" onclick="window.csv2CreateTeamAccess('${key}')"><i class="ri-user-add-line"></i> Criar login e salvar</button>
             `}
             <button type="button" class="csv2-button ghost" onclick="window.csv2ToggleTeamRow('${key}')"><i class="ri-arrow-up-s-line"></i> Recolher</button>
+            <button type="button" class="csv2-button danger" onclick="window.csv2RemoveTeamMember('${key}')"><i class="ri-user-unfollow-line"></i> Excluir colaborador</button>
           </div>
           <div class="csv2-row-message" data-row-message></div>
         </div>
@@ -690,42 +726,99 @@ async function usernameExists(username, ignoreUid = "") {
   return snapshot.docs.some((item) => item.id !== ignoreUid);
 }
 
-async function createAuthAndProfile({ collaboratorId, name, sector, username, password, permissions, active = true }) {
+async function createAuthAndProfile({
+  collaboratorId,
+  name,
+  sector,
+  username,
+  password,
+  permissions,
+  active = true
+}) {
   const normalizedUsername = normalize(username);
-  if (!normalizedUsername) throw new Error("Informe um usuário válido.");
-  if (password.length < 8) throw new Error("A senha inicial precisa ter pelo menos 8 caracteres.");
-  if (await usernameExists(normalizedUsername)) throw new Error("Este nome de usuário já está em uso.");
+
+  if (!normalizedUsername) {
+    throw new Error("Informe um usuário válido.");
+  }
+
+  if (password.length < 8) {
+    throw new Error("A senha inicial precisa ter pelo menos 8 caracteres.");
+  }
 
   const email = internalEmail(normalizedUsername);
   let credential;
+
   try {
-    credential = await createUserWithEmailAndPassword(creatorAuth, email, password);
-  } finally {
-    try { await signOut(creatorAuth); } catch (_) {}
+    credential = await createUserWithEmailAndPassword(
+      creatorAuth,
+      email,
+      password
+    );
+  } catch (error) {
+    if (error?.code === "auth/email-already-in-use") {
+      credential = await signInWithEmailAndPassword(
+        creatorAuth,
+        email,
+        password
+      );
+    } else {
+      throw error;
+    }
   }
 
   const uid = credential.user.uid;
-  await setDoc(doc(db, "usuarios", uid), {
+
+  const profilePayload = {
     nome: name,
     usuario: normalizedUsername,
     email,
     setor: sector,
     ativo: active,
+    removido: false,
     admin: false,
     permissoes: permissions,
     criadoEm: serverTimestamp(),
     atualizadoEm: serverTimestamp()
-  }, { merge: true });
+  };
 
-  await setDoc(doc(db, "colaboradores", collaboratorId || uid), {
-    "Nome Completo do Colaborador": name,
-    "Setor da Clínica": sector,
-    usuarioAuth: normalizedUsername,
-    uidAuth: uid,
-    ativo: active
-  }, { merge: true });
+  try {
+    try {
+      await setDoc(
+        doc(creatorDb, "usuarios", uid),
+        profilePayload,
+        { merge: true }
+      );
+    } catch (selfProfileError) {
+      await setDoc(
+        doc(db, "usuarios", uid),
+        profilePayload,
+        { merge: true }
+      );
+    }
 
-  return { uid, username: normalizedUsername };
+    await setDoc(
+      doc(db, "colaboradores", collaboratorId || uid),
+      {
+        "Nome Completo do Colaborador": name,
+        "Setor da Clínica": sector,
+        usuarioAuth: normalizedUsername,
+        uidAuth: uid,
+        ativo: active,
+        removido: false,
+        atualizadoEm: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    return {
+      uid,
+      username: normalizedUsername
+    };
+  } finally {
+    try {
+      await signOut(creatorAuth);
+    } catch (_) {}
+  }
 }
 
 window.csv2CreateTeamAccess = async function(key) {
@@ -775,7 +868,8 @@ window.csv2CreateTeamAccess = async function(key) {
     const known = {
       "auth/email-already-in-use": "Este usuário já existe no Firebase Authentication.",
       "auth/weak-password": "A senha informada é muito fraca.",
-      "auth/operation-not-allowed": "Ative o login por e-mail e senha no Firebase Authentication."
+      "auth/operation-not-allowed": "Ative o login por e-mail e senha no Firebase Authentication.",
+      "permission-denied": "O Firestore bloqueou a gravação. Publique o arquivo firestore.rules criado por esta atualização."
     };
     message.textContent = known[error.code] || error.message || "Não foi possível criar o acesso.";
     message.className = "csv2-row-message error";
@@ -825,6 +919,82 @@ window.csv2SaveTeamRow = async function(key) {
   } catch (error) {
     message.textContent = `Não foi possível salvar: ${error.message}`;
     message.className = "csv2-row-message error";
+  }
+};
+
+
+window.csv2RemoveTeamMember = async function(key) {
+  if (!state.isAdmin) return;
+
+  const record = findRenderedTeamRecord(key);
+  const row = renderedTeamRow(key);
+
+  if (!record || !row) return;
+
+  if (record.userId && record.userId === state.profile?.uid) {
+    alert("O administrador conectado não pode excluir o próprio acesso.");
+    return;
+  }
+
+  const confirmed = confirm(
+    `Excluir ${record.name} do portal?\n\n` +
+    "O colaborador desaparecerá da equipe e o login será bloqueado. " +
+    "A conta técnica continuará no Firebase Authentication até ser apagada pela gestão no Console."
+  );
+
+  if (!confirmed) return;
+
+  const message = row.querySelector("[data-row-message]");
+  const buttons = row.querySelectorAll("button");
+
+  buttons.forEach((button) => {
+    button.disabled = true;
+  });
+
+  try {
+    if (record.userId) {
+      await setDoc(
+        doc(db, "usuarios", record.userId),
+        {
+          ativo: false,
+          removido: true,
+          permissoes: [],
+          removidoEm: serverTimestamp(),
+          atualizadoEm: serverTimestamp()
+        },
+        { merge: true }
+      );
+    }
+
+    if (record.collaboratorId) {
+      await deleteDoc(
+        doc(db, "colaboradores", record.collaboratorId)
+      );
+    }
+
+    message.textContent =
+      "Colaborador removido do portal e acesso bloqueado.";
+    message.className = "csv2-row-message success";
+
+    setTimeout(() => {
+      renderTeamManager();
+    }, 450);
+  } catch (error) {
+    console.error("Erro ao remover colaborador:", error);
+
+    message.textContent =
+      error?.code === "permission-denied"
+        ? "O Firestore bloqueou a exclusão. Publique as regras 6.4."
+        : `Não foi possível excluir: ${error.message}`;
+
+    message.className =
+      error?.code === "permission-denied"
+        ? "csv2-row-message permission-warning"
+        : "csv2-row-message error";
+
+    buttons.forEach((button) => {
+      button.disabled = false;
+    });
   }
 };
 

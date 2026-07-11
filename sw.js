@@ -1,4 +1,4 @@
-const CACHE_NAME = 'painel-csv-v6.3.0';
+const CACHE_NAME = 'painel-csv-v6.4.0';
 
 // Ficheiros que queremos guardar no dispositivo
 const urlsToCache = [
@@ -9,6 +9,7 @@ const urlsToCache = [
   './csv-phase2.css',
   './csv-polish.css',
   './csv-weather-glass.css',
+  './csv-team-security.css',
   './app.js',
   './csv-bootstrap.js',
   './login-ui.js',
