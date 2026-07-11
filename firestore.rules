@@ -2,6 +2,7 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
     function signedIn() {
       return request.auth != null;
     }
@@ -32,6 +33,17 @@ service cloud.firestore {
 
     function ownUser(uid) {
       return signedIn() && request.auth.uid == uid;
+    }
+
+    function hasPermission(permissionId) {
+      return profileExists() &&
+        profile().data.ativo != false &&
+        profile().data.permissoes is list &&
+        permissionId in profile().data.permissoes;
+    }
+
+    function canManageClinicalSchedule() {
+      return isAdmin() || hasPermission('agenda-corpo-clinico');
     }
 
     function currentName() {
@@ -104,6 +116,16 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /configuracoes/{documentId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /agenda-profissionais/{eventId} {
+      allow read: if signedIn();
+      allow create, update, delete: if canManageClinicalSchedule();
+    }
+
     match /boletins/{bulletinId} {
       allow read: if signedIn();
       allow create, delete: if isAdmin();
@@ -142,7 +164,6 @@ service cloud.firestore {
           'agenda-trabalho',
           'agenda',
           'tarefas',
-          'configuracoes',
           'locais',
           'setores',
           'especialidades',

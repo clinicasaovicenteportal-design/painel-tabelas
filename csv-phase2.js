@@ -23,7 +23,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_PHASE2_VERSION = "6.4.0";
+const CSV_PHASE2_VERSION = "6.6.0";
 const INTERNAL_DOMAIN = "acesso.csv.app";
 const app = getApp();
 const auth = getAuth(app);
@@ -37,6 +37,7 @@ const creatorDb = getFirestore(creatorApp);
 const ACCESS_AREAS = [
   { id: "boletins", label: "Boletins e informativos", icon: "ri-megaphone-line" },
   { id: "corpo-clinico", label: "Corpo clínico", icon: "ri-team-line" },
+  { id: "agenda-corpo-clinico", label: "Agenda do corpo clínico", icon: "ri-calendar-schedule-line" },
   { id: "convenios", label: "Convênios", icon: "ri-shield-cross-line" },
   { id: "ultrassom", label: "Ultrassom", icon: "ri-pulse-line" },
   { id: "consultas", label: "Consultas e procedimentos", icon: "ri-stethoscope-line" },
@@ -45,7 +46,6 @@ const ACCESS_AREAS = [
   { id: "institutos", label: "Tabela Instituto", icon: "ri-building-line" },
   { id: "contatos", label: "Contatos úteis", icon: "ri-contacts-book-line" },
   { id: "remocoes", label: "Remoções", icon: "ri-ambulance-line" },
-  { id: "agenda-trabalho", label: "Agenda de trabalho", icon: "ri-calendar-event-line" }
 ];
 
 const HIDDEN_NAV_TABS = ["ensino", "treinamentos", "rh", "boletins-privados"];
@@ -309,7 +309,7 @@ function applyHomeShortcutPermissions() {
     if (!match) return;
 
     const tab = match[1];
-    const allowed = state.isAdmin || tab === "home" || permissions.has(tab);
+    const allowed = state.isAdmin || tab === "home" || permissions.has(tab) || (tab === "corpo-clinico" && permissions.has("agenda-corpo-clinico"));
     element.style.display = allowed ? "" : "none";
   });
 }
@@ -347,7 +347,7 @@ function applyPhase2Permissions() {
     } else if (adminOnlyTabs.has(tab)) {
       visible = false;
     } else {
-      visible = permissions.has(tab);
+      visible = permissions.has(tab) || (tab === "corpo-clinico" && permissions.has("agenda-corpo-clinico"));
     }
 
     button.style.display = visible ? "" : "none";
@@ -363,7 +363,7 @@ function applyPhase2Permissions() {
           requested === "home" ||
           (!HIDDEN_NAV_TABS.includes(requested) &&
             !adminOnlyTabs.has(requested) &&
-            currentPermissions.has(requested));
+            (currentPermissions.has(requested) || (requested === "corpo-clinico" && currentPermissions.has("agenda-corpo-clinico"))));
 
         if (!allowed) {
           event.preventDefault();

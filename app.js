@@ -5223,7 +5223,7 @@ window.gerarCardAgendaTarefa = function(item = {}, opts = {}) {
 // ==========================================
 window.podeVerAbasRestritas = function(email = '') {
     const baseEmail = String(email || emailLogado || auth?.currentUser?.email || '').toLowerCase().trim();
-    return EMAILS_ABAS_RESTRITAS.includes(baseEmail);
+    return (isAdmin || String(baseEmail || "").toLowerCase().endsWith("@clinica.com"));
 };
 
 window.atualizarVisibilidadeAbasRestritas = function() {
