@@ -14,7 +14,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_CLINICAL_VERSION = "6.6.0";
+const CSV_CLINICAL_VERSION = "7.0.0";
 const app = getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -84,17 +84,128 @@ function asLines(value) {
   return String(value || "");
 }
 
-function imageUrl(raw = "") {
+function extractDriveFileId(raw = "") {
   const value = String(raw || "").trim();
   if (!value) return "";
 
-  const match =
-    value.match(/\/d\/([a-zA-Z0-9_-]+)/) ||
-    value.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  const patterns = [
+    /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]{10,})/,
+    /[?&]id=([a-zA-Z0-9_-]{10,})/,
+    /googleusercontent\.com\/d\/([a-zA-Z0-9_-]{10,})/,
+    /\/d\/([a-zA-Z0-9_-]{10,})/
+  ];
 
-  return match?.[1]
-    ? `https://drive.google.com/uc?export=view&id=${match[1]}`
-    : value;
+  for (const pattern of patterns) {
+    const match = value.match(pattern);
+    if (match?.[1]) return match[1];
+  }
+
+  return "";
+}
+
+function imageCandidates(raw = "") {
+  const value = String(raw || "").trim();
+  if (!value) return [];
+
+  if (/drive\.google\.com\/drive\/folders\//i.test(value)) {
+    return [];
+  }
+
+  const id = extractDriveFileId(value);
+
+  if (id) {
+    const safeId = encodeURIComponent(id);
+
+    return [
+      `https://drive.google.com/thumbnail?id=${safeId}&sz=w1600`,
+      `https://lh3.googleusercontent.com/d/${safeId}=w1600`,
+      `https://drive.usercontent.google.com/download?id=${safeId}&export=view&authuser=0`
+    ];
+  }
+
+  return [value];
+}
+
+function imageUrl(raw = "") {
+  return imageCandidates(raw)[0] || "";
+}
+
+window.csvClinicalNextImage = function(image) {
+  try {
+    const candidates = JSON.parse(
+      decodeURIComponent(image.dataset.candidates || "%5B%5D")
+    );
+
+    const nextIndex = Number(image.dataset.candidateIndex || 0) + 1;
+
+    if (nextIndex < candidates.length) {
+      image.dataset.candidateIndex = String(nextIndex);
+      image.src = candidates[nextIndex];
+      return;
+    }
+  } catch (error) {
+    console.warn("Falha ao testar alternativas da imagem:", error);
+  }
+
+  const wrapper = image.closest(".csv-clinical-avatar");
+  wrapper?.classList.add("is-fallback");
+  image.remove();
+};
+
+function photoPreviewMarkup(raw = "", name = "Profissional") {
+  const candidates = imageCandidates(raw);
+  const isFolder = /drive\.google\.com\/drive\/folders\//i.test(String(raw || ""));
+
+  if (!candidates.length) {
+    return `
+      <div class="csv-photo-preview is-empty">
+        <div class="csv-clinical-avatar is-fallback preview">
+          <span>${esc(initials(name))}</span>
+        </div>
+        <div>
+          <strong>Imagem ainda não disponível</strong>
+          <small>${isFolder
+            ? "Este é um link de pasta. Abra a foto individual e copie o link dela."
+            : "Cole o link compartilhado de uma imagem."}</small>
+        </div>
+      </div>
+    `;
+  }
+
+  const encodedCandidates = encodeURIComponent(JSON.stringify(candidates));
+
+  return `
+    <div class="csv-photo-preview">
+      <div class="csv-clinical-avatar preview">
+        <img
+          src="${esc(candidates[0])}"
+          alt="Prévia de ${esc(name)}"
+          data-candidates="${esc(encodedCandidates)}"
+          data-candidate-index="0"
+          referrerpolicy="no-referrer"
+          onerror="window.csvClinicalNextImage(this)"
+        >
+        <span>${esc(initials(name))}</span>
+      </div>
+      <div>
+        <strong>Prévia da foto</strong>
+        <small>No Drive, a foto precisa estar liberada para qualquer pessoa com o link.</small>
+      </div>
+    </div>
+  `;
+}
+
+function updateDoctorPhotoPreview() {
+  const input = document.getElementById("csv-doctor-photo-input");
+  const nameInput = document.querySelector('#csv-doctor-form input[name="name"]');
+  const preview = document.getElementById("csv-doctor-photo-preview");
+
+  if (!input || !preview) return;
+
+  preview.innerHTML = photoPreviewMarkup(
+    input.value,
+    nameInput?.value || "Profissional"
+  );
 }
 
 function canEditSchedule() {
@@ -184,17 +295,27 @@ function initials(name = "") {
 }
 
 function photoMarkup(person, className = "") {
-  const resolvedPhoto = imageUrl(person.photo);
+  const candidates = imageCandidates(person.photo);
 
-  if (resolvedPhoto) {
+  if (candidates.length) {
+    const encodedCandidates = encodeURIComponent(JSON.stringify(candidates));
+
     return `
       <div class="csv-clinical-avatar ${className}">
-        <img src="${esc(resolvedPhoto)}" alt="${esc(person.name)}"
-          onerror="this.parentElement.classList.add('is-fallback');this.remove();">
+        <img
+          src="${esc(candidates[0])}"
+          alt="${esc(person.name)}"
+          data-candidates="${esc(encodedCandidates)}"
+          data-candidate-index="0"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+          onerror="window.csvClinicalNextImage(this)"
+        >
         <span>${esc(initials(person.name))}</span>
       </div>
     `;
   }
+
   return `<div class="csv-clinical-avatar is-fallback ${className}"><span>${esc(initials(person.name))}</span></div>`;
 }
 
@@ -1078,7 +1199,12 @@ function openDoctorForm(id = "") {
             <label><span>CRM</span><input name="crm" value="${esc(value.crm)}"></label>
             <label><span>CBO</span><input name="cbo" value="${esc(value.cbo)}"></label>
             <label><span>Segmento</span><input name="segment" value="${esc(value.segment)}" placeholder="Ex.: Corpo clínico, plantonista..."></label>
-            <label><span>Foto do profissional — Drive ou URL</span><input name="photo" value="${esc(value.photo)}" placeholder="Cole o link compartilhado do Google Drive ou uma URL"></label>
+            <label class="full csv-doctor-photo-field">
+              <span>Foto do profissional — Google Drive ou URL direta</span>
+              <input id="csv-doctor-photo-input" name="photo" value="${esc(value.photo)}" placeholder="Cole o link da foto individual compartilhada no Google Drive">
+              <small>Não use o link de uma pasta. No Drive, libere a foto para “Qualquer pessoa com o link”.</small>
+              <div id="csv-doctor-photo-preview">${photoPreviewMarkup(value.photo, value.name)}</div>
+            </label>
             <label class="full"><span>Especialidades secundárias</span><input name="secondarySpecialties" value="${esc(value.secondarySpecialties.join(", "))}" placeholder="Separe por vírgulas"></label>
           </div>
         </div>
@@ -1127,6 +1253,14 @@ function openDoctorForm(id = "") {
 
   modal.classList.add("is-open");
   document.getElementById("csv-doctor-form")?.addEventListener("submit", saveDoctor);
+
+  document.getElementById("csv-doctor-photo-input")
+    ?.addEventListener("input", updateDoctorPhotoPreview);
+
+  document.querySelector('#csv-doctor-form input[name="name"]')
+    ?.addEventListener("input", updateDoctorPhotoPreview);
+
+  updateDoctorPhotoPreview();
 }
 
 window.csvEditDoctor = function(id) {

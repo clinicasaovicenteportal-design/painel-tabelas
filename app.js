@@ -4,21 +4,21 @@
 console.log('APP NOVO 3.5.2 CARREGADO');
 const configuracaoAbas = {
     'colaboradores': { titulo: 'Colaborador (Equipe)', campos: ['Nome Completo do Colaborador', 'Setor da Clínica', 'PIN de Acesso (Treinamentos)'] },
-    
-    'treinamentos': { 
-        titulo: 'Material de Ensino', 
-        campos: ['Título da Atividade', 'Pasta / Módulo', 'Tipo (Vídeo, PDF, Tarefa, Prova)', 'Link do Material (Se houver)', 'Colaborador Específico (Opcional)', 'Para quais Setores?', 'Pontos Valendo', 'Modo de Controle', 'Permite Pausa?', 'Limite de Infrações', 'Regra ao Sair', 'Configuração da Avaliação'], 
-        campoAgrupador: 'Pasta / Módulo', 
-        icone: 'ri-book-read-fill' 
+
+    'treinamentos': {
+        titulo: 'Material de Ensino',
+        campos: ['Título da Atividade', 'Pasta / Módulo', 'Tipo (Vídeo, PDF, Tarefa, Prova)', 'Link do Material (Se houver)', 'Colaborador Específico (Opcional)', 'Para quais Setores?', 'Pontos Valendo', 'Modo de Controle', 'Permite Pausa?', 'Limite de Infrações', 'Regra ao Sair', 'Configuração da Avaliação'],
+        campoAgrupador: 'Pasta / Módulo',
+        icone: 'ri-book-read-fill'
     },
 
-    'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' }, 
+    'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' },
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'], campoAgrupador: 'Convênio', icone: 'ri-shield-cross-fill' },
-    
+
     'ultrassom': { titulo: 'Exame de Ultrassom', campos: ['Exame', 'Código', 'Profissionais que realizam (Opcional)', 'Restrição de Idade', 'Observação'], campoAgrupador: 'Exame', icone: 'ri-pulse-line' },
     'consultas': { titulo: 'Consulta / Procedimento', campos: ['Tipo', 'Código', 'Descrição', 'Valor', 'Profissionais que realizam (Opcional)', 'Observações'], campoAgrupador: 'Tipo', icone: 'ri-stethoscope-line' },
     'exames-imagem': { titulo: 'Exame de Imagem', campos: ['Categoria do Exame', 'Código', 'Descrição', 'Valor', 'Prazo de Laudo', 'Profissionais que realizam (Opcional)', 'Onde encontrar resultado', 'Observações', 'Convênios'], campoAgrupador: 'Categoria do Exame', icone: 'ri-body-scan-line' },
-    
+
     'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor ou Informacao', 'O que está incluso', 'Observações', 'Pacotes', 'Kit'], campoAgrupador: 'Pacotes', icone: 'ri-first-aid-kit-line' },
     'institutos': { titulo: 'Instituto Tabela', campos: ['Número da Tabela', 'Valor da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'], campoAgrupador: 'Número da Tabela', icone: 'ri-building-line' },
     'remocoes': { titulo: 'Remoção', campos: ['Nome do Lugar', 'Números (Separe por vírgula)', 'Local e Link Maps', 'Observações Importantes'] },
@@ -29,13 +29,13 @@ const configuracaoAbas = {
     'senhas': { titulo: 'Senha de Acesso', campos: ['Convênio ou Sistema', 'Link de Acesso', 'Senha', 'Local de Acesso Permitido'] },
     'boletins': { titulo: 'Boletim Informativo', campos: ['Título do Informativo', 'Para quais Setores?', 'Tipo (Urgente, Norma, Regra, etc)', 'Data de Publicação', 'Motivo', 'Links dos Materiais (1 por linha)'] },
     'boletins-privados': { titulo: 'Informativo Privado', campos: ['Para qual Colaborador?', 'Título do Documento', 'Data de Publicação', 'Tipo (Urgente, Norma, Regra, etc)', 'Motivo', 'Links dos Materiais (1 por linha)'] },
-    
+
     // --- NOVO MÓDULO: CONTROLE DE ATIVOS ---
-    'ativos': { 
-        titulo: 'Ativo / Equipamento', 
-        campos: ['Nome do Equipamento', 'Categoria', 'Número de Patrimônio', 'Localização / Setor', 'Responsável', 'Status do Ativo', 'Observações'], 
-        campoAgrupador: 'Categoria', 
-        icone: 'ri-qr-code-line' 
+    'ativos': {
+        titulo: 'Ativo / Equipamento',
+        campos: ['Nome do Equipamento', 'Categoria', 'Número de Patrimônio', 'Localização / Setor', 'Responsável', 'Status do Ativo', 'Observações'],
+        campoAgrupador: 'Categoria',
+        icone: 'ri-qr-code-line'
     }
 };
 
@@ -68,19 +68,19 @@ const auth = getAuth(app);
 
 window.db = db; window.updateDoc = updateDoc; window.doc = doc; window.arrayUnion = arrayUnion; window.arrayRemove = arrayRemove; window.addDoc = addDoc; window.collection = collection; window.deleteDoc = deleteDoc; window.onSnapshot = onSnapshot; window.setDoc = setDoc; window.getDoc = getDoc; window.runTransaction = runTransaction;
 
-let isAdmin = false; let abaAtual = 'home'; let emailLogado = ""; 
+let isAdmin = false; let abaAtual = 'home'; let emailLogado = "";
 const EMAILS_ABAS_RESTRITAS = ['gerencia@clinica.com', 'marketing@clinica.com', 'gestao@clinica.com'];
 
-let listaColaboradoresGlobal = []; let locaisGlobais = []; let setoresGlobais = []; let especialidadesGlobais = []; let motivosGlobais = []; let imagemPadraoPastas = ""; 
+let listaColaboradoresGlobal = []; let locaisGlobais = []; let setoresGlobais = []; let especialidadesGlobais = []; let motivosGlobais = []; let imagemPadraoPastas = "";
 
-window.todosBoletinsData = []; window.todosPrivadosData = []; window.todosTreinamentosData = []; 
-window.todosPesquisasRH = []; window.todosRespostasRH = []; 
+window.todosBoletinsData = []; window.todosPrivadosData = []; window.todosTreinamentosData = [];
+window.todosPesquisasRH = []; window.todosRespostasRH = [];
 window.todosPerfilAvaliacoes = []; window.todosRespostasPerfil = [];
 window.rhFiltroAtual = { setor: '', colaborador: '' };
 window.rhPerfilRadarChart = null;
 
-window.dadosGlobaisAbas = {}; window.todosOsDadosDoSistema = {}; window.dadosBoletins = {}; 
-window.pastaBoletimAtual = null; window.pastaPrivadoAtual = null; window.alunoLogado = null; 
+window.dadosGlobaisAbas = {}; window.todosOsDadosDoSistema = {}; window.dadosBoletins = {};
+window.pastaBoletimAtual = null; window.pastaPrivadoAtual = null; window.alunoLogado = null;
 
 window.corStatusPendente = "#e53e3e"; window.corStatusConcluido = "#38a169";
 
@@ -179,7 +179,7 @@ window.obterAvaliacoesPerfilDisponiveis = function(nomeColaborador = '', setorCo
 };
 
 let chartBoletinsInst = null; let chartPrivadosInst = null; let chartHomeInst = null; let chartPrivadosGeralInst = null;
-const APP_VERSION = '3.3.1';
+const APP_VERSION = '7.0.0';
 let loginEmAndamento = false;
 
 if ('serviceWorker' in navigator) {
@@ -224,7 +224,7 @@ window.efetuarLogin = async function(e) {
     loginEmAndamento = true; document.body.classList.add('is-auth-loading');
     if (btn) { btn.disabled = true; btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> A autenticar..."; }
 
-    try { await signInWithEmailAndPassword(auth, email, senha); } catch (err) { alert('Erro ao entrar: e-mail ou senha incorretos.'); } 
+    try { await signInWithEmailAndPassword(auth, email, senha); } catch (err) { alert('Erro ao entrar: e-mail ou senha incorretos.'); }
     finally {
         loginEmAndamento = false; document.body.classList.remove('is-auth-loading');
         if (btn) { btn.disabled = false; btn.innerHTML = textoOriginal; }
@@ -239,16 +239,16 @@ const btnLogout = document.getElementById('btn-logout'); if(btnLogout) btnLogout
 onAuthStateChanged(auth, (user) => {
     const loginScreen = document.getElementById('login-screen'); const dashboardScreen = document.getElementById('dashboard-screen');
     const chatFab = document.getElementById('chat-fab');
-    if (user) { 
+    if (user) {
         if(loginScreen) loginScreen.style.display = 'none'; if(dashboardScreen) dashboardScreen.style.display = 'flex';
         if(chatFab) chatFab.style.display = 'flex';
-        
+
         emailLogado = user.email || "";
         isAdmin = emailLogado.includes('@clinica');
-        
+
         const badge = document.getElementById('user-role-badge');
         if(badge) badge.textContent = isAdmin ? "Gestão Administrador" : "Acesso Geral";
-        if(isAdmin) { if(badge) badge.classList.add('admin'); document.querySelectorAll('.admin-only').forEach(el => el.style.display = ''); } 
+        if(isAdmin) { if(badge) badge.classList.add('admin'); document.querySelectorAll('.admin-only').forEach(el => el.style.display = ''); }
         else { if(badge) badge.classList.remove('admin'); document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none'); }
         Object.keys(configuracaoAbas).forEach(idColecao => window.renderizarCards(idColecao));
         window.carregarConfiguracoes(); window.buscarClimaAraucaria();
@@ -401,7 +401,7 @@ window.voltarSubAba = function() {
 window.renderizarRamaisAgrupados = function() {
     const grid = document.getElementById('grid-ramais-agrupado');
     if(!grid) return;
-    
+
     const itens = window.todosOsDadosDoSistema['ramais'] || [];
     if (itens.length === 0) {
         grid.innerHTML = '<p style="color: var(--text-muted);">Nenhum ramal cadastrado no momento.</p>';
@@ -426,27 +426,27 @@ window.renderizarRamaisAgrupados = function() {
                 ${local}
             </div>
             <div class="ramal-unidade-grid">`;
-        
+
         grupos[local].sort((a,b) => String(a.data['Setor'] || '').localeCompare(String(b.data['Setor'] || ''))).forEach(item => {
             htmlGrupo += window.gerarHTMLCard('ramais', item.id, item.data);
         });
-        
+
         htmlGrupo += `</div></div>`;
         htmlFinal += htmlGrupo;
     });
     grid.innerHTML = htmlFinal;
 };
 
-window.abrirPastaGenerica = function(colecao, valorPasta, docIdDestino = null) { 
-    window[`pasta_${colecao}_Atual`] = valorPasta; 
-    document.getElementById(`${colecao}-view-folders`).style.display = 'none'; 
-    document.getElementById(`${colecao}-view-list`).style.display = 'block'; 
-    const titleEl = document.getElementById(`titulo-pasta-${colecao}`); 
+window.abrirPastaGenerica = function(colecao, valorPasta, docIdDestino = null) {
+    window[`pasta_${colecao}_Atual`] = valorPasta;
+    document.getElementById(`${colecao}-view-folders`).style.display = 'none';
+    document.getElementById(`${colecao}-view-list`).style.display = 'block';
+    const titleEl = document.getElementById(`titulo-pasta-${colecao}`);
     if (titleEl && configuracaoAbas[colecao]) {
         titleEl.innerHTML = `<i class="${configuracaoAbas[colecao].icone}"></i> Pasta: ${valorPasta}`;
     }
-    window.renderizarListaGenerica(colecao); 
-    if (docIdDestino) window.destacarCard(docIdDestino); 
+    window.renderizarListaGenerica(colecao);
+    if (docIdDestino) window.destacarCard(docIdDestino);
 
     if (colecao === 'ativos') {
         setTimeout(window.renderizarGraficoAtivos, 300);
@@ -471,7 +471,7 @@ window.atualizarGrafico = function(canvasId, refInstancia, dados, labelGrafico) 
     const ctx = document.getElementById(canvasId); if(!ctx) return refInstancia;
     const contagemMotivos = {}; dados.forEach(b => { const m = b.data['Motivo'] || 'Sem Motivo'; contagemMotivos[m] = (contagemMotivos[m] || 0) + 1; });
     const paletaGrafico = ['#3182ce', '#38a169', '#ecc94b', '#e53e3e', '#805ad5', '#38b2ac', '#dd6b20', '#ed64a6', '#4a5568', '#667eea', '#48bb78', '#ed8936'];
-    if(refInstancia) refInstancia.destroy(); 
+    if(refInstancia) refInstancia.destroy();
     return new Chart(ctx, { type: 'bar', data: { labels: Object.keys(contagemMotivos), datasets: [{ label: labelGrafico, data: Object.values(contagemMotivos), backgroundColor: paletaGrafico, borderRadius: 5 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } } });
 };
 
@@ -663,7 +663,7 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
     document.getElementById('modal-title').textContent = docId ? `Editar ${config.titulo}` : `Novo(a) ${config.titulo}`;
     const corSalva = (dadosAntigos && dadosAntigos.corCard) ? dadosAntigos.corCard : "#ffffff";
     document.getElementById('card-color').value = corSalva;
-    
+
     let htmlGradientes = '';
     paletaGradientes.forEach(grad => { htmlGradientes += `<div class="color-swatch ${corSalva === grad.valor ? 'selected' : ''}" style="background: ${grad.valor};" data-color="${grad.valor}"></div>`; });
     const picker = document.getElementById('gradient-picker');
@@ -676,7 +676,7 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
     let htmlCampos = '';
     config.campos.forEach(campo => {
         const valorAntigo = (dadosAntigos && dadosAntigos[campo]) ? dadosAntigos[campo] : '';
-        
+
         if(colecao === 'colaboradores' && campo === 'Setor da Clínica') {
             htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Geral">Setor Padrão (Geral)</option>`; setoresGlobais.forEach(s => { htmlCampos += `<option value="${s}" ${valorAntigo === s ? 'selected' : ''}>${s}</option>`; }); htmlCampos += `</select>`;
         }
@@ -713,7 +713,7 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
         }
         else if(colecao === 'boletins-privados' && campo === 'Para qual Colaborador?') {
             htmlCampos += `<select id="input-${campo}" class="form-input"><option value="">Selecione o Colaborador...</option>`; listaColaboradoresGlobal.forEach(c => { htmlCampos += `<option value="${c.nome}" ${valorAntigo === c.nome ? 'selected' : ''}>${c.nome}</option>`; }); htmlCampos += `</select>`;
-        } 
+        }
         else if((colecao === 'boletins' || colecao === 'treinamentos') && campo === 'Para quais Setores?') {
             htmlCampos += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px;">Para quais setores? (Marque 1 ou mais)</label><div class="checkbox-group" style="margin-bottom:15px; display:grid; grid-template-columns: 1fr 1fr; gap:8px;">`;
             const valoresSalvos = valorAntigo ? String(valorAntigo).split(', ') : ['Geral'];
@@ -722,10 +722,10 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
         else if(campo === 'Motivo') { htmlCampos += `<select id="input-${campo}" class="form-input"><option value="">Selecione o Motivo...</option>`; motivosGlobais.forEach(m => { htmlCampos += `<option value="${m}" ${valorAntigo === m ? 'selected' : ''}>${m}</option>`; }); htmlCampos += `<option value="Outros" ${valorAntigo === 'Outros' ? 'selected' : ''}>Outros</option></select>`; }
         else if(campo === 'Links dos Materiais (1 por linha)') { htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:80px; resize:vertical;" placeholder="Cole os links">${valorAntigo}</textarea>`; }
         else if(campo === 'Aceita o Servico?') { htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Sim" ${valorAntigo === 'Sim' ? 'selected' : ''}>Sim</option><option value="Não" ${valorAntigo === 'Não' ? 'selected' : ''}>Não</option></select>`; }
-        else if(colecao === 'consultas' && campo === 'Tipo') { htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Consulta" ${valorAntigo === 'Consulta' ? 'selected' : ''}>Consulta</option><option value="Exame" ${valorAntigo === 'Exame' ? 'selected' : ''}>Exame</option><option value="Pacotes" ${valorAntigo === 'Pacotes' ? 'selected' : ''}>Pacotes</option></select>`; } 
+        else if(colecao === 'consultas' && campo === 'Tipo') { htmlCampos += `<select id="input-${campo}" class="form-input"><option value="Consulta" ${valorAntigo === 'Consulta' ? 'selected' : ''}>Consulta</option><option value="Exame" ${valorAntigo === 'Exame' ? 'selected' : ''}>Exame</option><option value="Pacotes" ${valorAntigo === 'Pacotes' ? 'selected' : ''}>Pacotes</option></select>`; }
         else if(campo === 'Local ou Prédio') { htmlCampos += `<select id="input-${campo}" class="form-input"><option value="">Selecione o Local...</option>`; locaisGlobais.forEach(loc => { const l = loc.trim(); if(l) htmlCampos += `<option value="${l}" ${valorAntigo === l ? 'selected' : ''}>${l}</option>`; }); htmlCampos += `<option value="Outros" ${valorAntigo === 'Outros' ? 'selected' : ''}>Outros</option></select>`; }
-        else if (campo.includes('Data')) { htmlCampos += `<input type="date" id="input-${campo}" value="${valorAntigo}" class="form-input">`; } 
-        else if (campo.includes('Link') || campo.includes('URL')) { htmlCampos += `<input type="url" id="input-${campo}" placeholder="Link ou URL" value="${valorAntigo}" class="form-input">`; } 
+        else if (campo.includes('Data')) { htmlCampos += `<input type="date" id="input-${campo}" value="${valorAntigo}" class="form-input">`; }
+        else if (campo.includes('Link') || campo.includes('URL')) { htmlCampos += `<input type="url" id="input-${campo}" placeholder="Link ou URL" value="${valorAntigo}" class="form-input">`; }
         else if (campo === 'Profissionais que realizam (Opcional)') {
             htmlCampos += `<label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px; color:var(--text-muted);">Quais médicos realizam isso?</label>`;
             htmlCampos += `<textarea id="input-${campo}" class="form-input" style="height:80px; resize:vertical;" placeholder="Ex: Dr. João, Dra. Maria...">${valorAntigo}</textarea>`;
@@ -735,7 +735,7 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
         }
         else { htmlCampos += `<input type="text" id="input-${campo}" placeholder="${campo}" value="${valorAntigo}" class="form-input">`; }
     });
-    
+
     document.getElementById('modal-form-area').innerHTML = htmlCampos;
     document.getElementById('btn-salvar-dados').setAttribute('data-colecao', colecao);
     document.getElementById('modal-cadastro').style.display = 'flex';
@@ -744,9 +744,9 @@ window.abrirModal = function(colecao, docId = null, dadosAntigos = null) {
 window.gerarHTMLCard = function(colecaoNome, docId, data) {
     const config = configuracaoAbas[colecaoNome]; if(!config) return '';
     let campoTitulo = config.campos[0]; if(config.campoAgrupador) campoTitulo = config.campos.find(c => c !== config.campoAgrupador) || config.campos[0];
-    
+
     let tituloDesteCard = data[campoTitulo] || data['Nome/Médico'] || data['Nome'] || 'Detalhes do Cadastro';
-    
+
     if (colecaoNome === 'ramais') {
         tituloDesteCard = data['Setor'] || 'Ramal Geral';
     }
@@ -756,10 +756,10 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
     const cardClass = (configCor && configCor.dark) && colecaoNome !== 'ramais' ? 'has-gradient' : '';
 
     let cardHtml = `<div class="card ${cardClass}" id="card-${docId}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border-left: 6px solid var(--primary-color);">`;
-    
+
     if(config.campoAgrupador) cardHtml += `<div style="font-size:10px; opacity:0.7; text-transform:uppercase; font-weight:700; margin-bottom:5px; color: var(--text-main);"><i class="${config.icone || 'ri-folder-line'}"></i> PASTA/MÓDULO: ${data[config.campoAgrupador] || 'Geral'}</div>`;
     cardHtml += `<div style="font-size:18px; font-weight:600; line-height:1.2; margin-bottom:15px;">${tituloDesteCard}</div>`;
-    
+
     let hasFlexLayout = (colecaoNome === 'corpo-clinico' && data['Link da Foto do Profissional']);
     if(hasFlexLayout) {
         cardHtml += `<div class="medico-wrapper">`;
@@ -772,41 +772,41 @@ window.gerarHTMLCard = function(colecaoNome, docId, data) {
 
     config.campos.forEach(chave => {
         const valor = data[chave];
-        
+
         if (colecaoNome === 'ramais' && (chave === 'Setor' || chave === 'Local ou Prédio')) return;
 
         if (valor && chave !== config.campoAgrupador && chave !== campoTitulo && chave !== 'Configuração da Avaliação' && !String(chave).includes('Link da Foto') && !String(chave).includes('Link da Logo') && chave !== 'PIN de Acesso (Treinamentos)') {
-            
+
             if (chave === 'Aceita o Servico?') {
                 const badgeClass = valor === 'Não' ? 'status-negado' : 'status-aceito';
                 const iconClass = valor === 'Não' ? 'ri-close-circle-fill' : 'ri-checkbox-circle-fill';
                 const text = valor === 'Não' ? 'Serviço Não Coberto' : 'Serviço Coberto';
                 cardHtml += `<div style="margin: 8px 0;"><span class="${badgeClass}"><i class="${iconClass}"></i> ${text}</span></div>`;
-            } 
+            }
             else if(String(valor).includes('http')) {
                 const urlMatch = String(valor).match(/https?:\/\/[^\s]+/);
                 const url = urlMatch ? urlMatch[0] : valor;
                 const textoSemUrl = String(valor).replace(url, '').trim();
-                
+
                 let btnTexto = "Acessar Link Externo";
                 let btnIcone = "ri-external-link-line";
                 let btnAcao = `window.open('${url}', '_blank')`;
                 let colorClass = "color-9";
 
                 if (chave.includes('Acesso') || chave.includes('Link') || colecaoNome === 'senhas') {
-                    btnTexto = "Navegador Interno"; 
-                    btnIcone = "ri-layout-window-line"; 
+                    btnTexto = "Navegador Interno";
+                    btnIcone = "ri-layout-window-line";
                     colorClass = "color-11";
                     const safeTitle = String(tituloDesteCard).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
                     btnAcao = `window.abrirJanelaFlutuante('${url}', '${safeTitle}')`;
-                } 
+                }
                 else if (chave.includes('Maps') || chave.includes('Local e Link')) {
                     btnTexto = "Abrir Mapa"; btnIcone = "ri-map-pin-user-fill"; colorClass = "color-5";
                 }
 
                 cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px; line-height: 1.4;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${textoSemUrl}</span><br><button type="button" onclick="${btnAcao}" class="btn-hover ${colorClass}" style="height: 32px; font-size: 11px; padding: 0 15px; margin-top: 5px; border-radius: 8px; width: 100%;"><i class="${btnIcone}"></i> ${btnTexto}</button></div>`;
             } else {
-                cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${valor}</span></div>`; 
+                cardHtml += `<div class="card-info" style="font-size:13px; margin-bottom: 8px;"><strong>${chave}:</strong> <span style="white-space: pre-wrap;">${valor}</span></div>`;
             }
         }
     });
@@ -1244,7 +1244,7 @@ window.imprimirEtiquetasAtivosEmLote = function() {
 };
 
 
-window.renderizarListaGenerica = function(colecao) { 
+window.renderizarListaGenerica = function(colecao) {
     const grid = document.getElementById(`grid-${colecao}-list`);
     if (!grid) return;
 
@@ -1295,7 +1295,7 @@ window.renderizarPastasGenericas = function(colecao) {
     const config = configuracaoAbas[colecao]; const dadosAtuais = window.dadosGlobaisAbas[colecao] || [];
     if (dadosAtuais.length === 0) { grid.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">Nenhuma pasta/módulo encontrado. Clique em "Novo" para criar.</p>'; return; }
     const obterNomePasta = (item) => { const bruto = item?.data?.[config.campoAgrupador] || item?.data?.Pacotes || item?.data?.['Pasta / Módulo'] || item?.data?.Especialidade || item?.data?.Convênio || item?.data?.Exame || item?.data?.Tipo || item?.data?.['Categoria do Exame'] || item?.data?.['Número da Tabela'] || 'Geral'; return String(bruto || 'Geral').trim() || 'Geral'; };
-    const pastasUnicas = [...new Set(dadosAtuais.map(obterNomePasta))].sort((a,b)=>String(a).toLowerCase().localeCompare(String(b).toLowerCase())); 
+    const pastasUnicas = [...new Set(dadosAtuais.map(obterNomePasta))].sort((a,b)=>String(a).toLowerCase().localeCompare(String(b).toLowerCase()));
     pastasUnicas.forEach(nomePasta => {
         const itensPasta = dadosAtuais.filter(i => obterNomePasta(i) === nomePasta);
         const qtd = itensPasta.length;
@@ -1323,7 +1323,7 @@ window.renderizarPastasBoletins = function() {
         });
         const icone = pasta === 'Geral' ? 'ri-global-line' : 'ri-folder-user-line';
         const corStatusPasta = totalFaltam > 0 ? window.corStatusPendente : window.corStatusConcluido;
-        const pastaSegura = pasta.replace(/'/g, "\\'"); 
+        const pastaSegura = pasta.replace(/'/g, "\\'");
         gridFolders.innerHTML += `<div class="shortcut-card" onclick="window.abrirPastaBoletim('${pastaSegura}')" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; border-left: 6px solid ${corStatusPasta};"><div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;"><div style="background: var(--bg-color); padding: 15px; border-radius: 12px; color: var(--primary-color); font-size: 24px; flex-shrink:0;"><i class="${icone}"></i></div><div style="font-size: 16px; font-weight: 600; line-height:1.2; word-wrap:break-word;">${pasta}</div></div><div style="font-size: 12px; color: var(--text-muted); background: #f8fafc; padding: 10px; border-radius: 8px;"><div>Boletins Ativos: <b style="color: var(--text-main);">${boletinsDaPasta.length}</b></div><div style="margin-top: 5px; color: #38a169;">Lidos Acumulados: <b>${totalLidos}</b></div><div style="color: #e53e3e;">Pendências: <b>${totalFaltam}</b></div></div></div>`;
     });
     if (!desenhouAlgum) gridFolders.innerHTML = '<div style="grid-column: 1/-1; padding: 15px; color: var(--text-muted); text-align:center;">Nenhuma pasta com boletins encontrada.</div>';
@@ -1340,14 +1340,14 @@ window.renderizarListaBoletins = function() {
         const titulo = data[campoTitulo] || 'Boletim';
         const isUrgente = data['Tipo (Urgente, Norma, Regra, etc)'] && String(data['Tipo (Urgente, Norma, Regra, etc)']).toLowerCase().includes('urgente');
         const corSalva = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
-        const configCor = paletaGradientes.find(p => p.valor === corSalva); const gradientClass = (configCor ? configCor.dark : false) ? 'has-gradient' : ''; 
+        const configCor = paletaGradientes.find(p => p.valor === corSalva); const gradientClass = (configCor ? configCor.dark : false) ? 'has-gradient' : '';
         const publicoAlvoNomes = window.obterPublicoAlvo(pasta);
         const lidosNomes = (data.leituras || []).map(txt => txt.split(' (')[0]);
         const faltamAssinar = publicoAlvoNomes.filter(n => !lidosNomes.includes(n));
         const qtdLidos = publicoAlvoNomes.filter(n => lidosNomes.includes(n)).length;
         const qtdFaltam = faltamAssinar.length;
         const corStatus = qtdFaltam > 0 ? window.corStatusPendente : window.corStatusConcluido;
-        const classeUrgente = (isUrgente && qtdFaltam > 0) ? 'card-urgente' : ''; 
+        const classeUrgente = (isUrgente && qtdFaltam > 0) ? 'card-urgente' : '';
         let cardHtml = `<div class="card ${classeUrgente} ${gradientClass}" id="card-${docId}" style="position: relative; display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border: 3px solid ${corStatus};"><div class="card-title" style="margin-bottom:15px; font-size:18px; font-weight:600; line-height:1.2;">${titulo}</div>`;
         let botaoLinkHtml = '';
         camposOrdem.forEach(chave => {
@@ -1413,10 +1413,10 @@ window.renderizarListaPrivados = function() {
         const titulo = data['Título do Documento'] || 'Documento Privado';
         const isUrgente = data['Tipo (Urgente, Norma, Regra, etc)'] && String(data['Tipo (Urgente, Norma, Regra, etc)']).toLowerCase().includes('urgente');
         const corSalva = data.corCard && data.corCard !== "transparent" ? data.corCard : "#ffffff";
-        const configCor = paletaGradientes.find(p => p.valor === corSalva); const gradientClass = (configCor ? configCor.dark : false) ? 'has-gradient' : ''; 
+        const configCor = paletaGradientes.find(p => p.valor === corSalva); const gradientClass = (configCor ? configCor.dark : false) ? 'has-gradient' : '';
         const jaLeu = (data.leituras || []).find(txt => txt.startsWith(colabAtual));
         const corStatus = jaLeu ? window.corStatusConcluido : window.corStatusPendente;
-        const classeUrgente = (isUrgente && !jaLeu) ? 'card-urgente' : ''; 
+        const classeUrgente = (isUrgente && !jaLeu) ? 'card-urgente' : '';
 
         let cardHtml = `<div class="card ${classeUrgente} ${gradientClass}" id="card-${docId}" style="display:flex; flex-direction:column; background: ${corSalva}; min-height: 100%; border: 3px solid ${corStatus};"><div class="card-title" style="margin-bottom:15px; font-size:18px; font-weight:600;">${titulo}</div>`;
         let botaoLinkHtml = '';
@@ -1446,7 +1446,7 @@ window.renderizarListaPrivados = function() {
 
 window.renderizarCards = function(colecaoNome) {
     const grid = document.getElementById(`grid-${colecaoNome}`);
-    
+
     if(!grid && colecaoNome !== 'boletins' && colecaoNome !== 'boletins-privados' && colecaoNome !== 'ramais' && !configuracaoAbas[colecaoNome]?.campoAgrupador) return;
 
     onSnapshot(collection(db, colecaoNome), (snapshot) => {
@@ -1459,10 +1459,10 @@ window.renderizarCards = function(colecaoNome) {
             if(grid) { grid.style.display = 'block'; grid.innerHTML = ''; }
             return;
         }
-        
-        let itens = []; snapshot.forEach(doc => itens.push({ id: doc.id, data: doc.data() })); 
+
+        let itens = []; snapshot.forEach(doc => itens.push({ id: doc.id, data: doc.data() }));
         window.todosOsDadosDoSistema[colecaoNome] = itens;
-        
+
         if (colecaoNome === 'ramais') {
             if (abaAtual === 'contatos' || document.getElementById('sub-ramais')?.style.display !== 'none') {
                 window.renderizarRamaisAgrupados();
@@ -1470,17 +1470,17 @@ window.renderizarCards = function(colecaoNome) {
             return;
         }
 
-        if(colecaoNome === 'colaboradores') { 
-            listaColaboradoresGlobal = itens.map(item => { return { nome: item.data['Nome Completo do Colaborador'], setor: item.data['Setor da Clínica'] || 'Geral' }; }).filter(c => c.nome).sort((a,b) => a.nome.localeCompare(b.nome)); 
-            if(abaAtual === 'colaboradores') window.renderizarListaGenerica(colecaoNome); 
-            if(isAdmin && abaAtual === 'rh') window.renderizarDashboardRH(); 
+        if(colecaoNome === 'colaboradores') {
+            listaColaboradoresGlobal = itens.map(item => { return { nome: item.data['Nome Completo do Colaborador'], setor: item.data['Setor da Clínica'] || 'Geral' }; }).filter(c => c.nome).sort((a,b) => a.nome.localeCompare(b.nome));
+            if(abaAtual === 'colaboradores') window.renderizarListaGenerica(colecaoNome);
+            if(isAdmin && abaAtual === 'rh') window.renderizarDashboardRH();
         }
         if(colecaoNome === 'boletins') { window.todosBoletinsData = itens; if(abaAtual === 'boletins') { if(window.pastaBoletimAtual) window.renderizarListaBoletins(); else window.renderizarPastasBoletins(); } window.verificarUrgentesHome(); window.renderizarGraficoHome(); return; }
         if(colecaoNome === 'boletins-privados') { window.todosPrivadosData = itens; if(abaAtual === 'boletins-privados') { if(window.pastaPrivadoAtual) window.renderizarListaPrivados(); else window.renderizarPastasPrivados(); } window.verificarUrgentesHome(); window.renderizarGraficoPrivadosGeral(); return; }
         if(colecaoNome === 'treinamentos') { window.todosTreinamentosData = itens; if(window.alunoLogado) window.renderizarTrilhaAluno(); if(isAdmin && abaAtual === 'rh') window.renderizarDashboardRH(); }
         if(configuracaoAbas[colecaoNome] && configuracaoAbas[colecaoNome].campoAgrupador && colecaoNome !== 'colaboradores') { window.dadosGlobaisAbas[colecaoNome] = itens; if(abaAtual === colecaoNome) { if(window[`pasta_${colecaoNome}_Atual`]) window.renderizarListaGenerica(colecaoNome); else window.renderizarPastasGenericas(colecaoNome); } return; }
-        
-        if(!grid) return; 
+
+        if(!grid) return;
 
         grid.style.display = 'grid'; grid.innerHTML = '';
         itens.sort((a, b) => { return String(a.data[configuracaoAbas[colecaoNome].campos[0]]).localeCompare(String(b.data[configuracaoAbas[colecaoNome].campos[0]])); }).forEach((item) => { grid.innerHTML += window.gerarHTMLCard(colecaoNome, item.id, item.data); });
@@ -1511,7 +1511,7 @@ window.carregarConfiguracoes = function() {
             const data = docSnap.data();
             const area = document.getElementById('banner-content');
             if(area) { if(data.banner_texto && data.banner_texto.trim() !== '') area.innerHTML = `<h2>${data.banner_texto.replace(/\n/g, '<br>')}</h2>`; else area.innerHTML = `<h2>Bem-vindo ao Painel Clínico</h2>`; }
-            
+
             const mapIds = {
                 'tab-input-banner': 'banner_texto', 'tab-input-locais': 'locais', 'tab-input-setores': 'setores',
                 'tab-input-especialidades': 'especialidades', 'tab-input-motivos': 'motivos', 'tab-input-imagem-pastas': 'imagem_padrao_pastas',
@@ -1526,7 +1526,7 @@ window.carregarConfiguracoes = function() {
             const chatLogo = data.chat_logo || "https://cdn-icons-png.flaticon.com/512/8943/8943377.png";
             const chatCor = data.chat_cor || "#0ba360";
             document.documentElement.style.setProperty('--chat-primary', chatCor);
-            
+
             const fabImg = document.getElementById('chat-fab-img'); const headerImg = document.getElementById('chat-header-img');
             const _chatLogoFinal = window.formatarLinkImagem(chatLogo) || chatLogo || './logo.png';
             if(fabImg){ fabImg.src = _chatLogoFinal; fabImg.onerror = () => { fabImg.src = './logo.png'; }; }
@@ -1534,12 +1534,12 @@ window.carregarConfiguracoes = function() {
             window.aplicarImagemClimaHome(data.weather_image || '');
 
             window.corStatusPendente = data.cor_pendente || '#e53e3e'; window.corStatusConcluido = data.cor_concluido || '#38a169';
-            
+
             locaisGlobais = data.locais ? data.locais.split('\n').filter(l => l.trim() !== '') : [];
             setoresGlobais = data.setores ? data.setores.split('\n').filter(s => s.trim() !== '') : [];
             especialidadesGlobais = data.especialidades ? data.especialidades.split('\n').filter(s => s.trim() !== '') : [];
             motivosGlobais = data.motivos ? data.motivos.split('\n').filter(m => m.trim() !== '') : [];
-            
+
             if(abaAtual === 'boletins' && !window.pastaBoletimAtual) window.renderizarPastasBoletins();
             if(abaAtual === 'boletins-privados' && !window.pastaPrivadoAtual) window.renderizarPastasPrivados();
         }
@@ -1633,7 +1633,7 @@ window.processarLogicaDoBot = function(mensagemUser) {
                 const config = configuracaoAbas[colecao];
                 let tituloItem = item.data[config.campos[0]] || 'Detalhes'; let detalhesStr = '';
                 if(colecao === 'boletins') tituloItem = `Boletim: ${item.data['Título do Informativo']}`;
-                
+
                 let profissionais = item.data['Profissionais que realizam (Opcional)'];
                 if(profissionais && profissionais.trim() !== '') {
                     detalhesStr += `<div style="background:#eefbf4; padding:8px; border-radius:8px; margin-bottom:8px; border-left:3px solid #38a169;"><b>️ Quem realiza:</b> ${profissionais}</div>`;
@@ -1643,16 +1643,16 @@ window.processarLogicaDoBot = function(mensagemUser) {
                 Object.entries(item.data).forEach(([k, v]) => { if(v && k !== config.campos[0] && k !== 'corCard' && !String(k).includes('Link') && k !== 'Profissionais que realizam (Opcional)' && cont < 2) { detalhesStr += `<b>${k}:</b> ${v}<br>`; cont++; } });
 
                 let pastaAgrupadora = config.campoAgrupador ? item.data[config.campoAgrupador] : null; let btnAction = '';
-                
-                if (pastaAgrupadora && colecao !== 'colaboradores') { 
-                    btnAction = `<button onclick="window.irParaAba('${colecao}'); setTimeout(() => { window.abrirPastaGenerica('${colecao}', '${pastaAgrupadora.replace(/'/g, "\\'")}', '${item.id}') }, 200); window.toggleChat();" class="btn-hover color-5" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 8px; width: 100%; border-radius: 6px;"><i class="ri-folder-open-line"></i> Ver na Pasta</button>`; 
-                } 
-                else if (colecao === 'boletins') { 
-                    const setorBoletim = item.data['Para quais Setores?'] ? String(item.data['Para quais Setores?']).split(',')[0] : 'Geral'; 
-                    btnAction = `<button onclick="window.irParaAba('${colecao}'); setTimeout(() => { window.abrirPastaBoletim('${setorBoletim.replace(/'/g, "\\'")}', '${item.id}') }, 200); window.toggleChat();" class="btn-hover color-5" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 8px; width: 100%; border-radius: 6px;"><i class="ri-folder-open-line"></i> Abrir Boletim</button>`; 
-                } 
-                else { 
-                    btnAction = `<button onclick="window.irParaAba('${colecao}'); setTimeout(() => { window.destacarCard('${item.id}') }, 300); window.toggleChat();" class="btn-hover color-8" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 8px; width: 100%; border-radius: 6px;"><i class="ri-arrow-right-circle-line"></i> Localizar na Aba</button>`; 
+
+                if (pastaAgrupadora && colecao !== 'colaboradores') {
+                    btnAction = `<button onclick="window.irParaAba('${colecao}'); setTimeout(() => { window.abrirPastaGenerica('${colecao}', '${pastaAgrupadora.replace(/'/g, "\\'")}', '${item.id}') }, 200); window.toggleChat();" class="btn-hover color-5" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 8px; width: 100%; border-radius: 6px;"><i class="ri-folder-open-line"></i> Ver na Pasta</button>`;
+                }
+                else if (colecao === 'boletins') {
+                    const setorBoletim = item.data['Para quais Setores?'] ? String(item.data['Para quais Setores?']).split(',')[0] : 'Geral';
+                    btnAction = `<button onclick="window.irParaAba('${colecao}'); setTimeout(() => { window.abrirPastaBoletim('${setorBoletim.replace(/'/g, "\\'")}', '${item.id}') }, 200); window.toggleChat();" class="btn-hover color-5" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 8px; width: 100%; border-radius: 6px;"><i class="ri-folder-open-line"></i> Abrir Boletim</button>`;
+                }
+                else {
+                    btnAction = `<button onclick="window.irParaAba('${colecao}'); setTimeout(() => { window.destacarCard('${item.id}') }, 300); window.toggleChat();" class="btn-hover color-8" style="height: 30px; font-size: 11px; padding: 0 15px; margin-top: 8px; width: 100%; border-radius: 6px;"><i class="ri-arrow-right-circle-line"></i> Localizar na Aba</button>`;
                 }
 
                 resultadosUnicos[item.id] = `<div style="background: white; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);"><div style="font-weight: 700; color: var(--primary-color); margin-bottom: 5px; font-size: 14px; line-height: 1.2;">${tituloItem}</div><div style="font-size: 12px; color: var(--text-main); line-height: 1.4;">${detalhesStr}</div>${btnAction}</div>`;
@@ -2240,7 +2240,7 @@ window.abrirCorrecaoAdmin = function(docId, nomeAluno) {
     let respObj = null; let respStr = null;
     respostas.forEach(r => { try { let o = window.safeParseJSON(r, null); if(o && o.nome === nomeAluno) { respObj = o; respStr = r; } } catch(e){} });
     if(!respObj) return;
-    
+
     let html = `<b>Aluno:</b> ${window.escapeHTML(nomeAluno)} <br><b>Enviado em:</b> ${window.escapeHTML(respObj.data || '-')}<br><br>`;
     const perguntasConfiguradas = window.safeParseJSON(window.decodificarConfigAvaliacao(data['Configuração da Avaliação'] || '[]'), []);
     (respObj.respostas || []).forEach((r, i) => {
@@ -2257,7 +2257,7 @@ window.abrirCorrecaoAdmin = function(docId, nomeAluno) {
         html += `<span style="color:#3182ce; white-space:pre-wrap;">R: ${window.escapeHTML(r.resposta || '-')}</span>`;
         html += `</div>`;
     });
-    
+
     const notaAuto = parseFloat(respObj.nota_auto || respObj.nota_total_calculada || 0) || 0;
     const pontosSubj = parseFloat(respObj.pontos_subjetivos || 0) || 0;
     const pendentes = parseInt(respObj.pendentes_subjetivas || 0, 10) || 0;
@@ -2272,7 +2272,7 @@ window.abrirCorrecaoAdmin = function(docId, nomeAluno) {
     document.getElementById('correcao-feedback').value = respObj.feedback || '';
     document.getElementById('correcao-docid').value = docId;
     document.getElementById('correcao-nomealuno').value = nomeAluno;
-    
+
     document.getElementById('modal-correcao-admin').style.display = 'flex';
     document.getElementById('modal-leituras').style.display = 'none';
 };
@@ -2347,7 +2347,7 @@ window.entrarPortalAluno = function() {
         window.alunoLogado = colaboradorEncontrado.data;
         document.getElementById('ensino-login-area').style.display = 'none'; document.getElementById('ensino-dashboard-area').style.display = 'block';
         document.getElementById('nome-aluno-logado').textContent = window.alunoLogado['Nome Completo do Colaborador'];
-        window.renderizarTrilhaAluno(); 
+        window.renderizarTrilhaAluno();
     } else { alert("Nome ou PIN incorretos. Verifique com a Gestão."); }
 };
 
@@ -2789,7 +2789,7 @@ window.enviarRespostaRH = async function() {
 
         const payload = { pesquisaId, nome: nomeAluno, respostas, data: new Date().toISOString() };
 
-        if (antiga?.id) { await window.updateDoc(window.doc(window.db, 'rh-respostas-pesquisa', antiga.id), payload); } 
+        if (antiga?.id) { await window.updateDoc(window.doc(window.db, 'rh-respostas-pesquisa', antiga.id), payload); }
         else { await window.addDoc(window.collection(window.db, 'rh-respostas-pesquisa'), payload); }
 
         alert('Muito obrigado pelas suas respostas! Isso ajuda-nos a crescer juntos.');
@@ -2811,7 +2811,7 @@ window.verResultadosPesquisaRH = function(pesquisaId) {
     p.data.perguntas.forEach(q => {
         html += `<div style="margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
                     <strong style="display:block; margin-bottom:10px; font-size:14px; color:var(--text-main);">${q.texto}</strong>`;
-        
+
         if(q.tipo === 'escala') {
             let soma = 0; let qtd = 0;
             resps.forEach(r => {
@@ -3092,7 +3092,7 @@ let html5QrcodeScanner = null;
 window.iniciarLeitorQR = function() {
     const modal = document.getElementById('modal-camera-qr');
     if(modal) modal.style.display = 'flex';
-    
+
     if (window.location.protocol === 'file:') {
         alert("⚠️ ATENÇÃO: A câmara foi bloqueada pelo navegador.\n\nPara a câmara funcionar, o sistema precisa estar a correr num ambiente seguro (HTTPS). Suba esta atualização para o seu GitHub Pages!");
     }
@@ -3103,12 +3103,12 @@ window.iniciarLeitorQR = function() {
             return;
         }
 
-        html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { 
-            fps: 10, 
+        html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", {
+            fps: 10,
             qrbox: { width: 250, height: 250 },
             rememberLastUsedCamera: true
         }, false);
-        
+
         html5QrcodeScanner.render(window.onScanSuccess, window.onScanFailure);
     } catch (error) {
         console.error("Erro ao iniciar câmara:", error);
@@ -3130,7 +3130,7 @@ window.onScanSuccess = function(decodedText, decodedResult) {
     window.fecharLeitorQR();
     const ativos = window.dadosGlobaisAbas['ativos'] || [];
     const ativoEncontrado = ativos.find(a => a.id === decodedText || a.data['Número de Patrimônio'] === decodedText);
-    
+
     if(ativoEncontrado) {
         alert("Equipamento localizado com sucesso!");
         window.abrirModal('ativos', ativoEncontrado.id, ativoEncontrado.data);
@@ -3147,7 +3147,7 @@ window.onScanFailure = function(error) {
 // 8. ATRIBUIÇÃO DE EVENTOS DE CLIQUES E INICIALIZAÇÃO
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
-    
+
     const mainContent = document.querySelector('.main-content');
     if(mainContent) {
         mainContent.addEventListener('click', async (e) => {
@@ -3163,12 +3163,12 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
                 return;
             }
-            
+
             if (btnExcluir && isAdmin) {
                 const colecao = btnExcluir?.getAttribute('data-colecao');
                 const id = btnExcluir?.getAttribute('data-id');
-                
-                if (!colecao || !id) return; 
+
+                if (!colecao || !id) return;
 
                 if (confirm("Tem a certeza que deseja excluir permanentemente este item?")) {
                     try {
@@ -3179,12 +3179,12 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
                 return;
             }
-            
+
             if (btnEditar && isAdmin) {
                 const colecao = btnEditar?.getAttribute('data-colecao');
                 const id = btnEditar?.getAttribute('data-id');
                 const info = btnEditar?.getAttribute('data-info');
-                
+
                 if (colecao && id && info) {
                     window.abrirModal(colecao, id, window.safeParseJSON(info, {}));
                 }
@@ -3197,22 +3197,22 @@ window.addEventListener('DOMContentLoaded', () => {
         // Recriar o botão para remover os event listeners antigos, se existirem
         const novoBtnSalvar = btnSalvar.cloneNode(true);
         btnSalvar.parentNode.replaceChild(novoBtnSalvar, btnSalvar);
-        
+
         novoBtnSalvar.addEventListener('click', async () => {
             if (novoBtnSalvar.getAttribute('data-colecao') === 'treinamentos' && document.getElementById('quiz-questions-list')) {
                 window.sincronizarQuizJSON();
             }
-            
+
             const colecao = novoBtnSalvar.getAttribute('data-colecao');
             const docId = document.getElementById('modal-doc-id').value;
             const config = configuracaoAbas[colecao];
             if(!config) return;
-            
+
             const btnOriginal = novoBtnSalvar.innerHTML;
             novoBtnSalvar.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> A guardar...';
-            
+
             let dados = { corCard: document.getElementById('card-color') ? document.getElementById('card-color').value : '#ffffff' };
-            
+
             config.campos.forEach(c => {
                 const val = document.getElementById('input-'+c);
                 if((colecao === 'boletins' || colecao === 'treinamentos') && c === 'Para quais Setores?') {
@@ -3228,7 +3228,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (!dados['Limite de Infrações']) dados['Limite de Infrações'] = '3';
                 if (!dados['Regra ao Sair']) dados['Regra ao Sair'] = dados['Modo de Controle'] === 'prova_bloqueada' ? 'zerada_por_saida' : 'inconclusa';
             }
-            
+
             if (colecao === 'ativos') {
                 if (!dados['Setor'] && dados['Localização / Setor']) dados['Setor'] = dados['Localização / Setor'];
                 if (!dados['Localização / Setor'] && dados['Setor']) dados['Localização / Setor'] = dados['Setor'];
@@ -3260,19 +3260,19 @@ window.addEventListener('DOMContentLoaded', () => {
                 const acao = docId ? 'Editado/Movimentado' : 'Cadastrado';
                 const dataAntiga = docId ? (window.dadosGlobaisAbas['ativos']?.find(a => a.id === docId)?.data || {}) : {};
                 const logTexto = `${acao} em ${new Date().toLocaleString('pt-PT')} por ${emailLogado || 'Gestor'}`;
-                
-                if (docId) { 
+
+                if (docId) {
                     const histAntigo = Array.isArray(dataAntiga.historico) ? dataAntiga.historico : [];
-                    dados.historico = [...histAntigo, logTexto]; 
-                } 
+                    dados.historico = [...histAntigo, logTexto];
+                }
                 else { dados.historico = [logTexto]; }
             }
-            
+
             try {
-                if(docId) { 
-                    await window.setDoc(window.doc(window.db, colecao, docId), dados, { merge: true }); 
-                } else { 
-                    await window.addDoc(window.collection(window.db, colecao), dados); 
+                if(docId) {
+                    await window.setDoc(window.doc(window.db, colecao, docId), dados, { merge: true });
+                } else {
+                    await window.addDoc(window.collection(window.db, colecao), dados);
                 }
                 window.fecharModal();
 
@@ -3289,21 +3289,21 @@ window.addEventListener('DOMContentLoaded', () => {
         btnSalvarAjustes.addEventListener('click', async () => {
             if(!isAdmin) return;
             const texto = document.getElementById('tab-input-banner').value;
-            const locaisTexto = document.getElementById('tab-input-locais').value; 
-            const setoresTexto = document.getElementById('tab-input-setores').value; 
-            const especialidadesTexto = document.getElementById('tab-input-especialidades').value; 
-            const motivosTexto = document.getElementById('tab-input-motivos').value; 
-            const corPend = document.getElementById('tab-color-pendente').value; 
-            const corConc = document.getElementById('tab-color-concluido').value; 
-            
+            const locaisTexto = document.getElementById('tab-input-locais').value;
+            const setoresTexto = document.getElementById('tab-input-setores').value;
+            const especialidadesTexto = document.getElementById('tab-input-especialidades').value;
+            const motivosTexto = document.getElementById('tab-input-motivos').value;
+            const corPend = document.getElementById('tab-color-pendente').value;
+            const corConc = document.getElementById('tab-color-concluido').value;
+
             const imgPastaInput = document.getElementById('tab-input-imagem-pastas'); const imgPastasTexto = imgPastaInput ? imgPastaInput.value : "";
             const chatLogoInput = document.getElementById('tab-input-chat-logo'); const chatLogoTexto = chatLogoInput ? chatLogoInput.value : "";
             const chatCorInput = document.getElementById('tab-color-chat'); const chatCorVal = chatCorInput ? chatCorInput.value : "#0ba360";
-            
+
             btnSalvarAjustes.innerHTML = "A guardar...";
             try {
-                await window.setDoc(window.doc(window.db, "configuracoes", "gerais"), { 
-                    banner_texto: texto, locais: locaisTexto, setores: setoresTexto, especialidades: especialidadesTexto, motivos: motivosTexto, 
+                await window.setDoc(window.doc(window.db, "configuracoes", "gerais"), {
+                    banner_texto: texto, locais: locaisTexto, setores: setoresTexto, especialidades: especialidadesTexto, motivos: motivosTexto,
                     cor_pendente: corPend, cor_concluido: corConc, imagem_padrao_pastas: imgPastasTexto, chat_logo: chatLogoTexto, chat_cor: chatCorVal
                 }, { merge: true });
                 alert("Configurações guardadas com sucesso!");
@@ -3379,13 +3379,13 @@ window.addEventListener('DOMContentLoaded', () => {
             abaAtual = btn.getAttribute('data-tab');
             const tabEl = document.getElementById(`tab-${abaAtual}`);
             if(tabEl) tabEl.style.display = 'block';
-            
+
             const titleEl = document.getElementById('page-title');
             if(titleEl) titleEl.textContent = btn.textContent.trim();
             const inputPesqLocal = document.getElementById('input-pesquisa');
-            if(inputPesqLocal) inputPesqLocal.value = ''; 
-            
-            if(abaAtual === 'boletins') window.fecharPastaBoletim(); 
+            if(inputPesqLocal) inputPesqLocal.value = '';
+
+            if(abaAtual === 'boletins') window.fecharPastaBoletim();
             if(abaAtual === 'boletins-privados') window.fecharPastaPrivado();
             ['convenios', 'ultrassom', 'consultas', 'exames-imagem', 'institutos', 'corpo-clinico', 'treinamentos', 'pacotes', 'ativos'].forEach(col => { if(abaAtual === col) window.fecharPastaGenerica(col); });
             if(abaAtual === 'rh' && isAdmin) { window.atualizarOpcoesFiltrosRH(); window.renderizarDashboardRH(); }
@@ -3425,7 +3425,7 @@ window.abrirModalImpressao = function(tipo = 'boletins') {
     if (inputTipo) inputTipo.value = tipo;
 
     if (selectColab) {
-        selectColab.innerHTML = '<option value="">Todos os Colaboradores</option>' + 
+        selectColab.innerHTML = '<option value="">Todos os Colaboradores</option>' +
             listaColaboradoresGlobal.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
     }
 
@@ -3438,14 +3438,14 @@ window.gerarImpressaoBoletim = function() {
     const incluirTema = document.getElementById('print-chk-tema')?.checked;
     const incluirMotivo = document.getElementById('print-chk-motivo')?.checked;
     const incluirPublicacao = document.getElementById('print-chk-publicacao')?.checked;
-    
+
     const tipo = document.getElementById('print-boletim-id')?.value || 'boletins';
-    
+
     const dataInicio = document.getElementById('print-data-inicio')?.value;
     const dataFim = document.getElementById('print-data-fim')?.value;
     const colabFiltro = document.getElementById('print-colaborador')?.value;
 
-    let boletins = tipo === 'boletins-privados' 
+    let boletins = tipo === 'boletins-privados'
         ? (Array.isArray(window.todosPrivadosData) ? [...window.todosPrivadosData] : [])
         : (Array.isArray(window.todosBoletinsData) ? [...window.todosBoletinsData] : []);
 
@@ -3478,7 +3478,7 @@ window.gerarImpressaoBoletim = function() {
         }
 
         if (!leituras.length) {
-            if (!colabFiltro) { 
+            if (!colabFiltro) {
                 linhas.push({
                     nome: 'Nenhuma assinatura registada', dataHora: '-', tema: titulo, motivo, publicacao: dataPublicacao
                 });
@@ -3565,7 +3565,7 @@ window.gerarImpressaoBoletim = function() {
     <p>Gerado em: <b>${new Date().toLocaleString('pt-PT')}</b></p>
     ${subtituloFiltro}
     ${periodoFiltro}
-    
+
     <table>
         <thead><tr>${ths.join('')}</tr></thead>
         <tbody>${trs}</tbody>

@@ -2,7 +2,7 @@
 (() => {
   "use strict";
 
-  const CURRENT_VERSION = "6.9.0";
+  const CURRENT_VERSION = "7.0.0";
   const REMOVED_TABS = new Set(["ensino", "treinamentos", "rh"]);
   const VERSION_STORAGE_KEY = "csv_app_version";
   const RELOAD_GUARD_KEY = "csv_app_reload_guard";

@@ -1,6 +1,6 @@
 {
-  "version": "6.9.0",
-  "message": "O Painel Clínico recebeu a remoção definitiva dos módulos antigos e um novo sistema automático de atualização.",
+  "version": "7.0.0",
+  "message": "A exibição das fotos do Corpo Clínico foi corrigida, com melhor suporte para links compartilhados do Google Drive e prévia antes de salvar.",
   "force": false,
   "publishedAt": "2026-07-11"
 }

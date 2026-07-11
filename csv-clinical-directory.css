@@ -1781,3 +1781,51 @@ html[data-theme="dark"] .csv-doctor-preview-cover {
     justify-content: flex-end;
   }
 }
+
+/* Fotos do Google Drive — 7.0.0 */
+
+.csv-doctor-photo-field > small {
+  display: block;
+  margin-top: 7px;
+  color: var(--directory-muted);
+  font-size: 8px;
+  line-height: 1.55;
+}
+
+.csv-photo-preview {
+  margin-top: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--directory-border);
+  border-radius: 16px;
+  background: var(--directory-surface-solid);
+}
+
+.csv-photo-preview .csv-clinical-avatar.preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+}
+
+.csv-photo-preview strong,
+.csv-photo-preview small {
+  display: block;
+}
+
+.csv-photo-preview strong {
+  color: var(--directory-text);
+  font-size: 10px;
+}
+
+.csv-photo-preview small {
+  margin-top: 4px;
+  color: var(--directory-muted);
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.csv-photo-preview.is-empty {
+  border-style: dashed;
+}
