@@ -1,6 +1,6 @@
 {
-  "version": "7.2.1",
-  "message": "Novo visual clean e contemporâneo para Informativos Diretos, com painel de indicadores, gráfico escuro, pesquisa, filtros e cards individuais modernizados.",
+  "version": "7.2.2",
+  "message": "Informativos Diretos corrigidos: painel administrativo moderno passa a abrir corretamente, gráfico geral por colaborador e relatório individual totalmente renovado.",
   "force": false,
   "publishedAt": "2026-07-11"
 }

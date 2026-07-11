@@ -16,7 +16,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_INTELLIGENCE_VERSION = "7.2.1";
+const CSV_INTELLIGENCE_VERSION = "7.2.2";
 const app = getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -34,6 +34,8 @@ const intel = {
   notices: [],
   unsubscribers: [],
   chart: null,
+  personChart: null,
+  selectedPerson: null,
   groups: new Map(),
   lastAlertKey: ""
 };
@@ -128,6 +130,20 @@ function bulletinDeadline(item) {
     item?.data?.["Prazo para Leitura"] ||
     ""
   );
+}
+
+function privateBulletinItems() {
+  if (intel.privateBulletins.length) {
+    return intel.privateBulletins;
+  }
+
+  return (Array.isArray(window.todosPrivadosData)
+    ? window.todosPrivadosData
+    : []
+  ).map((item) => ({
+    ...item,
+    collectionName: item.collectionName || "boletins-privados"
+  }));
 }
 
 function legacyReadNames(item) {
@@ -230,7 +246,7 @@ function directItemsForCurrentUser() {
   const name = currentName();
   const uid = intel.user?.uid || "";
 
-  return intel.privateBulletins.filter((item) => {
+  return privateBulletinItems().filter((item) => {
     const assignedName = String(
       item.data?.["Para qual Colaborador?"] ||
       item.data?.publicoPessoas?.[0] ||
@@ -281,6 +297,27 @@ function activePeople() {
     });
   });
 
+  privateBulletinItems().forEach((item) => {
+    const recipient = recipientForPrivate(item);
+    const name = String(recipient.name || "").trim();
+
+    if (!name || name === "Colaborador") return;
+
+    const key = normalizeText(name);
+    const existing = map.get(key) || {};
+
+    map.set(key, {
+      ...existing,
+      uid: existing.uid || recipient.uid || "",
+      name,
+      sector:
+        existing.sector ||
+        recipient.sector ||
+        item.data?.setorDestinatario ||
+        "Geral"
+    });
+  });
+
   return [...map.values()].sort((a, b) =>
     a.name.localeCompare(b.name, "pt-BR")
   );
@@ -289,7 +326,7 @@ function activePeople() {
 function directGroups() {
   const groups = new Map();
 
-  intel.privateBulletins.forEach((item) => {
+  privateBulletinItems().forEach((item) => {
     const groupId =
       item.data?.grupoPublicacaoId ||
       `single-${item.id}`;
@@ -348,7 +385,7 @@ function groupMetrics(group) {
 }
 
 function personAnalytics(person) {
-  const items = intel.privateBulletins.filter((item) => {
+  const items = privateBulletinItems().filter((item) => {
     const target = recipientForPrivate(item);
     return (
       (person.uid && target.uid === person.uid) ||
@@ -699,50 +736,141 @@ function monthSeries(groups) {
   return months;
 }
 
-function renderAdminChart(groups) {
+function renderAdminChart() {
   const canvas = document.getElementById("csv-intel-chart");
-  if (!canvas || typeof Chart === "undefined") return;
+  if (!canvas || typeof window.Chart === "undefined") return;
 
-  const series = monthSeries(groups);
+  const people = activePeople()
+    .map(personAnalytics)
+    .filter((person) => person.total > 0)
+    .sort(
+      (a, b) =>
+        b.total - a.total ||
+        b.pending - a.pending ||
+        a.name.localeCompare(b.name, "pt-BR")
+    )
+    .slice(0, 12);
+
   intel.chart?.destroy?.();
 
-  intel.chart = new Chart(canvas, {
+  const context = canvas.getContext("2d");
+  const readGradient = context.createLinearGradient(0, 0, 700, 0);
+  readGradient.addColorStop(0, "#6f5bd3");
+  readGradient.addColorStop(1, "#9a7cec");
+
+  const pendingGradient = context.createLinearGradient(0, 0, 700, 0);
+  pendingGradient.addColorStop(0, "#e6a23c");
+  pendingGradient.addColorStop(1, "#f2c766");
+
+  const overdueGradient = context.createLinearGradient(0, 0, 700, 0);
+  overdueGradient.addColorStop(0, "#d95363");
+  overdueGradient.addColorStop(1, "#ef8791");
+
+  intel.chart = new window.Chart(canvas, {
     type: "bar",
     data: {
-      labels: series.map((item) => item.label),
+      labels: people.map((person) => person.name),
       datasets: [
         {
-          label: "Atribuídos",
-          data: series.map((item) => item.assigned),
-          backgroundColor: "rgba(115,87,189,.78)",
-          borderRadius: 8
-        },
-        {
           label: "Lidos",
-          data: series.map((item) => item.read),
-          backgroundColor: "rgba(34,166,111,.82)",
-          borderRadius: 8
+          data: people.map((person) => person.read),
+          backgroundColor: readGradient,
+          borderRadius: 9,
+          borderSkipped: false,
+          maxBarThickness: 22
         },
         {
           label: "Pendentes",
-          data: series.map((item) => item.pending),
-          backgroundColor: "rgba(230,66,78,.76)",
-          borderRadius: 8
+          data: people.map((person) =>
+            Math.max(0, person.pending - person.overdue)
+          ),
+          backgroundColor: pendingGradient,
+          borderRadius: 9,
+          borderSkipped: false,
+          maxBarThickness: 22
+        },
+        {
+          label: "Vencidos",
+          data: people.map((person) => person.overdue),
+          backgroundColor: overdueGradient,
+          borderRadius: 9,
+          borderSkipped: false,
+          maxBarThickness: 22
         }
       ]
     },
     options: {
+      indexAxis: "y",
       responsive: true,
       maintainAspectRatio: false,
+      animation: {
+        duration: 480,
+        easing: "easeOutQuart"
+      },
+      interaction: {
+        mode: "index",
+        intersect: false
+      },
       plugins: {
         legend: {
           position: "bottom",
-          labels: { usePointStyle: true, boxWidth: 8 }
+          labels: {
+            color: "#b8b6ce",
+            usePointStyle: true,
+            pointStyle: "circle",
+            boxWidth: 8,
+            padding: 18,
+            font: {
+              family: "Poppins",
+              size: 10
+            }
+          }
+        },
+        tooltip: {
+          backgroundColor: "#111121",
+          titleColor: "#ffffff",
+          bodyColor: "#deddec",
+          padding: 12,
+          cornerRadius: 12,
+          displayColors: true
         }
       },
       scales: {
-        y: { beginAtZero: true, ticks: { precision: 0 } },
-        x: { grid: { display: false } }
+        x: {
+          beginAtZero: true,
+          stacked: false,
+          grid: {
+            color: "rgba(255,255,255,.07)"
+          },
+          border: {
+            display: false
+          },
+          ticks: {
+            precision: 0,
+            color: "#aaa8c0",
+            font: {
+              family: "Poppins",
+              size: 9
+            }
+          }
+        },
+        y: {
+          stacked: false,
+          grid: {
+            display: false
+          },
+          border: {
+            display: false
+          },
+          ticks: {
+            color: "#e4e3ef",
+            font: {
+              family: "Poppins",
+              size: 9,
+              weight: "600"
+            }
+          }
+        }
       }
     }
   });
@@ -819,7 +947,7 @@ function renderAdminDashboard() {
     <section class="csv-intel-overview">
       <div class="csv-intel-chart-card">
         <div class="csv-intel-card-heading">
-          <div><strong>Evolução dos informativos direcionados</strong><span>Atribuídos, lidos e pendentes nos últimos seis meses.</span></div>
+          <div><strong>Leituras e pendências por colaborador</strong><span>Comparativo geral dos colaboradores com informativos direcionados.</span></div>
         </div>
         <div class="csv-intel-chart-holder"><canvas id="csv-intel-chart"></canvas></div>
       </div>
@@ -904,7 +1032,7 @@ function renderAdminDashboard() {
     .getElementById("csv-intel-status")
     ?.addEventListener("change", renderPeopleTable);
 
-  renderAdminChart(groups);
+  requestAnimationFrame(() => renderAdminChart());
   renderPeopleTable();
 }
 
@@ -1144,9 +1272,308 @@ window.csvIntelApproveReread = async function(requestId, groupId) {
   window.csvIntelOpenAudience(groupId);
 };
 
+function bulletinMaterialLinks(item) {
+  const data = item?.data || {};
+  const raw =
+    data["Links dos Materiais (1 por linha)"] ||
+    data.linksMateriais ||
+    data.linkMaterial ||
+    data.link ||
+    "";
+
+  const values = Array.isArray(raw)
+    ? raw
+    : String(raw)
+        .split(/
+?
+/)
+        .flatMap((line) =>
+          line.includes(",") ? line.split(",") : [line]
+        );
+
+  return values
+    .map((value) => String(value || "").trim())
+    .filter((value) => /^https?:\/\//i.test(value));
+}
+
+function personMonthSeries(person) {
+  const months = [];
+  const now = new Date();
+
+  for (let index = 5; index >= 0; index -= 1) {
+    const date = new Date(
+      now.getFullYear(),
+      now.getMonth() - index,
+      1
+    );
+
+    months.push({
+      key:
+        `${date.getFullYear()}-` +
+        `${String(date.getMonth() + 1).padStart(2, "0")}`,
+      label: date
+        .toLocaleDateString("pt-BR", { month: "short" })
+        .replace(".", ""),
+      assigned: 0,
+      read: 0,
+      pending: 0
+    });
+  }
+
+  person.rows.forEach((row) => {
+    const date = dateOnly(bulletinDate(row.item));
+    if (!date) return;
+
+    const key =
+      `${date.getFullYear()}-` +
+      `${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+    const month = months.find((item) => item.key === key);
+    if (!month) return;
+
+    month.assigned += 1;
+
+    if (row.read) {
+      month.read += 1;
+    } else {
+      month.pending += 1;
+    }
+  });
+
+  return months;
+}
+
+function renderPersonChart(person) {
+  const canvas = document.getElementById("csv-intel-person-chart");
+  if (!canvas || typeof window.Chart === "undefined") return;
+
+  const series = personMonthSeries(person);
+  intel.personChart?.destroy?.();
+
+  intel.personChart = new window.Chart(canvas, {
+    type: "line",
+    data: {
+      labels: series.map((item) => item.label),
+      datasets: [
+        {
+          label: "Atribuídos",
+          data: series.map((item) => item.assigned),
+          borderColor: "#8c6ee7",
+          backgroundColor: "rgba(140,110,231,.16)",
+          borderWidth: 3,
+          fill: true,
+          tension: .4,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: "Lidos",
+          data: series.map((item) => item.read),
+          borderColor: "#38b27a",
+          backgroundColor: "rgba(56,178,122,.08)",
+          borderWidth: 3,
+          fill: false,
+          tension: .4,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            color: "#aaa8c0",
+            usePointStyle: true,
+            pointStyle: "circle",
+            boxWidth: 8,
+            padding: 18
+          }
+        },
+        tooltip: {
+          backgroundColor: "#111121",
+          titleColor: "#fff",
+          bodyColor: "#deddec",
+          padding: 12,
+          cornerRadius: 12
+        }
+      },
+      scales: {
+        x: {
+          grid: {
+            display: false
+          },
+          border: {
+            display: false
+          },
+          ticks: {
+            color: "#aaa8c0"
+          }
+        },
+        y: {
+          beginAtZero: true,
+          grid: {
+            color: "rgba(255,255,255,.07)"
+          },
+          border: {
+            display: false
+          },
+          ticks: {
+            precision: 0,
+            color: "#aaa8c0"
+          }
+        }
+      }
+    }
+  });
+}
+
+window.csvIntelOpenMaterial = function(encodedUrl, encodedTitle) {
+  const url = decodeURIComponent(encodedUrl || "");
+  const title = decodeURIComponent(encodedTitle || "Material");
+
+  if (!url) {
+    alert("Este informativo não possui material vinculado.");
+    return;
+  }
+
+  if (typeof window.abrirMidiaFlutuante === "function") {
+    window.abrirMidiaFlutuante(url, title);
+  } else {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+};
+
+window.csvIntelOpenPersonDocument = function(docId) {
+  const item = privateBulletinItems().find(
+    (entry) => entry.id === docId
+  );
+
+  if (!item) return;
+
+  const person = recipientForPrivate(item);
+  const reading = isRead(item, person);
+  const deadline = bulletinDeadline(item);
+  const remaining = daysUntil(deadline);
+  const overdue =
+    !reading &&
+    remaining !== null &&
+    remaining < 0;
+
+  const type = String(
+    item.data?.["Tipo (Urgente, Norma, Regra, etc)"] ||
+    "Informativo"
+  );
+
+  const reason = String(
+    item.data?.Motivo ||
+    item.data?.motivo ||
+    "Sem motivo informado"
+  );
+
+  const links = bulletinMaterialLinks(item);
+  const modal = ensureModal();
+
+  modal.innerHTML = `
+    <div class="csv-intel-modal-card wide csv-intel-document-modal">
+      <button
+        type="button"
+        class="csv-intel-close"
+        onclick="window.csvIntelCloseModal()"
+      >
+        <i class="ri-close-line"></i>
+      </button>
+
+      <span class="csv-intel-eyebrow">
+        Documento individual
+      </span>
+
+      <h2>${esc(bulletinTitle(item))}</h2>
+
+      <p>
+        ${esc(person.name)} •
+        ${esc(formatDate(bulletinDate(item)))}
+      </p>
+
+      <section class="csv-intel-person-summary">
+        <article>
+          <span>Status</span>
+          <strong>
+            ${reading
+              ? "Lido"
+              : overdue
+                ? "Vencido"
+                : "Pendente"}
+          </strong>
+        </article>
+
+        <article>
+          <span>Tipo</span>
+          <strong>${esc(type)}</strong>
+        </article>
+
+        <article>
+          <span>Motivo</span>
+          <strong>${esc(reason)}</strong>
+        </article>
+
+        <article>
+          <span>Prazo</span>
+          <strong>${esc(formatDate(deadline))}</strong>
+        </article>
+      </section>
+
+      <div class="csv-intel-person-docs">
+        ${links.length
+          ? links.map((link, index) => `
+              <article>
+                <div>
+                  <strong>Material ${index + 1}</strong>
+                  <small>${esc(link)}</small>
+                </div>
+
+                <button
+                  type="button"
+                  onclick="window.csvIntelOpenMaterial(
+                    '${esc(encodeURIComponent(link))}',
+                    '${esc(encodeURIComponent(bulletinTitle(item)))}'
+                  )"
+                >
+                  <i class="ri-eye-line"></i>
+                  Abrir
+                </button>
+              </article>
+            `).join("")
+          : `
+            <div class="csv-intel-empty compact">
+              <strong>Nenhum material externo vinculado</strong>
+            </div>
+          `}
+      </div>
+    </div>
+  `;
+
+  modal.classList.add("is-open");
+};
+
+window.csvIntelPrintPerson = function(encodedName) {
+  const name = decodeURIComponent(encodedName || "");
+  window.pastaPrivadoAtual = name;
+  window.abrirModalImpressao?.("boletins-privados");
+};
+
+window.csvIntelBackDashboard = function() {
+  intel.selectedPerson = null;
+  renderAdminDashboard();
+};
+
 window.csvIntelOpenPerson = function(identifier) {
   const decodedIdentifier = decodeURIComponent(identifier || "");
   const people = activePeople().map(personAnalytics);
+
   const person = people.find(
     (item) =>
       item.uid === decodedIdentifier ||
@@ -1155,45 +1582,263 @@ window.csvIntelOpenPerson = function(identifier) {
 
   if (!person) return;
 
-  const modal = ensureModal();
+  intel.selectedPerson = person.uid || person.name;
 
-  modal.innerHTML = `
-    <div class="csv-intel-modal-card wide">
-      <button type="button" class="csv-intel-close" onclick="window.csvIntelCloseModal()"><i class="ri-close-line"></i></button>
-      <span class="csv-intel-eyebrow">Relatório individual</span>
-      <h2>${esc(person.name)}</h2>
-      <p>${esc(person.sector)} • ${person.label}</p>
+  const root = directDashboardRoot();
+  if (!root) return;
 
-      <section class="csv-intel-person-summary">
-        <article><span>Índice</span><strong>${person.score}</strong></article>
-        <article><span>Lidos</span><strong>${person.read}/${person.total}</strong></article>
-        <article><span>Pontos positivos</span><strong>+${person.positivePoints}</strong></article>
-        <article><span>Pontos negativos</span><strong>-${person.negativePoints}</strong></article>
-        <article><span>Vencidos</span><strong>${person.overdue}</strong></article>
-        <article><span>Releituras</span><strong>${person.requests}</strong></article>
+  root.innerHTML = `
+    <div class="csv-intel-person-page">
+      <header class="csv-intel-person-page-header">
+        <div class="csv-intel-person-page-identity">
+          <button
+            type="button"
+            class="csv-intel-person-back"
+            onclick="window.csvIntelBackDashboard()"
+          >
+            <i class="ri-arrow-left-line"></i>
+            Voltar
+          </button>
+
+          <span class="csv-intel-person-avatar">
+            ${esc(person.name.charAt(0))}
+          </span>
+
+          <div>
+            <span class="csv-intel-eyebrow">
+              Relatório individual de leitura
+            </span>
+            <h2>${esc(person.name)}</h2>
+            <p>
+              ${esc(person.sector)} •
+              ${esc(person.label)}
+            </p>
+          </div>
+        </div>
+
+        <div class="csv-intel-header-actions">
+          <button
+            type="button"
+            class="secondary"
+            onclick="window.csvIntelPrintPerson(
+              '${esc(encodeURIComponent(person.name))}'
+            )"
+          >
+            <i class="ri-printer-line"></i>
+            Relatório
+          </button>
+
+          <button
+            type="button"
+            class="primary"
+            onclick="window.csvIntelCreateDirect()"
+          >
+            <i class="ri-add-line"></i>
+            Novo documento
+          </button>
+        </div>
+      </header>
+
+      <section class="csv-intel-person-kpis">
+        <article class="featured">
+          <span>Índice de leitura</span>
+          <strong>${person.score}</strong>
+          <small>${esc(person.label)}</small>
+          <i class="ri-line-chart-line"></i>
+        </article>
+
+        <article>
+          <span>Documentos</span>
+          <strong>${person.total}</strong>
+          <small>informativos atribuídos</small>
+          <i class="ri-file-list-3-line"></i>
+        </article>
+
+        <article>
+          <span>Leituras</span>
+          <strong>${person.read}</strong>
+          <small>${person.rate}% concluído</small>
+          <i class="ri-checkbox-circle-line"></i>
+        </article>
+
+        <article class="${person.pending ? "attention" : ""}">
+          <span>Pendências</span>
+          <strong>${person.pending}</strong>
+          <small>${person.overdue} vencido(s)</small>
+          <i class="ri-time-line"></i>
+        </article>
+
+        <article>
+          <span>Pontos positivos</span>
+          <strong>+${person.positivePoints}</strong>
+          <small>leituras dentro do prazo</small>
+          <i class="ri-thumb-up-line"></i>
+        </article>
+
+        <article class="${person.negativePoints ? "danger" : ""}">
+          <span>Pontos de atenção</span>
+          <strong>-${person.negativePoints}</strong>
+          <small>${person.requests} releitura(s)</small>
+          <i class="ri-error-warning-line"></i>
+        </article>
       </section>
 
-      <div class="csv-intel-note">
-        <i class="ri-information-line"></i>
-        Este relatório mede somente comportamento de leitura. Não deve ser usado isoladamente para promoção, advertência ou qualquer decisão trabalhista.
-      </div>
+      <section class="csv-intel-person-overview">
+        <div class="csv-intel-person-chart-card">
+          <div class="csv-intel-card-heading">
+            <div>
+              <strong>Evolução individual de leitura</strong>
+              <span>
+                Informativos atribuídos e concluídos nos últimos seis meses.
+              </span>
+            </div>
+          </div>
 
-      <div class="csv-intel-person-docs">
-        ${person.rows.length
-          ? person.rows.map((row) => `
-              <article>
-                <div><strong>${esc(bulletinTitle(row.item))}</strong><small>Prazo ${esc(formatDate(row.deadline))}</small></div>
-                <span class="csv-intel-status ${row.read ? "read" : row.overdue ? "overdue" : "pending"}">
-                  ${row.read ? "Lido" : row.overdue ? "Vencido" : "Pendente"}
+          <div class="csv-intel-person-chart-holder">
+            <canvas id="csv-intel-person-chart"></canvas>
+          </div>
+        </div>
+
+        <aside class="csv-intel-person-score-card ${person.level}">
+          <span>Resumo de acompanhamento</span>
+          <strong>${person.rate}%</strong>
+          <h3>${esc(person.label)}</h3>
+          <p>
+            ${person.pending
+              ? `Existem ${person.pending} leitura(s) aguardando acompanhamento.`
+              : "Todas as leituras direcionadas estão concluídas."}
+          </p>
+
+          <div class="csv-intel-note">
+            <i class="ri-information-line"></i>
+            Este resultado considera somente o comportamento de leitura.
+          </div>
+        </aside>
+      </section>
+
+      <section class="csv-intel-person-documents">
+        <div class="csv-intel-card-heading">
+          <div>
+            <strong>Informativos de ${esc(person.name)}</strong>
+            <span>
+              Conteúdos, prazos e situação de cada leitura.
+            </span>
+          </div>
+        </div>
+
+        <div class="csv-intel-person-document-grid">
+          ${person.rows.length
+            ? person.rows.map((row) => {
+                const type = String(
+                  row.item.data?.[
+                    "Tipo (Urgente, Norma, Regra, etc)"
+                  ] || "Informativo"
+                );
+
+                const reason = String(
+                  row.item.data?.Motivo ||
+                  row.item.data?.motivo ||
+                  "Orientação individual"
+                );
+
+                const links = bulletinMaterialLinks(row.item);
+
+                return `
+                  <article class="csv-intel-person-document-card ${
+                    row.overdue
+                      ? "overdue"
+                      : row.read
+                        ? "read"
+                        : "pending"
+                  }">
+                    <div class="csv-intel-person-document-icon">
+                      <i class="ri-file-user-line"></i>
+                    </div>
+
+                    <div class="csv-intel-person-document-copy">
+                      <div class="csv-intel-person-document-tags">
+                        <span>${esc(type)}</span>
+                        <span>
+                          ${esc(formatDate(bulletinDate(row.item)))}
+                        </span>
+                      </div>
+
+                      <h3>${esc(bulletinTitle(row.item))}</h3>
+                      <p>${esc(reason)}</p>
+
+                      <small>
+                        Prazo:
+                        ${esc(formatDate(row.deadline))}
+                      </small>
+                    </div>
+
+                    <div class="csv-intel-person-document-actions">
+                      <span class="csv-intel-status ${
+                        row.read
+                          ? "read"
+                          : row.overdue
+                            ? "overdue"
+                            : "pending"
+                      }">
+                        ${row.read
+                          ? "Lido"
+                          : row.overdue
+                            ? "Vencido"
+                            : "Pendente"}
+                      </span>
+
+                      ${links[0]
+                        ? `
+                          <button
+                            type="button"
+                            onclick="window.csvIntelOpenMaterial(
+                              '${esc(encodeURIComponent(links[0]))}',
+                              '${esc(encodeURIComponent(bulletinTitle(row.item)))}'
+                            )"
+                          >
+                            <i class="ri-eye-line"></i>
+                            Abrir material
+                          </button>
+                        `
+                        : ""}
+
+                      <button
+                        type="button"
+                        class="secondary"
+                        onclick="window.csvIntelOpenPersonDocument(
+                          '${esc(row.item.id)}'
+                        )"
+                      >
+                        <i class="ri-list-check-2"></i>
+                        Detalhes
+                      </button>
+                    </div>
+                  </article>
+                `;
+              }).join("")
+            : `
+              <div class="csv-intel-empty">
+                <i class="ri-inbox-line"></i>
+                <strong>Nenhum informativo direcionado</strong>
+                <span>
+                  Os documentos individuais aparecerão neste espaço.
                 </span>
-              </article>
-            `).join("")
-          : `<div class="csv-intel-empty compact"><strong>Nenhum informativo direcionado</strong></div>`}
+              </div>
+            `}
+        </div>
+      </section>
+
+      <div class="csv-intel-person-disclaimer">
+        <i class="ri-shield-check-line"></i>
+        <span>
+          O painel mede somente o cumprimento das leituras e não deve ser
+          usado isoladamente em decisões trabalhistas.
+        </span>
       </div>
     </div>
   `;
 
-  modal.classList.add("is-open");
+  requestAnimationFrame(() => renderPersonChart(person));
 };
 
 window.csvBulletinOpenReadStatus = function(key) {
@@ -1461,7 +2106,21 @@ function bindDirectNavigation() {
 
   button.dataset.csvIntelBound = "1";
   button.addEventListener("click", () => {
-    setTimeout(() => scheduleRefresh(20), 50);
+    intel.selectedPerson = null;
+
+    setTimeout(() => {
+      if (intel.isAdmin) {
+        renderAdminDashboard();
+      } else {
+        scheduleRefresh(20);
+      }
+    }, 90);
+
+    setTimeout(() => {
+      if (intel.isAdmin) {
+        renderAdminDashboard();
+      }
+    }, 320);
   });
 }
 
@@ -1474,6 +2133,24 @@ function cleanup() {
 
 let refreshTimer = null;
 
+function directTabIsOpen() {
+  const tab = document.getElementById("tab-boletins-privados");
+  const button = document.querySelector(
+    '.nav-btn[data-tab="boletins-privados"]'
+  );
+
+  if (!tab) return false;
+
+  const computedVisible =
+    window.getComputedStyle(tab).display !== "none";
+
+  return Boolean(
+    tab.classList.contains("active") ||
+    button?.classList.contains("active") ||
+    computedVisible
+  );
+}
+
 function refreshAll() {
   installReadOverride();
   renderHomeCard();
@@ -1482,9 +2159,16 @@ function refreshAll() {
 
   if (
     intel.isAdmin &&
-    directTab?.classList.contains("active")
+    directTab &&
+    directTabIsOpen()
   ) {
-    renderAdminDashboard();
+    if (intel.selectedPerson) {
+      window.csvIntelOpenPerson(
+        encodeURIComponent(intel.selectedPerson)
+      );
+    } else {
+      renderAdminDashboard();
+    }
   }
 
   if (
@@ -1640,13 +2324,30 @@ async function handleAuth(user) {
     return;
   }
 
-  intel.profile = await loadProfile(user);
+  try {
+    intel.profile = await loadProfile(user);
+  } catch (error) {
+    console.warn(
+      "Não foi possível ler o perfil da inteligência de boletins. Usando o acesso autenticado.",
+      error
+    );
+
+    intel.profile =
+      window.csvPhase2State?.profile ||
+      {
+        email: user.email || "",
+        name: user.displayName || "",
+        permissions: []
+      };
+  }
+
   intel.isAdmin =
     intel.profile?.admin === true ||
     String(user.email || "").toLowerCase().endsWith("@clinica.com");
 
   bindDirectNavigation();
   installReadOverride();
+  installLegacyPrivateOverride();
   subscribe();
 
   [120, 500].forEach((delay) => {
@@ -1654,9 +2355,58 @@ async function handleAuth(user) {
   });
 }
 
+function installLegacyPrivateOverride() {
+  const originalOpen = window.abrirPastaPrivado;
+
+  if (
+    typeof originalOpen === "function" &&
+    !originalOpen.__csvIntelModernOverride
+  ) {
+    const wrappedOpen = function(name, docIdDestino = null) {
+      if (intel.isAdmin) {
+        window.csvIntelOpenPerson(
+          encodeURIComponent(name || "")
+        );
+        return;
+      }
+
+      return originalOpen.call(
+        this,
+        name,
+        docIdDestino
+      );
+    };
+
+    wrappedOpen.__csvIntelModernOverride = true;
+    wrappedOpen.__csvIntelOriginal = originalOpen;
+    window.abrirPastaPrivado = wrappedOpen;
+  }
+
+  const originalClose = window.fecharPastaPrivado;
+
+  if (
+    typeof originalClose === "function" &&
+    !originalClose.__csvIntelModernOverride
+  ) {
+    const wrappedClose = function() {
+      if (intel.isAdmin) {
+        window.csvIntelBackDashboard();
+        return;
+      }
+
+      return originalClose.call(this);
+    };
+
+    wrappedClose.__csvIntelModernOverride = true;
+    wrappedClose.__csvIntelOriginal = originalClose;
+    window.fecharPastaPrivado = wrappedClose;
+  }
+}
+
 function init() {
   bindDirectNavigation();
   installReadOverride();
+  installLegacyPrivateOverride();
 
   onAuthStateChanged(auth, handleAuth);
 
@@ -1666,6 +2416,8 @@ function init() {
 }
 
 window.csvBulletinIntelligence = intel;
+window.csvIntelRefreshAdmin = renderAdminDashboard;
+window.csvIntelRenderPerson = window.csvIntelOpenPerson;
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", init);

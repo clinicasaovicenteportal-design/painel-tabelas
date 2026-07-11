@@ -1,4 +1,4 @@
-const CSV_DIRECT_MODERN_VERSION = "7.2.1";
+const CSV_DIRECT_MODERN_VERSION = "7.2.2";
 
 const directModernState = {
   search: "",
@@ -491,6 +491,31 @@ function dmRestyleChart() {
 }
 
 function dmRefresh() {
+  const intelligence = window.csvBulletinIntelligence;
+  const directTab = document.getElementById("tab-boletins-privados");
+  const directButton = document.querySelector(
+    '.nav-btn[data-tab="boletins-privados"]'
+  );
+
+  const tabVisible = Boolean(
+    directTab &&
+    (
+      directTab.classList.contains("active") ||
+      directButton?.classList.contains("active") ||
+      window.getComputedStyle(directTab).display !== "none"
+    )
+  );
+
+  if (
+    intelligence?.isAdmin &&
+    typeof window.csvIntelRefreshAdmin === "function"
+  ) {
+    if (tabVisible) {
+      window.csvIntelRefreshAdmin();
+    }
+    return;
+  }
+
   dmEnsureHero();
   dmRenderKpis();
   dmDecorateLegacyStructure();

@@ -749,3 +749,479 @@ html[data-theme="dark"] #grid-privados-folders
     grid-template-columns: 1fr !important;
   }
 }
+
+/* =========================================================
+   CSV DIRECT MODERN 7.2.2 — PAINEL GERAL E DETALHE INDIVIDUAL
+   ========================================================= */
+
+.csv-intel-admin-root .csv-intel-chart-holder {
+  min-height: 360px;
+  height: min(46vh, 470px);
+}
+
+.csv-intel-admin-root .csv-intel-chart-holder canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.csv-intel-person-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--direct-ink);
+  animation: csvDirectPersonEnter .42s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes csvDirectPersonEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.csv-intel-person-page-header {
+  padding: 23px 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(112,87,215,.14);
+  border-radius: 25px;
+  background:
+    radial-gradient(circle at 95% -15%, rgba(140,110,231,.24), transparent 35%),
+    linear-gradient(135deg, rgba(255,255,255,.98), rgba(248,247,255,.96));
+  box-shadow: var(--direct-shadow);
+}
+
+.csv-intel-person-page-header::after {
+  content: "";
+  width: 190px;
+  height: 190px;
+  position: absolute;
+  right: -90px;
+  bottom: -125px;
+  border: 28px solid rgba(112,87,215,.055);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.csv-intel-person-page-identity {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  position: relative;
+  z-index: 1;
+}
+
+.csv-intel-person-back {
+  min-height: 41px;
+  padding: 0 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--direct-line);
+  border-radius: 13px;
+  color: var(--direct-ink);
+  background: rgba(255,255,255,.76);
+  font-family: inherit;
+  font-size: 8px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.csv-intel-person-back:hover {
+  transform: translateX(-2px);
+}
+
+.csv-intel-person-avatar {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 18px;
+  color: #fff;
+  background: linear-gradient(145deg, #684fd0, #9374e9);
+  box-shadow: 0 14px 28px rgba(112,87,215,.22);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.csv-intel-person-page-identity h2,
+.csv-intel-person-page-identity p {
+  margin: 0;
+}
+
+.csv-intel-person-page-identity h2 {
+  margin-top: 6px;
+  color: var(--direct-ink);
+  font-size: clamp(24px, 3.5vw, 38px);
+  line-height: 1;
+  letter-spacing: -.035em;
+}
+
+.csv-intel-person-page-identity p {
+  margin-top: 6px;
+  color: var(--direct-muted);
+  font-size: 9px;
+}
+
+.csv-intel-person-kpis {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.csv-intel-person-kpis article {
+  min-height: 115px;
+  padding: 17px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--direct-line);
+  border-radius: 20px;
+  background: var(--direct-surface);
+  box-shadow: 0 13px 32px rgba(31,33,54,.05);
+}
+
+.csv-intel-person-kpis article.featured {
+  color: #fff;
+  border-color: transparent;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255,255,255,.16), transparent 34%),
+    linear-gradient(145deg, #19182e, #2d2a50);
+}
+
+.csv-intel-person-kpis article.attention::after {
+  background: rgba(229,160,49,.14);
+}
+
+.csv-intel-person-kpis article.danger::after {
+  background: rgba(219,88,100,.12);
+}
+
+.csv-intel-person-kpis article::after {
+  content: "";
+  width: 88px;
+  height: 88px;
+  position: absolute;
+  right: -27px;
+  bottom: -31px;
+  border-radius: 50%;
+  background: rgba(112,87,215,.07);
+}
+
+.csv-intel-person-kpis span,
+.csv-intel-person-kpis strong,
+.csv-intel-person-kpis small {
+  display: block;
+}
+
+.csv-intel-person-kpis span {
+  color: var(--direct-muted);
+  font-size: 7px;
+  font-weight: 700;
+}
+
+.csv-intel-person-kpis strong {
+  margin-top: 8px;
+  color: var(--direct-ink);
+  font-size: 25px;
+  line-height: 1;
+}
+
+.csv-intel-person-kpis small {
+  margin-top: 6px;
+  color: var(--direct-muted);
+  font-size: 7px;
+}
+
+.csv-intel-person-kpis .featured span,
+.csv-intel-person-kpis .featured small {
+  color: rgba(255,255,255,.68);
+}
+
+.csv-intel-person-kpis .featured strong {
+  color: #fff;
+}
+
+.csv-intel-person-kpis article > i {
+  position: absolute;
+  right: 14px;
+  bottom: 13px;
+  z-index: 1;
+  color: rgba(112,87,215,.27);
+  font-size: 25px;
+}
+
+.csv-intel-person-kpis .featured > i {
+  color: rgba(255,255,255,.30);
+}
+
+.csv-intel-person-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(270px, .55fr);
+  gap: 14px;
+}
+
+.csv-intel-person-chart-card,
+.csv-intel-person-score-card,
+.csv-intel-person-documents {
+  border: 1px solid var(--direct-line);
+  border-radius: 23px;
+  background: var(--direct-surface);
+  box-shadow: 0 16px 40px rgba(31,33,54,.06);
+}
+
+.csv-intel-person-chart-card {
+  padding: 20px;
+  color: #fff;
+  border-color: rgba(255,255,255,.06);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(112,87,215,.27), transparent 34%),
+    linear-gradient(145deg, #19182e, #252342);
+}
+
+.csv-intel-person-chart-card
+.csv-intel-card-heading span {
+  color: #aaa8c0;
+}
+
+.csv-intel-person-chart-holder {
+  height: 285px;
+}
+
+.csv-intel-person-score-card {
+  padding: 22px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255,255,255,.19), transparent 32%),
+    linear-gradient(145deg, #654dcd, #8d6ee8);
+}
+
+.csv-intel-person-score-card > span {
+  color: rgba(255,255,255,.70);
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.csv-intel-person-score-card > strong {
+  display: block;
+  margin-top: 18px;
+  font-size: 40px;
+  line-height: 1;
+}
+
+.csv-intel-person-score-card h3 {
+  margin: 10px 0 7px;
+  font-size: 19px;
+}
+
+.csv-intel-person-score-card p {
+  margin: 0;
+  color: rgba(255,255,255,.82);
+  font-size: 8px;
+  line-height: 1.6;
+}
+
+.csv-intel-person-documents {
+  padding: 20px;
+}
+
+.csv-intel-person-document-grid {
+  display: grid;
+  gap: 9px;
+}
+
+.csv-intel-person-document-card {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr) auto;
+  align-items: center;
+  gap: 13px;
+  border: 1px solid var(--direct-line);
+  border-radius: 17px;
+  background: var(--direct-soft);
+  transition: .2s ease;
+}
+
+.csv-intel-person-document-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(112,87,215,.25);
+  box-shadow: 0 12px 28px rgba(31,33,54,.06);
+}
+
+.csv-intel-person-document-card.read {
+  border-left: 4px solid var(--direct-green);
+}
+
+.csv-intel-person-document-card.pending {
+  border-left: 4px solid var(--direct-amber);
+}
+
+.csv-intel-person-document-card.overdue {
+  border-left: 4px solid var(--direct-red);
+}
+
+.csv-intel-person-document-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: #684fd0;
+  background: rgba(112,87,215,.10);
+  font-size: 20px;
+}
+
+.csv-intel-person-document-copy {
+  min-width: 0;
+}
+
+.csv-intel-person-document-copy h3,
+.csv-intel-person-document-copy p,
+.csv-intel-person-document-copy small {
+  display: block;
+  margin: 0;
+}
+
+.csv-intel-person-document-copy h3 {
+  margin-top: 6px;
+  color: var(--direct-ink);
+  font-size: 11px;
+}
+
+.csv-intel-person-document-copy p {
+  margin-top: 4px;
+  color: var(--direct-muted);
+  font-size: 8px;
+}
+
+.csv-intel-person-document-copy small {
+  margin-top: 6px;
+  color: var(--direct-muted);
+  font-size: 7px;
+}
+
+.csv-intel-person-document-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.csv-intel-person-document-tags span {
+  padding: 5px 7px;
+  border-radius: 8px;
+  color: #6048be;
+  background: rgba(112,87,215,.09);
+  font-size: 7px;
+  font-weight: 700;
+}
+
+.csv-intel-person-document-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.csv-intel-person-document-actions button,
+.csv-intel-document-modal
+.csv-intel-person-docs button {
+  min-height: 36px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  color: #fff;
+  background: linear-gradient(145deg, #6248ca, #896be5);
+  font-family: inherit;
+  font-size: 7px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.csv-intel-person-document-actions button.secondary {
+  color: var(--direct-ink);
+  border-color: var(--direct-line);
+  background: var(--direct-surface);
+}
+
+.csv-intel-person-disclaimer {
+  padding: 13px 15px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(112,87,215,.13);
+  border-radius: 15px;
+  color: var(--direct-muted);
+  background: rgba(112,87,215,.055);
+  font-size: 8px;
+  line-height: 1.55;
+}
+
+html[data-theme="dark"] .csv-intel-person-page-header {
+  background:
+    radial-gradient(circle at 95% -15%, rgba(140,110,231,.24), transparent 35%),
+    var(--direct-surface);
+}
+
+html[data-theme="dark"] .csv-intel-person-back {
+  color: var(--direct-ink);
+  background: rgba(255,255,255,.04);
+}
+
+@media (max-width: 1320px) {
+  .csv-intel-person-kpis {
+    grid-template-columns: repeat(3, minmax(0,1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .csv-intel-person-page-header,
+  .csv-intel-person-overview {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .csv-intel-person-page-header
+  .csv-intel-header-actions {
+    justify-content: flex-start;
+  }
+
+  .csv-intel-person-document-card {
+    grid-template-columns: auto minmax(0,1fr);
+  }
+
+  .csv-intel-person-document-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 700px) {
+  .csv-intel-person-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .csv-intel-person-page-identity {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .csv-intel-person-avatar {
+    order: -1;
+  }
+}
