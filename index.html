@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Clínico 2.0</title>
+    <title>Painel Clínico 6.9.0</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#8B252C">
@@ -25,16 +25,10 @@
     <link rel="stylesheet" href="csv-team-security.css?v=6.4.0">
     <link rel="stylesheet" href="csv-clinical-directory.css?v=6.6.0">
     <link rel="stylesheet" href="csv-admin-control.css?v=6.6.0">
-
-    <style>
-        .sidebar-nav { overflow-y: auto; max-height: 65vh; }
-        .sidebar-nav::-webkit-scrollbar { width: 4px; }
-        .sidebar-nav::-webkit-scrollbar-thumb { background-color: var(--primary-color); border-radius: 10px; }
-    </style>
 </head>
 <body>
 
-    
+
     <div id="login-screen" class="screen csv-login-screen">
         <div class="csv-login-layout">
 
@@ -241,13 +235,10 @@
                 <button class="nav-btn" data-tab="institutos"><i class="ri-building-line"></i> Tabela Instituto</button>
                 <button class="nav-btn" data-tab="contatos"><i class="ri-contacts-book-line"></i> Contatos Úteis</button>
                 <button class="nav-btn" data-tab="remocoes"><i class="ri-ambulance-line"></i> Remoções</button>
-                <button class="nav-btn" data-tab="ensino"><i class="ri-graduation-cap-line"></i> Ensino e Treinamento</button>
 
                 <button class="nav-btn nav-separator" data-tab="boletins"><i class="ri-newspaper-line"></i> Boletins Gerais</button>
-                
+
                 <button class="nav-btn admin-only" id="btn-nav-privados" data-tab="boletins-privados" style="display: none;"><i class="ri-user-star-line"></i> Informativos Diretos</button>
-                <button class="nav-btn admin-only" id="btn-nav-treinamentos" data-tab="treinamentos" style="display: none;"><i class="ri-book-read-line"></i> Gerenciar Ensino</button>
-                <button class="nav-btn admin-only nav-btn-rh-style" id="btn-nav-rh" data-tab="rh" style="display: none;"><i class="ri-pie-chart-2-fill"></i> RH & Analytics</button>
                 <button class="nav-btn admin-only" id="btn-nav-colaboradores" data-tab="colaboradores" style="display: none;"><i class="ri-group-line"></i> Gerenciar Equipe</button>
                 <button class="nav-btn admin-only" id="btn-nav-ajustes" data-tab="ajustes" style="display: none;"><i class="ri-settings-4-line"></i> Ajustes do Administrador</button>
                 <button class="nav-btn admin-only" id="btn-nav-ativos" data-tab="ativos" style="display: none;"><i class="ri-qr-code-line"></i> Controle de Ativos</button>
@@ -267,7 +258,7 @@
                 </div>
             </header>
 
-            
+
             <section id="tab-home" class="tab-content active csv-home-page">
 
                 <div class="csv-home-hero">
@@ -841,144 +832,13 @@
                 </div>
             </section>
 
-            <section id="tab-treinamentos" class="tab-content" style="display: none;">
-                <div id="treinamentos-view-folders">
-                    <div class="flex-between mb-20">
-                        <p class="text-muted">Gerencie os vídeos, provas e PDFs de Ensino.</p>
-                        <div class="flex-gap-10"><button class="btn-hover color-8 admin-only" onclick="window.abrirCadastroProva()" style="display:none;"><i class="ri-file-list-3-line"></i> Cadastrar Prova</button><button class="btn-hover color-11 admin-only" onclick="window.abrirModal('treinamentos')" style="display:none;"><i class="ri-add-line"></i> Novo Material</button></div>
-                    </div>
-                    <div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; padding:12px; font-size:12px; color:#64748b; margin-bottom:16px;"><strong style="color:#8B252C;">Fase 3:</strong> construtor avançado + nota automática nas objetivas e soma final com correção manual das subjetivas.</div><div class="home-grid" id="grid-treinamentos-folders"></div>
-                </div>
-                <div id="treinamentos-view-list" style="display:none;">
-                    <div class="flex-between mb-25">
-                        <div class="flex-start">
-                            <button class="btn-hover color-8" onclick="window.fecharPastaGenerica('treinamentos')"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 id="titulo-pasta-treinamentos" class="text-primary">Categoria</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('treinamentos')" style="display:none;"><i class="ri-add-line"></i> Novo Material</button>
-                    </div>
-                    <div class="cards-grid" id="grid-treinamentos-list"></div>
-                </div>
-            </section>
 
-            <section id="tab-ensino" class="tab-content" style="display: none;">
-                <div id="ensino-login-area" class="portal-aluno-box">
-                    <div class="portal-aluno-icon"><i class="ri-graduation-cap-fill"></i></div>
-                    <h2 class="text-primary mb-5">Portal do Aluno</h2>
-                    <p class="portal-aluno-subtitle">Acesso exclusivo para equipe.</p>
-                    <input type="text" id="login-aluno-nome" class="form-input mb-15" placeholder="Seu Nome (Como no Cadastro)">
-                    <input type="password" id="login-aluno-pin" class="form-input mb-20" placeholder="Seu PIN de Acesso">
-                    <button onclick="window.entrarPortalAluno()" class="btn-hover color-11 w-100"><i class="ri-login-box-line"></i> Acessar Jornada</button>
-                </div>
 
-                <div id="ensino-dashboard-area" style="display: none;">
-                    <div class="flex-between mb-20">
-                        <h2 class="text-primary">Jornada de Aprendizado<br><span id="nome-aluno-logado" class="fs-16 text-muted"></span></h2>
-                        <button onclick="window.sairPortalAluno()" class="btn-hover color-8" style="height: 35px; font-size: 12px;"><i class="ri-logout-circle-r-line"></i> Sair</button>
-                    </div>
-                    <div class="flex-gap-15 mb-25">
-                         <div class="card aluno-stat-card aluno-stat-green">
-                             <h3 class="aluno-stat-num" id="aluno-pontos">0</h3>
-                             <p class="aluno-stat-label">Pontos Acumulados (XP)</p>
-                         </div>
-                         <div class="card aluno-stat-card aluno-stat-blue">
-                             <h3 class="aluno-stat-num" id="aluno-tarefas-pendentes">0</h3>
-                             <p class="aluno-stat-label">Materiais Pendentes</p>
-                         </div>
-                    </div>
-                    
-                    <div id="aluno-pesquisas-pendentes" class="pesquisa-pendente-box" style="display: none;">
-                        <h3 class="text-danger mb-10"><i class="ri-survey-line"></i> Pesquisas do RH Pendentes</h3>
-                        <div id="lista-pesquisas-aluno" class="lista-pendente"></div>
-                    </div>
 
-                    <div id="aluno-perfil-pendentes" class="pesquisa-pendente-box" style="display: none;">
-                        <h3 class="text-blue mb-10"><i class="ri-radar-line"></i> Avaliações de Perfil Pendentes</h3>
-                        <div id="lista-perfis-aluno" class="lista-pendente"></div>
-                    </div>
 
-                    <h3 class="text-main mb-15"><i class="ri-route-line"></i> Minhas Atividades</h3>
-                    <div class="cards-grid" id="grid-trilha-aluno"></div>
-                </div>
-            </section>
 
-            <section id="tab-rh" class="tab-content rh-shell" style="display: none;">
-                <div class="rh-header">
-                    <div>
-                        <h2><i class="ri-pie-chart-2-fill"></i> RH & Analytics</h2>
-                        <p>Visão estratégica de desempenho, engajamento e clima.</p>
-                        <small id="rh-scope-label" class="text-muted d-block mt-10">Visão geral da empresa</small>
-                    </div>
-                    <div class="rh-header-actions">
-                        <button class="btn-hover color-5" onclick="window.abrirModalCriarPesquisa()"><i class="ri-survey-line"></i> Nova Pesquisa (Clima/Fit)</button>
-                        <button class="btn-hover color-9" onclick="window.abrirModalCriarPerfil()"><i class="ri-radar-line"></i> Nova Avaliação de Perfil</button>
-                    </div>
-                </div>
 
-                <div class="rh-overview-grid">
-                    <div class="rh-stat-card">
-                        <span>Total Colaboradores</span>
-                        <strong id="rh-tot-colab">0</strong>
-                    </div>
-                    <div class="rh-stat-card">
-                        <span>Média Geral de XP</span>
-                        <strong id="rh-avg-xp">0</strong>
-                    </div>
-                    <div class="rh-stat-card">
-                        <span>Alta Performance</span>
-                        <strong id="rh-tot-high">0</strong>
-                    </div>
-                    <div class="rh-stat-card rh-stat-card-action cursor-pointer" onclick="window.abrirModalPerfilProfissional()">
-                        <span>Perfil Profissional</span>
-                        <strong><i class="ri-radar-line"></i></strong>
-                        <small class="fs-12 text-muted text-white">Abrir gráfico de teia</small>
-                    </div>
-                </div>
 
-                <div class="rh-panel card rh-filters-card">
-                    <div class="rh-panel-title"><i class="ri-filter-3-line"></i> Filtros Analíticos</div>
-                    <div class="rh-filter-grid">
-                        <div>
-                            <label class="fs-12 fw-600">Setor</label>
-                            <select id="rh-filter-setor" class="form-input">
-                                <option value="">Visão Geral</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="fs-12 fw-600">Colaborador</label>
-                            <select id="rh-filter-colaborador" class="form-input">
-                                <option value="">Todos os colaboradores</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="fs-12 fw-600">Ação</label>
-                            <button class="btn-hover color-8 w-100" onclick="window.limparFiltrosRH()"><i class="ri-refresh-line"></i> Limpar filtros</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rh-panels-grid rh-panels-grid-3">
-                    <div class="rh-panel card">
-                        <div class="rh-panel-title"><i class="ri-bar-chart-grouped-line"></i> Dashboard de Talentos</div>
-                        <div class="rh-filters">
-                            <input type="text" id="rh-search-colab" class="form-input" placeholder="Buscar colaborador..." onkeyup="window.renderizarDashboardRH()">
-                        </div>
-                        <div class="rh-collabs-grid mt-15" id="rh-grid-colaboradores" style="max-height: 500px; overflow-y: auto; padding-right: 5px;"></div>
-                    </div>
-                    
-                    <div class="rh-panel card">
-                        <div class="rh-panel-title"><i class="ri-feedback-line"></i> Pesquisas de Clima/Fit Ativas</div>
-                        <div class="rh-surveys-list" id="rh-grid-pesquisas"></div>
-                    </div>
-
-                    <div class="rh-panel card">
-                        <div class="rh-panel-title"><i class="ri-radar-line"></i> Avaliações de Perfil Ativas</div>
-                        <div class="rh-surveys-list" id="rh-grid-perfis"></div>
-                    </div>
-                </div>
-            </section>
-
-            
             <section id="tab-agenda-trabalho" class="tab-content" style="display: none;">
                 <div class="agenda-shell">
                     <div class="agenda-topbar">
@@ -1025,7 +885,7 @@
                     <div class="card text-center cursor-pointer" onclick="window.abrirSubAba('contatos-convenios')"><h3>Contatos Convênios</h3></div>
                     <div class="card text-center cursor-pointer" onclick="window.abrirSubAba('senhas')"><h3>Senhas e Logins</h3></div>
                 </div>
-                
+
                 <div id="sub-ramais" style="display:none;">
                     <div class="flex-between mb-25">
                         <div class="flex-start">
@@ -1036,7 +896,7 @@
                     </div>
                     <div id="grid-ramais-agrupado" class="ramais-agrupados"></div>
                 </div>
-                
+
                 <div id="sub-emails" style="display:none;">
                     <div class="sub-aba-header">
                         <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
@@ -1044,7 +904,7 @@
                     </div>
                     <div class="cards-grid" id="grid-emails"></div>
                 </div>
-                
+
                 <div id="sub-contatos-gerais" style="display:none;">
                     <div class="sub-aba-header">
                         <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
@@ -1052,7 +912,7 @@
                     </div>
                     <div class="cards-grid" id="grid-contatos-gerais"></div>
                 </div>
-                
+
                 <div id="sub-contatos-convenios" style="display:none;">
                     <div class="sub-aba-header">
                         <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
@@ -1060,7 +920,7 @@
                     </div>
                     <div class="cards-grid" id="grid-contatos-convenios"></div>
                 </div>
-                
+
                 <div id="sub-senhas" style="display:none;">
                     <div class="sub-aba-header">
                         <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
@@ -1110,7 +970,7 @@
             <div class="modal-body h-100 overflow-hidden border-radius-15"><iframe id="iframe-media" src="about:blank" allow="autoplay; clipboard-write; fullscreen" referrerpolicy="no-referrer-when-downgrade" allowfullscreen class="modal-media-iframe"></iframe></div>
         </div>
     </div>
-    
+
     <div id="modal-imprimir-boletim" class="modal-overlay" style="display:none;">
         <div class="modal-box glass-effect">
             <header class="modal-header"><h3>Imprimir Relatório de Assinaturas</h3><button type="button" onclick="window.fecharModalImpressao()" class="btn-icon"><i class="ri-close-line"></i></button></header>
@@ -1201,7 +1061,7 @@
             <button onclick="window.enviarRespostaRH()" class="btn-hover color-5 w-100 mt-15"><i class="ri-check-double-line"></i> Enviar Respostas</button>
         </div>
     </div>
-    
+
     <div id="modal-ver-respostas-rh" class="modal-overlay" style="display: none; z-index: 10006;">
         <div class="modal-box rh-modal-box glass-effect">
             <div class="rh-modal-header">
@@ -1285,7 +1145,7 @@
     <div id="chat-fab" onclick="window.toggleChat()" style="display: none;">
     <img id="chat-fab-img" src="./logo.png" onerror="this.src='./logo.png'" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
 </div>
-    
+
     <div id="chat-window" style="display:none;">
        <div class="chat-header">
     <div class="flex-gap-10 align-items-center">
@@ -1388,7 +1248,7 @@
         </div>
     </div>
 
-    
+
     <div id="modal-agenda-trabalho" class="modal-overlay" style="display:none; z-index:10020;">
         <div class="modal-box glass-effect modal-scroll-y" style="max-width:760px;">
             <header class="modal-header">
@@ -1442,7 +1302,7 @@
     </div>
     <script src="login-ui.js?v=4.3.0"></script>
     <script type="module" src="app.js?v=4.3.0"></script>
-    <script type="module" src="csv-bootstrap.js?v=6.6.0"></script>
+    <script type="module" src="csv-bootstrap.js?v=6.9.0"></script>
 
 </body>
 </html>

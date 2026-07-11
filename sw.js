@@ -1,77 +1,110 @@
-const CACHE_NAME = 'painel-csv-v6.6.0';
+const CACHE_NAME = "painel-csv-v6.9.0";
 
-// Ficheiros que queremos guardar no dispositivo
-const urlsToCache = [
-  './',
-  './index.html',
-  './style.css',
-  './login-ui.css',
-  './csv-phase2.css',
-  './csv-polish.css',
-  './csv-weather-glass.css',
-  './csv-team-security.css',
-  './csv-clinical-directory.css',
-  './csv-admin-control.css',
-  './app.js',
-  './csv-bootstrap.js',
-  './csv-clinical-directory.js',
-  './csv-admin-control.js',
-  './login-ui.js',
-  './csv-phase2.js',
-  './csv-polish.js',
-  './manifest.json',
-  './logo.png'
+const APP_SHELL = [
+  "./",
+  "./index.html",
+  "./style.css",
+  "./login-ui.css",
+  "./csv-phase2.css",
+  "./csv-polish.css",
+  "./csv-weather-glass.css",
+  "./csv-team-security.css",
+  "./csv-clinical-directory.css",
+  "./csv-admin-control.css",
+  "./app.js",
+  "./login-ui.js",
+  "./csv-bootstrap.js",
+  "./csv-phase2.js",
+  "./csv-polish.js",
+  "./csv-clinical-directory.js",
+  "./csv-admin-control.js",
+  "./csv-menu-update.js",
+  "./version.json",
+  "./manifest.json",
+  "./logo.png"
 ];
 
-// Instalação do Service Worker
-self.addEventListener('install', event => {
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache aberto');
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then(async (cache) => {
+      await Promise.allSettled(
+        APP_SHELL.map((url) =>
+          cache.add(new Request(url, { cache: "reload" }))
+        )
+      );
+    })
   );
+
   self.skipWaiting();
 });
 
-// Ativa o novo Service Worker imediatamente e limpa caches antigos
-self.addEventListener('activate', event => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then(cacheNames => Promise.all(
-      cacheNames
-        .filter(cacheName => cacheName !== CACHE_NAME)
-        .map(cacheName => caches.delete(cacheName))
-    ))
+    Promise.all([
+      caches.keys().then((names) =>
+        Promise.all(
+          names
+            .filter(
+              (name) =>
+                name.startsWith("painel-csv-") &&
+                name !== CACHE_NAME
+            )
+            .map((name) => caches.delete(name))
+        )
+      ),
+      self.clients.claim()
+    ])
   );
-  self.clients.claim();
 });
 
-// Estratégia: rede primeiro para arquivos do app (evita servir JS antigo)
-self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
 
-  event.respondWith(
-    fetch(event.request)
-      .then(networkResponse => {
-        const responseClone = networkResponse.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone)).catch(err => console.warn('Falha ao salvar no cache:', err));
-        return networkResponse;
-      })
-      .catch(async () => {
-        const cachedResponse = await caches.match(event.request, {
-          ignoreSearch: true
-        });
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
 
-        if (cachedResponse) {
-          return cachedResponse;
-        }
+  try {
+    const response = await fetch(request, { cache: "no-store" });
 
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
+    if (response?.ok) {
+      cache.put(request, response.clone()).catch(() => {});
+    }
 
-        return Response.error();
-      })
-  );
+    return response;
+  } catch (error) {
+    const cached = await cache.match(request, {
+      ignoreSearch: true
+    });
+
+    if (cached) return cached;
+
+    if (request.mode === "navigate") {
+      return cache.match("./index.html");
+    }
+
+    throw error;
+  }
+}
+
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+
+  const requestUrl = new URL(event.request.url);
+
+  if (requestUrl.origin !== self.location.origin) return;
+
+  if (
+    requestUrl.pathname.endsWith("/version.json") ||
+    requestUrl.pathname.endsWith("/sw.js")
+  ) {
+    event.respondWith(
+      fetch(event.request, { cache: "no-store" })
+    );
+    return;
+  }
+
+  event.respondWith(networkFirst(event.request));
 });

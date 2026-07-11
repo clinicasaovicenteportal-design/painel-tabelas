@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "6.6.0";
+const VERSION = "6.9.0";
 const MAX_ATTEMPTS = 160;
 const WAIT_MS = 75;
 
@@ -75,6 +75,9 @@ async function start() {
 
   console.log("CSV Bootstrap: iniciando controle administrativo...");
   await import(`./csv-admin-control.js?v=${VERSION}`);
+
+  console.log("CSV Bootstrap: limpando menu e ativando atualizações...");
+  await import(`./csv-menu-update.js?v=${VERSION}`);
 
   console.log(`CSV Bootstrap ${VERSION}: carregamento concluído.`);
 

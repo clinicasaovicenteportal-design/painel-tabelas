@@ -16,7 +16,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_ADMIN_VERSION = "6.6.0";
+const CSV_ADMIN_VERSION = "6.9.0";
 const app = getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -204,9 +204,6 @@ function guaranteeAdminTabs() {
     "ajustes",
     "ativos",
     "boletins-privados",
-    "treinamentos",
-    "ensino",
-    "rh"
   ].forEach((tab) => {
     document.querySelectorAll(`.nav-btn[data-tab="${tab}"]`).forEach((button) => {
       button.style.removeProperty("display");
