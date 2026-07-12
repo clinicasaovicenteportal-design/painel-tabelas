@@ -23,7 +23,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_PHASE2_VERSION = "7.2.1";
+const CSV_PHASE2_VERSION = "7.4.1";
 const INTERNAL_DOMAIN = "acesso.csv.app";
 const app = getApp();
 const auth = getAuth(app);
@@ -39,13 +39,7 @@ const ACCESS_AREAS = [
   { id: "corpo-clinico", label: "Corpo clínico", icon: "ri-team-line" },
   { id: "agenda-corpo-clinico", label: "Agenda do corpo clínico", icon: "ri-calendar-schedule-line" },
   { id: "convenios", label: "Convênios", icon: "ri-shield-cross-line" },
-  { id: "ultrassom", label: "Ultrassom", icon: "ri-pulse-line" },
-  { id: "consultas", label: "Consultas e procedimentos", icon: "ri-stethoscope-line" },
-  { id: "pacotes", label: "Pacotes do pronto-socorro", icon: "ri-first-aid-kit-line" },
-  { id: "exames-imagem", label: "Exames de imagem", icon: "ri-body-scan-line" },
-  { id: "institutos", label: "Tabela Instituto", icon: "ri-building-line" },
-  { id: "contatos", label: "Contatos úteis", icon: "ri-contacts-book-line" },
-  { id: "remocoes", label: "Remoções", icon: "ri-ambulance-line" },
+
 ];
 
 const HIDDEN_NAV_TABS = ["ensino", "treinamentos", "rh", "boletins-privados"];

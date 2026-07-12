@@ -1,6 +1,6 @@
 {
-  "version": "7.4.0",
-  "message": "Nova atualização visual: Informativos Diretos modernizados, Exames de Imagem simplificados sem atlas, abas de valores reorganizadas, busca avançada de convênios, cards de ramais em vidro e correção da mensagem permanente de erro.",
+  "version": "7.4.1",
+  "message": "O menu foi simplificado. Foram removidas as abas Ultrassom, Consultas e Procedimentos, Pacotes PS, Exames de Imagem, Tabela Instituto, Contatos Úteis e Remoções. Os dados do Firebase foram preservados.",
   "force": false,
   "publishedAt": "2026-07-11"
 }

@@ -14,72 +14,6 @@ const configuracaoAbas = {
 
     'corpo-clinico': { titulo: 'Médico', campos: ['Nome do Médico', 'Segmento', 'Especialidade', 'Unimed', 'CRM', 'CBO', 'URA', 'Exibir Logo do Convenio', 'Link da Foto do Profissional'], campoAgrupador: 'Especialidade', icone: 'ri-team-fill' },
     'convenios': { titulo: 'Convênio', campos: ['Convênio', 'Código', 'Serviço', 'Aceita o Servico?', 'Observações'], campoAgrupador: 'Convênio', icone: 'ri-shield-cross-fill' },
-
-    'ultrassom': {
-        titulo: 'Exame de Ultrassom',
-        campos: [
-            'Exame',
-            'Código',
-            'Região do Corpo',
-            'Sub-região / Órgão',
-            'Público (Masculino, Feminino, Infantil, Todos)',
-            'Descrição',
-            'Como é feito',
-            'Preparação / Observações',
-            'Duração Média',
-            'Profissionais que realizam (Opcional)',
-            'Restrição de Idade',
-            'Imagem de Referência (Link)',
-            'Observação'
-        ],
-        campoAgrupador: 'Exame',
-        icone: 'ri-pulse-line'
-    },
-    'consultas': { titulo: 'Consulta / Procedimento', campos: ['Tipo', 'Código', 'Descrição', 'Valor', 'Profissionais que realizam (Opcional)', 'Observações'], campoAgrupador: 'Tipo', icone: 'ri-stethoscope-line' },
-    'exames-imagem': {
-        titulo: 'Exame de Imagem',
-        campos: [
-            'Categoria do Exame',
-            'Nome do Exame',
-            'Código',
-            'Região do Corpo',
-            'Sub-região / Órgão',
-            'Público (Masculino, Feminino, Infantil, Todos)',
-            'Descrição',
-            'Como é feito',
-            'Preparação / Observações',
-            'Duração Média',
-            'Radiação',
-            'Valor',
-            'Prazo de Laudo',
-            'Profissionais que realizam (Opcional)',
-            'Onde encontrar resultado',
-            'Imagem de Referência (Link)',
-            'Convênios',
-            'Observações'
-        ],
-        campoAgrupador: 'Categoria do Exame',
-        icone: 'ri-body-scan-line'
-    },
-
-    'pacotes': { titulo: 'Pacote PS', campos: ['Descrição', 'Valor ou Informacao', 'O que está incluso', 'Observações', 'Pacotes', 'Kit'], campoAgrupador: 'Pacotes', icone: 'ri-first-aid-kit-line' },
-    'institutos': { titulo: 'Instituto Tabela', campos: ['Número da Tabela', 'Valor da Tabela', 'Profissional', 'Especialidade', 'Restrição de Idade', 'CRM', 'CBO', 'URA', 'Outros'], campoAgrupador: 'Número da Tabela', icone: 'ri-building-line' },
-    'remocoes': { titulo: 'Remoção', campos: ['Nome do Lugar', 'Números (Separe por vírgula)', 'Local e Link Maps', 'Observações Importantes'] },
-    'ramais': { titulo: 'Ramal', campos: ['Local ou Prédio', 'Setor', 'Número do Ramal', 'Observações'] },
-    'emails': { titulo: 'E-mail', campos: ['Descrição do E-mail', 'Setor'] },
-    'contatos-gerais': { titulo: 'Contato Geral', campos: ['Descrição (Lugar ou Pessoa)', 'Número'] },
-    'contatos-convenios': { titulo: 'Contato Convênio', campos: ['Nome do Convênio', 'Número'] },
-    'senhas': { titulo: 'Senha de Acesso', campos: ['Convênio ou Sistema', 'Link de Acesso', 'Senha', 'Local de Acesso Permitido'] },
-    'boletins': { titulo: 'Boletim Informativo', campos: ['Título do Informativo', 'Para quais Setores?', 'Tipo (Urgente, Norma, Regra, etc)', 'Data de Publicação', 'Motivo', 'Links dos Materiais (1 por linha)'] },
-    'boletins-privados': { titulo: 'Informativo Privado', campos: ['Para qual Colaborador?', 'Título do Documento', 'Data de Publicação', 'Tipo (Urgente, Norma, Regra, etc)', 'Motivo', 'Links dos Materiais (1 por linha)'] },
-
-    // --- NOVO MÓDULO: CONTROLE DE ATIVOS ---
-    'ativos': {
-        titulo: 'Ativo / Equipamento',
-        campos: ['Nome do Equipamento', 'Categoria', 'Número de Patrimônio', 'Localização / Setor', 'Responsável', 'Status do Ativo', 'Observações'],
-        campoAgrupador: 'Categoria',
-        icone: 'ri-qr-code-line'
-    }
 };
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -222,7 +156,7 @@ window.obterAvaliacoesPerfilDisponiveis = function(nomeColaborador = '', setorCo
 };
 
 let chartBoletinsInst = null; let chartPrivadosInst = null; let chartHomeInst = null; let chartPrivadosGeralInst = null;
-const APP_VERSION = '7.4.0';
+const APP_VERSION = '7.4.1';
 let loginEmAndamento = false;
 
 if ('serviceWorker' in navigator) {

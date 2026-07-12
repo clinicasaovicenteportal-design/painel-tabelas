@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Clínico 7.4.0</title>
+    <title>Painel Clínico 7.4.1</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#8B252C">
@@ -231,13 +231,13 @@
                 <button class="nav-btn active" data-tab="home"><i class="ri-home-4-line"></i> Início</button>
                 <button class="nav-btn" data-tab="corpo-clinico"><i class="ri-team-line"></i> Corpo Clínico</button>
                 <button class="nav-btn" data-tab="convenios"><i class="ri-shield-cross-fill"></i> Convênios</button>
-                <button class="nav-btn" data-tab="ultrassom"><i class="ri-pulse-line"></i> Ultrassom</button>
-                <button class="nav-btn" data-tab="consultas"><i class="ri-stethoscope-line"></i> Consultas e Proc.</button>
-                <button class="nav-btn" data-tab="pacotes"><i class="ri-first-aid-kit-line"></i> Pacotes PS</button>
-                <button class="nav-btn" data-tab="exames-imagem"><i class="ri-body-scan-line"></i> Exames Imagem</button>
-                <button class="nav-btn" data-tab="institutos"><i class="ri-building-line"></i> Tabela Instituto</button>
-                <button class="nav-btn" data-tab="contatos"><i class="ri-contacts-book-line"></i> Contatos Úteis</button>
-                <button class="nav-btn" data-tab="remocoes"><i class="ri-ambulance-line"></i> Remoções</button>
+
+
+
+
+
+
+
 
                 <button class="nav-btn nav-separator" data-tab="boletins"><i class="ri-newspaper-line"></i> Boletins Gerais</button>
 
@@ -381,7 +381,7 @@
                             type="text"
                             id="input-pesquisa-global"
                             class="search-input search-input-global"
-                            placeholder="Pesquisar médicos, exames, convênios, contatos e procedimentos..."
+                            placeholder="Pesquisar médicos, convênios e comunicados..."
                         >
                     </div>
 
@@ -437,33 +437,9 @@
                         </div>
                     </div>
 
-                    <div
-                        class="shortcut-card csv-service-card"
-                        onclick="window.irParaAba('institutos')"
-                    >
-                        <div>
-                            <div class="csv-service-icon">
-                                <i class="ri-building-line"></i>
-                            </div>
 
-                            <div class="shortcut-title">Tabela Instituto</div>
-                            <small>Tabelas, profissionais e códigos internos.</small>
-                        </div>
-                    </div>
 
-                    <div
-                        class="shortcut-card csv-service-card"
-                        onclick="window.abrirSubAba('ramais'); window.irParaAba('contatos');"
-                    >
-                        <div>
-                            <div class="csv-service-icon">
-                                <i class="ri-phone-fill"></i>
-                            </div>
 
-                            <div class="shortcut-title">Ramais Internos</div>
-                            <small>Contatos rápidos de setores e unidades.</small>
-                        </div>
-                    </div>
 
                     <div
                         class="shortcut-card csv-service-card"
@@ -572,33 +548,9 @@
                 <div class="cards-grid" id="grid-colaboradores"></div>
             </section>
 
-            <section id="tab-pacotes" class="tab-content" style="display: none;">
-                <div id="pacotes-view-folders">
-                    <div class="flex-between mb-20">
-                        <p class="text-muted">Selecione a pasta/categoria do Pronto Socorro.</p>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('pacotes')" style="display:none;"><i class="ri-add-line"></i> Adicionar Pacote</button>
-                    </div>
-                    <div class="home-grid" id="grid-pacotes-folders"></div>
-                </div>
-                <div id="pacotes-view-list" style="display:none;">
-                    <div class="flex-between mb-25">
-                        <div class="flex-start">
-                            <button class="btn-hover color-8" onclick="window.fecharPastaGenerica('pacotes')"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 id="titulo-pasta-pacotes" class="text-primary">Pasta</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('pacotes')" style="display:none;"><i class="ri-add-line"></i> Adicionar Pacote</button>
-                    </div>
-                    <div class="cards-grid" id="grid-pacotes-list"></div>
-                </div>
-            </section>
 
-            <section id="tab-remocoes" class="tab-content" style="display: none;">
-                <div class="flex-between mb-20">
-                    <p class="text-muted">Contatos e informações de Remoção.</p>
-                    <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('remocoes')" style="display:none;"><i class="ri-add-line"></i> Adicionar Remoção</button>
-                </div>
-                <div class="cards-grid" id="grid-remocoes"></div>
-            </section>
+
+
 
             <section id="tab-ativos" class="tab-content" style="display: none;">
                 <div id="ativos-view-folders">
@@ -688,85 +640,13 @@
                 </div>
             </section>
 
-            <section id="tab-ultrassom" class="tab-content" style="display: none;">
-                <div id="ultrassom-view-folders">
-                    <div class="flex-between mb-20">
-                        <p class="text-muted">Selecione o Tipo de Exame.</p>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('ultrassom')" style="display:none;"><i class="ri-add-line"></i> Novo Ultrassom</button>
-                    </div>
-                    <div class="home-grid" id="grid-ultrassom-folders"></div>
-                </div>
-                <div id="ultrassom-view-list" style="display:none;">
-                    <div class="flex-between mb-25">
-                        <div class="flex-start">
-                            <button class="btn-hover color-8" onclick="window.fecharPastaGenerica('ultrassom')"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 id="titulo-pasta-ultrassom" class="text-primary">Pasta</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('ultrassom')" style="display:none;"><i class="ri-add-line"></i> Novo Ultrassom</button>
-                    </div>
-                    <div class="cards-grid" id="grid-ultrassom-list"></div>
-                </div>
-            </section>
 
-            <section id="tab-consultas" class="tab-content" style="display: none;">
-                <div id="consultas-view-folders">
-                    <div class="flex-between mb-20">
-                        <p class="text-muted">Selecione a Categoria/Setor.</p>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('consultas')" style="display:none;"><i class="ri-add-line"></i> Nova Consulta/Proc.</button>
-                    </div>
-                    <div class="home-grid" id="grid-consultas-folders"></div>
-                </div>
-                <div id="consultas-view-list" style="display:none;">
-                    <div class="flex-between mb-25">
-                        <div class="flex-start">
-                            <button class="btn-hover color-8" onclick="window.fecharPastaGenerica('consultas')"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 id="titulo-pasta-consultas" class="text-primary">Pasta</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('consultas')" style="display:none;"><i class="ri-add-line"></i> Novo Item</button>
-                    </div>
-                    <div class="cards-grid" id="grid-consultas-list"></div>
-                </div>
-            </section>
 
-            <section id="tab-exames-imagem" class="tab-content" style="display: none;">
-                <div id="exames-imagem-view-folders">
-                    <div class="flex-between mb-20">
-                        <p class="text-muted">Selecione a Categoria do Exame.</p>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('exames-imagem')" style="display:none;"><i class="ri-add-line"></i> Novo Exame de Imagem</button>
-                    </div>
-                    <div class="home-grid" id="grid-exames-imagem-folders"></div>
-                </div>
-                <div id="exames-imagem-view-list" style="display:none;">
-                    <div class="flex-between mb-25">
-                        <div class="flex-start">
-                            <button class="btn-hover color-8" onclick="window.fecharPastaGenerica('exames-imagem')"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 id="titulo-pasta-exames-imagem" class="text-primary">Pasta</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('exames-imagem')" style="display:none;"><i class="ri-add-line"></i> Novo Exame</button>
-                    </div>
-                    <div class="cards-grid" id="grid-exames-imagem-list"></div>
-                </div>
-            </section>
 
-            <section id="tab-institutos" class="tab-content" style="display: none;">
-                <div id="institutos-view-folders">
-                    <div class="flex-between mb-20">
-                        <p class="text-muted">Selecione o Número da Tabela.</p>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('institutos')" style="display:none;"><i class="ri-add-line"></i> Novo Instituto</button>
-                    </div>
-                    <div class="home-grid" id="grid-institutos-folders"></div>
-                </div>
-                <div id="institutos-view-list" style="display:none;">
-                    <div class="flex-between mb-25">
-                        <div class="flex-start">
-                            <button class="btn-hover color-8" onclick="window.fecharPastaGenerica('institutos')"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 id="titulo-pasta-institutos" class="text-primary">Pasta</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('institutos')" style="display:none;"><i class="ri-add-line"></i> Novo Instituto</button>
-                    </div>
-                    <div class="cards-grid" id="grid-institutos-list"></div>
-                </div>
-            </section>
+
+
+
+
 
             <section id="tab-boletins" class="tab-content" style="display: none;">
                 <div id="boletins-view-folders">
@@ -880,58 +760,7 @@
                 </div>
             </section>
 
-            <section id="tab-contatos" class="tab-content" style="display: none;">
-                <div class="cards-grid" id="menu-contatos">
-                    <div class="card text-center cursor-pointer" onclick="window.abrirSubAba('ramais')"><h3>Ramais Internos</h3></div>
-                    <div class="card text-center cursor-pointer" onclick="window.abrirSubAba('emails')"><h3>E-mails</h3></div>
-                    <div class="card text-center cursor-pointer" onclick="window.abrirSubAba('contatos-gerais')"><h3>Contatos Gerais</h3></div>
-                    <div class="card text-center cursor-pointer" onclick="window.abrirSubAba('contatos-convenios')"><h3>Contatos Convênios</h3></div>
-                    <div class="card text-center cursor-pointer" onclick="window.abrirSubAba('senhas')"><h3>Senhas e Logins</h3></div>
-                </div>
 
-                <div id="sub-ramais" style="display:none;">
-                    <div class="flex-between mb-25">
-                        <div class="flex-start">
-                            <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
-                            <h2 class="text-primary">Ramais Internos</h2>
-                        </div>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('ramais')" style="display:none;"><i class="ri-add-line"></i> Novo Ramal</button>
-                    </div>
-                    <div id="grid-ramais-agrupado" class="ramais-agrupados"></div>
-                </div>
-
-                <div id="sub-emails" style="display:none;">
-                    <div class="sub-aba-header">
-                        <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('emails')" style="display:none;"><i class="ri-add-line"></i> Novo E-mail</button>
-                    </div>
-                    <div class="cards-grid" id="grid-emails"></div>
-                </div>
-
-                <div id="sub-contatos-gerais" style="display:none;">
-                    <div class="sub-aba-header">
-                        <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('contatos-gerais')" style="display:none;"><i class="ri-add-line"></i> Novo Contato Geral</button>
-                    </div>
-                    <div class="cards-grid" id="grid-contatos-gerais"></div>
-                </div>
-
-                <div id="sub-contatos-convenios" style="display:none;">
-                    <div class="sub-aba-header">
-                        <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('contatos-convenios')" style="display:none;"><i class="ri-add-line"></i> Novo Contato Convênio</button>
-                    </div>
-                    <div class="cards-grid" id="grid-contatos-convenios"></div>
-                </div>
-
-                <div id="sub-senhas" style="display:none;">
-                    <div class="sub-aba-header">
-                        <button class="btn-hover color-8" onclick="window.voltarSubAba()"><i class="ri-arrow-left-line"></i> Voltar</button>
-                        <button class="btn-hover color-11 admin-only" onclick="window.abrirModal('senhas')" style="display:none;"><i class="ri-add-line"></i> Nova Senha</button>
-                    </div>
-                    <div class="cards-grid" id="grid-senhas"></div>
-                </div>
-            </section>
         </main>
     </div>
 
@@ -1305,7 +1134,7 @@
     </div>
     <script src="login-ui.js?v=4.3.0"></script>
     <script type="module" src="app.js?v=4.3.0"></script>
-    <script type="module" src="csv-bootstrap.js?v=7.4.0"></script>
+    <script type="module" src="csv-bootstrap.js?v=7.4.1"></script>
 
 </body>
 </html>
