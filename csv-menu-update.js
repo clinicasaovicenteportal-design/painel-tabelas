@@ -1,24 +1,19 @@
-
 (() => {
   "use strict";
 
-  const CURRENT_VERSION =
-    new URL(import.meta.url).searchParams.get("v") ||
-    "7.5.5";
+  const CURRENT_VERSION = "7.5.6";
   const REMOVED_TABS = new Set(["ensino", "treinamentos", "rh"]);
-  const VERSION_STORAGE_KEY = "csv_app_version";
-  const RELOAD_GUARD_KEY = "csv_app_reload_guard";
-  const DISMISS_PREFIX = "csv_update_dismissed_";
-
-  let updateOpen = false;
+  const APPLIED_KEY = "csv_update_applied_version";
+  const DISMISSED_KEY = "csv_update_dismissed_version";
+  let popupOpen = false;
   let pendingVersion = "";
 
   function compareVersions(left = "", right = "") {
     const a = String(left).split(".").map((item) => Number(item) || 0);
     const b = String(right).split(".").map((item) => Number(item) || 0);
-    const size = Math.max(a.length, b.length);
+    const total = Math.max(a.length, b.length);
 
-    for (let index = 0; index < size; index += 1) {
+    for (let index = 0; index < total; index += 1) {
       const difference = (a[index] || 0) - (b[index] || 0);
       if (difference !== 0) return difference;
     }
@@ -27,540 +22,173 @@
   }
 
   function injectStyles() {
-    if (document.getElementById("csv-menu-update-style")) return;
+    if (document.getElementById("csv-update-stable-style")) return;
 
     const style = document.createElement("style");
-    style.id = "csv-menu-update-style";
+    style.id = "csv-update-stable-style";
     style.textContent = `
       .nav-btn[data-tab="ensino"],
       .nav-btn[data-tab="treinamentos"],
       .nav-btn[data-tab="rh"],
       #tab-ensino,
       #tab-treinamentos,
-      #tab-rh {
-        display: none !important;
-      }
+      #tab-rh { display:none !important; }
 
-      .sidebar {
-        height: 100vh !important;
-        min-height: 0 !important;
-        overflow: hidden !important;
-        display: flex !important;
-        flex-direction: column !important;
-      }
+      .sidebar { height:100vh !important; min-height:0 !important; overflow:hidden !important; display:flex !important; flex-direction:column !important; }
+      .sidebar-header,.sidebar-footer { flex:0 0 auto !important; }
+      .sidebar-nav { flex:1 1 auto !important; min-height:0 !important; height:auto !important; max-height:none !important; overflow-y:auto !important; overflow-x:hidden !important; scrollbar-gutter:stable; padding-bottom:14px !important; }
+      .sidebar-footer { position:relative !important; z-index:4 !important; margin-top:7px !important; background:inherit !important; }
 
-      .sidebar-header,
-      .sidebar-footer {
-        flex: 0 0 auto !important;
-      }
-
-      .sidebar-nav {
-        flex: 1 1 auto !important;
-        min-height: 0 !important;
-        height: auto !important;
-        max-height: none !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        scrollbar-gutter: stable;
-        padding-bottom: 14px !important;
-      }
-
-      .sidebar-nav::-webkit-scrollbar {
-        width: 5px !important;
-      }
-
-      .sidebar-nav::-webkit-scrollbar-thumb {
-        border-radius: 999px !important;
-        background: rgba(139, 37, 44, .42) !important;
-      }
-
-      .sidebar-footer {
-        position: relative !important;
-        z-index: 4 !important;
-        margin-top: 7px !important;
-        background: inherit !important;
-      }
-
-      .csv-update-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 9999999;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 22px;
-        background: rgba(10, 17, 29, .68);
-        backdrop-filter: blur(14px);
-      }
-
-      .csv-update-overlay.is-open {
-        display: flex;
-      }
-
-      .csv-update-card {
-        width: min(470px, 100%);
-        padding: 28px;
-        border: 1px solid rgba(255,255,255,.58);
-        border-radius: 28px;
-        color: #172033;
-        background:
-          radial-gradient(circle at 92% 0%, rgba(116,88,202,.18), transparent 32%),
-          #fff;
-        box-shadow: 0 38px 100px rgba(0,0,0,.32);
-        font-family: Poppins, sans-serif;
-      }
-
-      html[data-theme="dark"] .csv-update-card {
-        color: #eef3fb;
-        border-color: rgba(255,255,255,.1);
-        background:
-          radial-gradient(circle at 92% 0%, rgba(116,88,202,.22), transparent 32%),
-          #182231;
-      }
-
-      .csv-update-icon {
-        width: 62px;
-        height: 62px;
-        display: grid;
-        place-items: center;
-        border-radius: 21px;
-        color: #fff;
-        background: linear-gradient(145deg, #8b252c, #c94d59);
-        box-shadow: 0 17px 35px rgba(139,37,44,.28);
-        font-size: 28px;
-      }
-
-      .csv-update-card h2 {
-        margin: 18px 0 8px;
-        font-size: 25px;
-        line-height: 1.08;
-      }
-
-      .csv-update-card p {
-        margin: 0;
-        color: #718096;
-        font-size: 11px;
-        line-height: 1.7;
-      }
-
-      html[data-theme="dark"] .csv-update-card p {
-        color: #aeb9ca;
-      }
-
-      .csv-update-version {
-        margin-top: 15px;
-        padding: 10px 12px;
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        border: 1px solid rgba(116,88,202,.15);
-        border-radius: 13px;
-        color: #6952b0;
-        background: rgba(116,88,202,.08);
-        font-size: 9px;
-        font-weight: 800;
-      }
-
-      .csv-update-actions {
-        margin-top: 22px;
-        display: grid;
-        grid-template-columns: .75fr 1.25fr;
-        gap: 9px;
-      }
-
-      .csv-update-actions button {
-        min-height: 48px;
-        border-radius: 15px;
-        font-family: inherit;
-        font-size: 10px;
-        font-weight: 800;
-        cursor: pointer;
-      }
-
-      .csv-update-later {
-        border: 1px solid #dfe5ee;
-        color: #586579;
-        background: #f6f8fb;
-      }
-
-      .csv-update-now {
-        border: 1px solid rgba(255,255,255,.24);
-        color: #fff;
-        background: linear-gradient(145deg, #781c24, #b53b45);
-        box-shadow: 0 14px 30px rgba(139,37,44,.24);
-      }
-
-      .csv-update-progress {
-        margin-top: 16px;
-        display: none;
-        color: #718096;
-        font-size: 9px;
-        font-weight: 700;
-      }
-
-      .csv-update-progress.visible {
-        display: block;
-      }
-
-      @media (max-width: 520px) {
-        .csv-update-actions {
-          grid-template-columns: 1fr;
-        }
-      }
+      .csv-update-stable-overlay { position:fixed; inset:0; z-index:9999999; display:none; align-items:center; justify-content:center; padding:22px; background:rgba(10,17,29,.72); backdrop-filter:blur(14px); }
+      .csv-update-stable-overlay.open { display:flex; }
+      .csv-update-stable-card { width:min(470px,100%); padding:28px; border:1px solid rgba(255,255,255,.48); border-radius:28px; color:#172033; background:#fff; box-shadow:0 38px 100px rgba(0,0,0,.32); font-family:Poppins,sans-serif; }
+      html[data-theme="dark"] .csv-update-stable-card { color:#eef3fb; border-color:rgba(255,255,255,.10); background:#182231; }
+      .csv-update-stable-icon { width:62px; height:62px; display:grid; place-items:center; border-radius:21px; color:#fff; background:linear-gradient(145deg,#8b252c,#c94d59); box-shadow:0 17px 35px rgba(139,37,44,.28); font-size:28px; }
+      .csv-update-stable-card h2 { margin:18px 0 8px; font-size:25px; line-height:1.08; }
+      .csv-update-stable-card p { margin:0; color:#718096; font-size:11px; line-height:1.7; }
+      .csv-update-stable-version { margin-top:15px; padding:10px 12px; display:inline-flex; align-items:center; gap:7px; border-radius:13px; color:#6952b0; background:rgba(116,88,202,.08); font-size:9px; font-weight:800; }
+      .csv-update-stable-actions { margin-top:22px; display:grid; grid-template-columns:.75fr 1.25fr; gap:9px; }
+      .csv-update-stable-actions button { min-height:48px; border-radius:15px; font-family:inherit; font-size:10px; font-weight:800; cursor:pointer; }
+      .csv-update-stable-later { border:1px solid #dfe5ee; color:#586579; background:#f6f8fb; }
+      .csv-update-stable-now { border:1px solid rgba(255,255,255,.24); color:#fff; background:linear-gradient(145deg,#781c24,#b53b45); box-shadow:0 14px 30px rgba(139,37,44,.24); }
+      .csv-update-stable-progress { margin-top:16px; display:none; color:#718096; font-size:9px; font-weight:700; }
+      .csv-update-stable-progress.visible { display:block; }
+      @media(max-width:520px){.csv-update-stable-actions{grid-template-columns:1fr;}}
     `;
-
     document.head.appendChild(style);
   }
 
-  function removeObsoleteModules() {
+  function cleanRemovedTabs() {
     REMOVED_TABS.forEach((tab) => {
-      document
-        .querySelectorAll(`.nav-btn[data-tab="${tab}"], #tab-${tab}`)
-        .forEach((element) => element.remove());
-
-      document
-        .querySelectorAll(
-          `[data-permission="${tab}"], input[value="${tab}"], [data-area="${tab}"]`
-        )
-        .forEach((element) => {
-          const removable =
-            element.closest("label") ||
-            element.closest(".csv2-permission-item") ||
-            element.closest(".csv-polish-permission") ||
-            element;
-
-          removable?.remove();
-        });
+      document.querySelectorAll(`.nav-btn[data-tab="${tab}"], #tab-${tab}`).forEach((element) => element.remove());
+      document.querySelectorAll(`[data-permission="${tab}"], input[value="${tab}"], [data-area="${tab}"]`).forEach((element) => {
+        (element.closest("label") || element.closest(".csv2-permission-item") || element).remove();
+      });
     });
-
-    const nav = document.querySelector(".sidebar-nav");
-
-    if (nav) {
-      nav.style.setProperty("max-height", "none", "important");
-      nav.style.setProperty("height", "auto", "important");
-      nav.style.setProperty("min-height", "0", "important");
-      nav.style.setProperty("overflow-y", "auto", "important");
-    }
   }
 
-  async function clearPanelCaches() {
+  async function clearCaches() {
     if (!("caches" in window)) return;
-
     const names = await caches.keys();
-
-    await Promise.all(
-      names
-        .filter((name) => name.startsWith("painel-csv-"))
-        .map((name) => caches.delete(name))
-    );
+    await Promise.allSettled(names.filter((name) => name.startsWith("painel-csv-")).map((name) => caches.delete(name)));
   }
 
-  async function unregisterWorkers() {
+  async function updateWorker() {
     if (!("serviceWorker" in navigator)) return;
-
     const registrations = await navigator.serviceWorker.getRegistrations();
-    await Promise.all(registrations.map((item) => item.unregister()));
+    await Promise.allSettled(registrations.map(async (registration) => {
+      try { await registration.update(); } catch (_) {}
+      registration.waiting?.postMessage({ type: "SKIP_WAITING" });
+      registration.installing?.postMessage({ type: "SKIP_WAITING" });
+    }));
   }
 
-  function reloadWithVersion(version) {
-    const url = new URL(window.location.href);
-    url.searchParams.set("csv-version", version || CURRENT_VERSION);
-    url.searchParams.set("csv-refresh", Date.now().toString());
-    window.location.replace(url.toString());
-  }
-
-  async function applyCurrentVersionOnce() {
-    const storedVersion = localStorage.getItem(
-      VERSION_STORAGE_KEY
-    );
-
-    if (storedVersion !== CURRENT_VERSION) {
-      localStorage.setItem(
-        VERSION_STORAGE_KEY,
-        CURRENT_VERSION
-      );
-    }
-
-    sessionStorage.removeItem(RELOAD_GUARD_KEY);
-
-    const url = new URL(window.location.href);
-
-    if (url.searchParams.has("csv-updated")) {
-      url.searchParams.delete("csv-updated");
-      url.searchParams.delete("csv-refresh");
-      url.searchParams.delete("csv-version");
-
-      window.history.replaceState(
-        {},
-        document.title,
-        url.toString()
-      );
-    }
-  }
-
-  function showUpdatingScreen() {
-    document
-      .getElementById("csv-update-loading-screen")
-      ?.remove();
-
-    const screen = document.createElement("div");
-    screen.id = "csv-update-loading-screen";
-    screen.className = "csv-update-loading-screen";
-    screen.innerHTML = `
-      <div class="csv-update-loading-card">
-        <i class="ri-loader-4-line"></i>
-        <strong>Atualizando o Painel Clínico</strong>
-        <small>
-          Removendo arquivos antigos e carregando a versão mais recente.
-          Esta tela será fechada automaticamente.
-        </small>
-      </div>
-    `;
-
-    document.body.appendChild(screen);
-    return screen;
-  }
-
-  async function refreshServiceWorkers() {
-    if (!("serviceWorker" in navigator)) return;
-
-    const registrations =
-      await navigator.serviceWorker.getRegistrations();
-
-    await Promise.allSettled(
-      registrations.map(async (registration) => {
-        try {
-          await registration.update();
-        } catch (_) {}
-
-        registration.waiting?.postMessage({
-          type: "SKIP_WAITING"
-        });
-
-        registration.installing?.postMessage({
-          type: "SKIP_WAITING"
-        });
-
-        await registration.unregister();
-      })
-    );
-  }
-
-  function ensureUpdatePopup() {
-    let overlay = document.getElementById("csv-update-overlay");
-
+  function ensurePopup() {
+    let overlay = document.getElementById("csv-update-stable-overlay");
     if (overlay) return overlay;
 
     overlay = document.createElement("div");
-    overlay.id = "csv-update-overlay";
-    overlay.className = "csv-update-overlay";
+    overlay.id = "csv-update-stable-overlay";
+    overlay.className = "csv-update-stable-overlay";
     overlay.innerHTML = `
-      <div class="csv-update-card" role="dialog" aria-modal="true">
-        <div class="csv-update-icon"><i class="ri-refresh-line"></i></div>
+      <div class="csv-update-stable-card" role="dialog" aria-modal="true">
+        <div class="csv-update-stable-icon"><i class="ri-refresh-line"></i></div>
         <h2>Há uma atualização nova</h2>
-        <p id="csv-update-message">
-          Uma nova versão do Painel Clínico está disponível.
-          Deseja atualizar o navegador agora?
-        </p>
-        <div class="csv-update-version" id="csv-update-version">
-          <i class="ri-sparkling-line"></i>
-          Nova versão
+        <p id="csv-update-stable-message">Uma nova versão do Painel Clínico está disponível.</p>
+        <div class="csv-update-stable-version" id="csv-update-stable-version"><i class="ri-sparkling-line"></i> Nova versão</div>
+        <div class="csv-update-stable-actions">
+          <button type="button" class="csv-update-stable-later">Depois</button>
+          <button type="button" class="csv-update-stable-now">Atualizar agora</button>
         </div>
-        <div class="csv-update-actions">
-          <button type="button" class="csv-update-later" id="csv-update-later">
-            Depois
-          </button>
-          <button type="button" class="csv-update-now" id="csv-update-now">
-            Sim, atualizar agora
-          </button>
-        </div>
-        <div class="csv-update-progress" id="csv-update-progress">
-          Limpando arquivos antigos e carregando a nova versão...
-        </div>
+        <div class="csv-update-stable-progress">Limpando o cache e carregando a versão nova...</div>
       </div>
     `;
 
     document.body.appendChild(overlay);
 
-    overlay
-      .querySelector("#csv-update-later")
-      ?.addEventListener("click", () => {
-        if (pendingVersion) {
-          sessionStorage.setItem(`${DISMISS_PREFIX}${pendingVersion}`, "1");
-        }
+    overlay.querySelector(".csv-update-stable-later")?.addEventListener("click", () => {
+      sessionStorage.setItem(DISMISSED_KEY, pendingVersion || CURRENT_VERSION);
+      overlay.classList.remove("open");
+      popupOpen = false;
+    });
 
-        overlay.classList.remove("is-open");
-        updateOpen = false;
-      });
+    overlay.querySelector(".csv-update-stable-now")?.addEventListener("click", async () => {
+      const target = pendingVersion || CURRENT_VERSION;
+      overlay.querySelectorAll("button").forEach((button) => { button.disabled = true; });
+      overlay.querySelector(".csv-update-stable-progress")?.classList.add("visible");
+      sessionStorage.setItem(APPLIED_KEY, target);
 
-    overlay
-      .querySelector("#csv-update-now")
-      ?.addEventListener("click", async () => {
-        const targetVersion =
-          pendingVersion || CURRENT_VERSION;
+      try {
+        await Promise.race([
+          Promise.all([clearCaches(), updateWorker()]),
+          new Promise((resolve) => setTimeout(resolve, 3500))
+        ]);
+      } catch (error) {
+        console.warn("Atualização do painel:", error);
+      }
 
-        overlay.classList.remove("is-open");
-        updateOpen = false;
-
-        localStorage.setItem(
-          VERSION_STORAGE_KEY,
-          targetVersion
-        );
-
-        sessionStorage.removeItem(
-          `${DISMISS_PREFIX}${targetVersion}`
-        );
-
-        const loading = showUpdatingScreen();
-
-        try {
-          await Promise.race([
-            Promise.all([
-              clearPanelCaches(),
-              refreshServiceWorkers()
-            ]),
-            new Promise((resolve) =>
-              setTimeout(resolve, 4500)
-            )
-          ]);
-
-          const url = new URL(window.location.href);
-
-          url.searchParams.set(
-            "csv-version",
-            targetVersion
-          );
-
-          url.searchParams.set(
-            "csv-refresh",
-            Date.now().toString()
-          );
-
-          url.searchParams.set(
-            "csv-updated",
-            "1"
-          );
-
-          window.location.replace(url.toString());
-        } catch (error) {
-          console.error("Atualização do painel:", error);
-          loading?.remove();
-
-          overlay.classList.add("is-open");
-          updateOpen = true;
-
-          overlay
-            .querySelectorAll("button")
-            .forEach((button) => {
-              button.disabled = false;
-            });
-
-          const progress = overlay.querySelector(
-            "#csv-update-progress"
-          );
-
-          if (progress) {
-            progress.textContent =
-              "Não foi possível concluir agora. " +
-              "Verifique a internet e tente novamente.";
-
-            progress.classList.add("visible");
-          }
-        }
-      });
+      const url = new URL(window.location.href);
+      url.searchParams.set("csv-version", target);
+      url.searchParams.set("csv-refresh", Date.now().toString());
+      window.location.replace(url.toString());
+    });
 
     return overlay;
   }
 
-  function showUpdatePopup(version, message = "") {
-    if (
-      updateOpen ||
-      sessionStorage.getItem(`${DISMISS_PREFIX}${version}`) === "1"
-    ) {
-      return;
-    }
+  function showPopup(version, message = "") {
+    if (popupOpen) return;
+    if (sessionStorage.getItem(APPLIED_KEY) === version) return;
+    if (sessionStorage.getItem(DISMISSED_KEY) === version) return;
 
     pendingVersion = version;
-    updateOpen = true;
+    popupOpen = true;
 
-    const overlay = ensureUpdatePopup();
-
-    overlay.querySelector("#csv-update-message").textContent =
-      message ||
-      "Uma nova versão do Painel Clínico está disponível. Deseja atualizar o navegador agora?";
-
-    overlay.querySelector("#csv-update-version").innerHTML =
-      `<i class="ri-sparkling-line"></i> Versão ${version}`;
-
-    overlay.classList.add("is-open");
+    const overlay = ensurePopup();
+    overlay.querySelector("#csv-update-stable-message").textContent = message || "Uma nova versão do Painel Clínico está disponível. Deseja atualizar agora?";
+    overlay.querySelector("#csv-update-stable-version").innerHTML = `<i class="ri-sparkling-line"></i> Versão ${version}`;
+    overlay.classList.add("open");
   }
 
   async function checkForUpdates() {
     try {
       const url = new URL("./version.json", window.location.href);
       url.searchParams.set("_", Date.now().toString());
-
-      const response = await fetch(url.toString(), {
-        cache: "no-store",
-        headers: {
-          "Cache-Control": "no-cache, no-store, must-revalidate"
-        }
-      });
-
+      const response = await fetch(url.toString(), { cache: "no-store" });
       if (!response.ok) return;
 
       const data = await response.json();
-      const remoteVersion = String(data.version || "").trim();
-
-      if (
-        remoteVersion &&
-        compareVersions(remoteVersion, CURRENT_VERSION) > 0
-      ) {
-        showUpdatePopup(remoteVersion, data.message || "");
+      const remote = String(data.version || "").trim();
+      if (remote && compareVersions(remote, CURRENT_VERSION) > 0) {
+        showPopup(remote, data.message || "");
       }
     } catch (error) {
       console.warn("Verificação de atualização:", error);
     }
   }
 
-  function startObservers() {
-    const observer = new MutationObserver(removeObsoleteModules);
-
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ["style", "class"]
-    });
-
-    [0, 100, 300, 700, 1500, 3000, 6000].forEach((delay) => {
-      setTimeout(removeObsoleteModules, delay);
-    });
-  }
-
-  async function init() {
+  function init() {
     injectStyles();
-    removeObsoleteModules();
-    startObservers();
+    cleanRemovedTabs();
 
-    await applyCurrentVersionOnce();
+    const observer = new MutationObserver(cleanRemovedTabs);
+    observer.observe(document.documentElement, { childList:true, subtree:true });
 
+    localStorage.setItem("csv_app_version", CURRENT_VERSION);
     checkForUpdates();
-    setInterval(checkForUpdates, 5 * 60 * 1000);
-
+    setInterval(checkForUpdates, 10 * 60 * 1000);
     window.addEventListener("focus", checkForUpdates);
 
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") {
-        checkForUpdates();
-      }
-    });
-
     window.csvCheckForUpdates = checkForUpdates;
+    window.csvForceRefreshPanel = async () => {
+      await clearCaches();
+      await updateWorker();
+      const url = new URL(window.location.href);
+      url.searchParams.set("csv-refresh", Date.now().toString());
+      window.location.replace(url.toString());
+    };
 
-    console.log(
-      `CSV Menu/Atualização ${CURRENT_VERSION} carregado.`
-    );
+    console.log(`CSV Atualizador Estável ${CURRENT_VERSION} carregado.`);
   }
 
   if (document.readyState === "loading") {
@@ -569,3 +197,4 @@
     init();
   }
 })();
+

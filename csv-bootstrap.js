@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.5.5";
+const VERSION = "7.5.6";
 const MAX_ATTEMPTS = 180;
 const WAIT_MS = 75;
 
@@ -45,7 +45,6 @@ async function safeImport(name, path) {
       `CSV Bootstrap: o módulo "${name}" não carregou.`,
       error
     );
-
     return false;
   }
 }
@@ -98,14 +97,16 @@ async function start() {
     "./csv-bulletin-folders-enforcer.js"
   );
 
+  // Um único módulo controla login, anúncio fixo, carrossel e editor.
+  // Os dois módulos antigos foram retirados do carregamento para evitar conflito.
   await safeImport(
-    "Imagens públicas do Google Drive",
-    "./csv-drive-media-fix.js"
+    "Mídia e banners estabilizados",
+    "./csv-media-stable.js"
   );
 
   await safeImport(
-    "Correção de banners e editor visual",
-    "./csv-banners-hotfix.js"
+    "Chat de IA removido",
+    "./csv-chat-disabled.js"
   );
 
   removeOldStartupError();
@@ -145,3 +146,4 @@ start().catch((error) => {
     error
   );
 });
+

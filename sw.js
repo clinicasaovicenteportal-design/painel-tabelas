@@ -1,4 +1,4 @@
-const CACHE_NAME = "painel-csv-v7.5.5";
+const CACHE_NAME = "painel-csv-v7.5.6";
 
 const APP_SHELL = [
   "./",
@@ -31,12 +31,10 @@ const APP_SHELL = [
   "./csv-bulletin-intelligence.js",
   "./csv-bulletins-unified.js",
   "./csv-bulletin-folders.js",
-  "./csv-drive-media-fix.css",
-  "./csv-drive-media-fix.js",
-  "./csv-banners-hotfix.js",
-  "./csv-banners-hotfix.css",
   "./csv-bulletin-folders-enforcer.js",
   "./csv-assets-dashboard.js",
+  "./csv-media-stable.js",
+  "./csv-chat-disabled.js",
   "./version.json",
   "./manifest.json",
   "./logo.png"
@@ -126,3 +124,4 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(networkFirst(event.request));
 });
+

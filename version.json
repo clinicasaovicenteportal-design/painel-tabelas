@@ -1,6 +1,6 @@
 {
-  "version": "7.5.5",
-  "message": "Correção dos controles de banners: o anúncio fixo agora desaparece ao ser desativado, o carrossel salva ativação, imagens, tempo e transição, ganhou botões para adicionar/remover banners e o atualizador deixou de entrar em repetição.",
-  "force": true,
+  "version": "7.5.6",
+  "message": "Banners estabilizados, atualizador simplificado e chat de IA removido.",
+  "force": false,
   "publishedAt": "2026-07-12"
 }
