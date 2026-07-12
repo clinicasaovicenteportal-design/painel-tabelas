@@ -1,6 +1,6 @@
 {
-  "version": "7.5.4",
-  "message": "A página inicial ganhou um carrossel amplo e responsivo para campanhas. Agora é possível cadastrar vários links do Google Drive, definir o tempo de exibição e escolher entre transição suave, deslizamento ou zoom.",
+  "version": "7.5.5",
+  "message": "Correção dos controles de banners: o anúncio fixo agora desaparece ao ser desativado, o carrossel salva ativação, imagens, tempo e transição, ganhou botões para adicionar/remover banners e o atualizador deixou de entrar em repetição.",
   "force": true,
   "publishedAt": "2026-07-12"
 }

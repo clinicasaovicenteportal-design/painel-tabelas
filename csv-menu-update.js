@@ -2,7 +2,9 @@
 (() => {
   "use strict";
 
-  const CURRENT_VERSION = "7.5.2";
+  const CURRENT_VERSION =
+    new URL(import.meta.url).searchParams.get("v") ||
+    "7.5.5";
   const REMOVED_TABS = new Set(["ensino", "treinamentos", "rh"]);
   const VERSION_STORAGE_KEY = "csv_app_version";
   const RELOAD_GUARD_KEY = "csv_app_reload_guard";
@@ -268,25 +270,80 @@
   }
 
   async function applyCurrentVersionOnce() {
-    const storedVersion = localStorage.getItem(VERSION_STORAGE_KEY);
-    const guardedVersion = sessionStorage.getItem(RELOAD_GUARD_KEY);
+    const storedVersion = localStorage.getItem(
+      VERSION_STORAGE_KEY
+    );
 
-    if (storedVersion === CURRENT_VERSION) {
-      sessionStorage.removeItem(RELOAD_GUARD_KEY);
-      return;
+    if (storedVersion !== CURRENT_VERSION) {
+      localStorage.setItem(
+        VERSION_STORAGE_KEY,
+        CURRENT_VERSION
+      );
     }
 
-    localStorage.setItem(VERSION_STORAGE_KEY, CURRENT_VERSION);
+    sessionStorage.removeItem(RELOAD_GUARD_KEY);
 
-    if (guardedVersion === CURRENT_VERSION) {
-      sessionStorage.removeItem(RELOAD_GUARD_KEY);
-      return;
+    const url = new URL(window.location.href);
+
+    if (url.searchParams.has("csv-updated")) {
+      url.searchParams.delete("csv-updated");
+      url.searchParams.delete("csv-refresh");
+      url.searchParams.delete("csv-version");
+
+      window.history.replaceState(
+        {},
+        document.title,
+        url.toString()
+      );
     }
+  }
 
-    sessionStorage.setItem(RELOAD_GUARD_KEY, CURRENT_VERSION);
-    await clearPanelCaches();
-    await unregisterWorkers();
-    reloadWithVersion(CURRENT_VERSION);
+  function showUpdatingScreen() {
+    document
+      .getElementById("csv-update-loading-screen")
+      ?.remove();
+
+    const screen = document.createElement("div");
+    screen.id = "csv-update-loading-screen";
+    screen.className = "csv-update-loading-screen";
+    screen.innerHTML = `
+      <div class="csv-update-loading-card">
+        <i class="ri-loader-4-line"></i>
+        <strong>Atualizando o Painel Clínico</strong>
+        <small>
+          Removendo arquivos antigos e carregando a versão mais recente.
+          Esta tela será fechada automaticamente.
+        </small>
+      </div>
+    `;
+
+    document.body.appendChild(screen);
+    return screen;
+  }
+
+  async function refreshServiceWorkers() {
+    if (!("serviceWorker" in navigator)) return;
+
+    const registrations =
+      await navigator.serviceWorker.getRegistrations();
+
+    await Promise.allSettled(
+      registrations.map(async (registration) => {
+        try {
+          await registration.update();
+        } catch (_) {}
+
+        registration.waiting?.postMessage({
+          type: "SKIP_WAITING"
+        });
+
+        registration.installing?.postMessage({
+          type: "SKIP_WAITING"
+        });
+
+        await registration.unregister();
+      })
+    );
   }
 
   function ensureUpdatePopup() {
@@ -339,22 +396,77 @@
     overlay
       .querySelector("#csv-update-now")
       ?.addEventListener("click", async () => {
-        overlay.querySelectorAll("button").forEach((button) => {
-          button.disabled = true;
-        });
+        const targetVersion =
+          pendingVersion || CURRENT_VERSION;
 
-        overlay
-          .querySelector("#csv-update-progress")
-          ?.classList.add("visible");
+        overlay.classList.remove("is-open");
+        updateOpen = false;
 
         localStorage.setItem(
           VERSION_STORAGE_KEY,
-          pendingVersion || CURRENT_VERSION
+          targetVersion
         );
 
-        await clearPanelCaches();
-        await unregisterWorkers();
-        reloadWithVersion(pendingVersion || CURRENT_VERSION);
+        sessionStorage.removeItem(
+          `${DISMISS_PREFIX}${targetVersion}`
+        );
+
+        const loading = showUpdatingScreen();
+
+        try {
+          await Promise.race([
+            Promise.all([
+              clearPanelCaches(),
+              refreshServiceWorkers()
+            ]),
+            new Promise((resolve) =>
+              setTimeout(resolve, 4500)
+            )
+          ]);
+
+          const url = new URL(window.location.href);
+
+          url.searchParams.set(
+            "csv-version",
+            targetVersion
+          );
+
+          url.searchParams.set(
+            "csv-refresh",
+            Date.now().toString()
+          );
+
+          url.searchParams.set(
+            "csv-updated",
+            "1"
+          );
+
+          window.location.replace(url.toString());
+        } catch (error) {
+          console.error("Atualização do painel:", error);
+          loading?.remove();
+
+          overlay.classList.add("is-open");
+          updateOpen = true;
+
+          overlay
+            .querySelectorAll("button")
+            .forEach((button) => {
+              button.disabled = false;
+            });
+
+          const progress = overlay.querySelector(
+            "#csv-update-progress"
+          );
+
+          if (progress) {
+            progress.textContent =
+              "Não foi possível concluir agora. " +
+              "Verifique a internet e tente novamente.";
+
+            progress.classList.add("visible");
+          }
+        }
       });
 
     return overlay;

@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.5.4";
+const VERSION = "7.5.5";
 const MAX_ATTEMPTS = 180;
 const WAIT_MS = 75;
 
@@ -101,6 +101,11 @@ async function start() {
   await safeImport(
     "Imagens públicas do Google Drive",
     "./csv-drive-media-fix.js"
+  );
+
+  await safeImport(
+    "Correção de banners e editor visual",
+    "./csv-banners-hotfix.js"
   );
 
   removeOldStartupError();

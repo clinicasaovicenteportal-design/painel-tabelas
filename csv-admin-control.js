@@ -16,7 +16,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_ADMIN_VERSION = "6.9.0";
+const CSV_ADMIN_VERSION = "7.5.5";
 const app = getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -729,6 +729,15 @@ async function saveAdminSettings(event) {
     homeAnnouncementImage: String(data.get("homeAnnouncementImage") || "").trim(),
     homeAnnouncementButtonText: String(data.get("homeAnnouncementButtonText") || "").trim(),
     homeAnnouncementButtonLink: String(data.get("homeAnnouncementButtonLink") || "").trim(),
+    homeCarouselActive: data.get("homeCarouselActive") === "on",
+    homeCarouselItems: String(data.get("homeCarouselItems") || "").trim(),
+    homeCarouselInterval: Math.max(
+      3,
+      Number(data.get("homeCarouselInterval") || 7)
+    ),
+    homeCarouselTransition: String(
+      data.get("homeCarouselTransition") || "fade"
+    ),
     chatAvatar: String(data.get("chatAvatar") || "").trim(),
     primaryColor: String(data.get("primaryColor") || "#8b252c"),
     folderImage: String(data.get("folderImage") || "").trim(),
@@ -765,6 +774,9 @@ async function saveAdminSettings(event) {
 
     state.config = { ...(state.config || {}), ...payload };
     applyAdminSettings();
+    window.csvBannerEditorSync?.();
+    window.csvBannerSettingsApply?.();
+    window.csvHomeCarouselRefresh?.();
 
     message.textContent = "Ajustes salvos e aplicados com sucesso.";
     message.className = "success";
