@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.5.1";
+const VERSION = "7.5.2";
 const MAX_ATTEMPTS = 180;
 const WAIT_MS = 75;
 
@@ -86,6 +86,11 @@ async function start() {
   await safeImport(
     "Boletins unificados",
     "./csv-bulletins-unified.js"
+  );
+
+  await safeImport(
+    "Pastas e leitores dos boletins",
+    "./csv-bulletin-folders.js"
   );
 
   removeOldStartupError();

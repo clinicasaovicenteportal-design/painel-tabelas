@@ -1,6 +1,6 @@
 {
-  "version": "7.5.1",
-  "message": "Proteção visual das ferramentas técnicas ativada no painel publicado. Os atalhos F12, Console, Elements, código-fonte e menu de contexto agora mostram um aviso de acesso restrito. Também foi corrigido o erro de inicialização do Controle de Ativos.",
+  "version": "7.5.2",
+  "message": "A Central de Boletins agora organiza automaticamente as publicações em pastas da empresa, setores e colaboradores. O painel de leitores foi corrigido, o acompanhamento direcionado voltou a exibir os dados e o card Ensino foi removido da tela inicial.",
   "force": false,
   "publishedAt": "2026-07-12"
 }
