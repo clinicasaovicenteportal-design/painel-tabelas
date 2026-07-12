@@ -1,6 +1,6 @@
 {
-  "version": "7.5.3",
-  "message": "Correção das pastas visuais dos boletins e compatibilidade ampliada com imagens públicas do Google Drive na tela de login e no anúncio inicial.",
+  "version": "7.5.4",
+  "message": "A página inicial ganhou um carrossel amplo e responsivo para campanhas. Agora é possível cadastrar vários links do Google Drive, definir o tempo de exibição e escolher entre transição suave, deslizamento ou zoom.",
   "force": true,
   "publishedAt": "2026-07-12"
 }

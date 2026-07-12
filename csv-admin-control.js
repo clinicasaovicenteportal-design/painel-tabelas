@@ -284,6 +284,10 @@ function settingsDefaults() {
     homeAnnouncementImage: "",
     homeAnnouncementButtonText: "",
     homeAnnouncementButtonLink: "",
+    homeCarouselActive: true,
+    homeCarouselItems: "",
+    homeCarouselInterval: 7,
+    homeCarouselTransition: "fade",
     chatAvatar: "",
     primaryColor: "#8b252c",
     folderImage: "",
@@ -516,11 +520,11 @@ function renderAdminSettings() {
                 value="${esc(config.homeAnnouncementTitle || "")}">
             </label>
 
-            <label class="csv-admin-settings-field">
-              <span>Imagem do anúncio — Drive ou URL</span>
-              <input name="homeAnnouncementImage"
-                value="${esc(config.homeAnnouncementImage || "")}">
-            </label>
+            <input
+              type="hidden"
+              name="homeAnnouncementImage"
+              value="${esc(config.homeAnnouncementImage || "")}"
+            >
 
             <label class="csv-admin-settings-field full">
               <span>Texto do anúncio</span>
@@ -545,6 +549,66 @@ function renderAdminSettings() {
             <input type="checkbox" name="homeAnnouncementActive"
               ${config.homeAnnouncementActive !== false ? "checked" : ""}>
             <span><strong>Anúncio ativo</strong><small>Desmarque para ocultar temporariamente.</small></span>
+          </label>
+        </section>
+
+        <section class="csv-admin-settings-card">
+          <div class="csv-admin-settings-card-title">
+            <span class="orange"><i class="ri-gallery-line"></i></span>
+            <div>
+              <h3>Carrossel de banners da página inicial</h3>
+              <p>Exiba campanhas em tamanho amplo no final da tela inicial, com troca automática e efeito de transição.</p>
+            </div>
+          </div>
+
+          <label class="csv-admin-settings-field full">
+            <span>Banners do carrossel — um por linha</span>
+            <textarea
+              name="homeCarouselItems"
+              rows="8"
+              placeholder="LINK DA IMAGEM | Título | Texto | Texto do botão | Link do botão"
+            >${esc(config.homeCarouselItems || "")}</textarea>
+            <small>
+              Você pode colocar somente o link ou completar as informações.
+              Exemplo: link-do-drive | Campanha de vacinação | Confira as datas | Ver comunicado | https://...
+            </small>
+          </label>
+
+          <div class="csv-admin-settings-grid" style="margin-top:14px;">
+            <label class="csv-admin-settings-field">
+              <span>Tempo de permanência de cada banner</span>
+              <div class="csv-admin-input-suffix">
+                <input
+                  type="number"
+                  min="3"
+                  max="60"
+                  name="homeCarouselInterval"
+                  value="${esc(config.homeCarouselInterval || 7)}"
+                >
+                <b>segundos</b>
+              </div>
+            </label>
+
+            <label class="csv-admin-settings-field">
+              <span>Efeito entre os banners</span>
+              <select name="homeCarouselTransition">
+                <option value="fade" ${config.homeCarouselTransition === "fade" ? "selected" : ""}>Suave — desaparecer e aparecer</option>
+                <option value="slide" ${config.homeCarouselTransition === "slide" ? "selected" : ""}>Deslizar lateralmente</option>
+                <option value="zoom" ${config.homeCarouselTransition === "zoom" ? "selected" : ""}>Zoom cinematográfico</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="csv-admin-switch">
+            <input
+              type="checkbox"
+              name="homeCarouselActive"
+              ${config.homeCarouselActive !== false ? "checked" : ""}
+            >
+            <span>
+              <strong>Carrossel ativo</strong>
+              <small>Desmarque para ocultar os banners sem apagar os links cadastrados.</small>
+            </span>
           </label>
         </section>
 

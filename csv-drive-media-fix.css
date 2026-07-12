@@ -1,4 +1,4 @@
-/* CSV Drive Media Fix 7.5.3 */
+/* CSV Drive Media Fix 7.5.4 */
 
 .csv-login-ad-panel.csv-drive-login-active {
   background-image:
@@ -67,17 +67,363 @@
   background: #fff;
 }
 
-#banner-area.csv-drive-home-active {
-  background-image:
+.csv-home-banner-carousel-section {
+  width: 100%;
+  margin: 28px 0 12px;
+  padding: 0;
+  animation: csvHomeCarouselEnter .5s ease both;
+}
+
+@keyframes csvHomeCarouselEnter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.csv-home-banner-heading {
+  margin-bottom: 13px;
+  padding: 0 4px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.csv-home-banner-heading span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #8b252c;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.csv-home-banner-heading h2 {
+  margin: 6px 0 0;
+  color: var(--cp-text, #172033);
+  font-size: clamp(20px, 2.5vw, 31px);
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+
+.csv-home-banner-heading > small {
+  color: var(--cp-muted, #718096);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.csv-home-banner-carousel {
+  width: 100%;
+}
+
+.csv-home-banner-stage {
+  width: 100%;
+  min-height: clamp(280px, 31vw, 470px);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(139, 37, 44, .13);
+  border-radius: 30px;
+  background: #101827;
+  box-shadow:
+    0 26px 65px rgba(31, 43, 66, .15),
+    inset 0 1px 0 rgba(255,255,255,.12);
+  isolation: isolate;
+}
+
+.csv-home-banner-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(1.01);
+  transition:
+    opacity .65s ease,
+    visibility .65s ease,
+    transform .8s cubic-bezier(.2,.8,.2,1);
+}
+
+.csv-home-banner-slide.active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  z-index: 2;
+}
+
+.csv-home-banner-slide img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.csv-home-banner-overlay {
+  position: absolute;
+  inset: 0;
+  background:
     linear-gradient(
       90deg,
-      rgba(35, 14, 22, .86),
-      rgba(35, 14, 22, .33)
+      rgba(17, 20, 31, .82) 0%,
+      rgba(17, 20, 31, .50) 43%,
+      rgba(17, 20, 31, .10) 75%
     ),
-    var(--csv-drive-home-image) !important;
-  background-position: center !important;
-  background-size: cover !important;
-  background-repeat: no-repeat !important;
+    linear-gradient(
+      0deg,
+      rgba(8, 13, 24, .34),
+      transparent 48%
+    );
+}
+
+.csv-home-banner-copy {
+  width: min(620px, calc(100% - 150px));
+  position: absolute;
+  left: clamp(24px, 4vw, 58px);
+  top: 50%;
+  z-index: 3;
+  transform: translateY(-50%);
+  color: #fff;
+}
+
+.csv-home-banner-copy > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+  padding: 7px 11px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 999px;
+  background: rgba(255,255,255,.11);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
+
+.csv-home-banner-copy h3 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(27px, 4.2vw, 56px);
+  line-height: 1.02;
+  letter-spacing: -.048em;
+  text-shadow: 0 4px 22px rgba(0,0,0,.28);
+}
+
+.csv-home-banner-copy p {
+  max-width: 560px;
+  margin: 14px 0 0;
+  color: rgba(255,255,255,.82);
+  font-size: clamp(10px, 1.2vw, 14px);
+  line-height: 1.65;
+  text-shadow: 0 2px 15px rgba(0,0,0,.24);
+}
+
+.csv-home-banner-copy a {
+  min-height: 43px;
+  margin-top: 19px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 14px;
+  color: #7b1d25;
+  background: #fff;
+  box-shadow: 0 13px 28px rgba(0,0,0,.17);
+  font-size: 9px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: .2s ease;
+}
+
+.csv-home-banner-copy a:hover {
+  transform: translateY(-2px);
+}
+
+.csv-home-banner-arrow {
+  width: 43px;
+  height: 43px;
+  position: absolute;
+  top: 50%;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(17, 24, 39, .30);
+  box-shadow: 0 12px 28px rgba(0,0,0,.17);
+  cursor: pointer;
+  transform: translateY(-50%);
+  backdrop-filter: blur(13px);
+  transition: .2s ease;
+}
+
+.csv-home-banner-arrow:hover {
+  background: rgba(139, 37, 44, .88);
+  transform: translateY(-50%) scale(1.07);
+}
+
+.csv-home-banner-arrow.previous {
+  left: 17px;
+}
+
+.csv-home-banner-arrow.next {
+  right: 17px;
+}
+
+.csv-home-banner-arrow i {
+  font-size: 24px;
+}
+
+.csv-home-banner-bottom {
+  position: absolute;
+  left: 50%;
+  bottom: 21px;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  transform: translateX(-50%);
+}
+
+.csv-home-banner-dots {
+  padding: 7px 9px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 999px;
+  background: rgba(17, 24, 39, .27);
+  backdrop-filter: blur(12px);
+}
+
+.csv-home-banner-dots button {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255,255,255,.38);
+  cursor: pointer;
+  transition: .25s ease;
+}
+
+.csv-home-banner-dots button.active {
+  width: 26px;
+  background: #fff;
+}
+
+.csv-home-banner-counter {
+  color: rgba(255,255,255,.82);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.csv-home-banner-progress {
+  height: 3px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 7;
+  overflow: hidden;
+  background: rgba(255,255,255,.12);
+}
+
+.csv-home-banner-progress i {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: linear-gradient(90deg, #fff, #f2a7ad);
+  transform-origin: left center;
+  animation-name: csvHomeBannerProgress;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.csv-home-banner-stage.paused .csv-home-banner-progress i {
+  animation-play-state: paused;
+}
+
+@keyframes csvHomeBannerProgress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.csv-home-banner-carousel[data-transition="fade"]
+.csv-home-banner-slide.active {
+  animation: csvHomeBannerFade .7s ease both;
+}
+
+@keyframes csvHomeBannerFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.csv-home-banner-carousel[data-transition="slide"]
+.csv-home-banner-slide.active {
+  animation: csvHomeBannerSlide .72s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes csvHomeBannerSlide {
+  from {
+    opacity: 0;
+    transform: translateX(5%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.csv-home-banner-carousel[data-transition="zoom"]
+.csv-home-banner-slide.active img {
+  animation: csvHomeBannerZoom .95s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes csvHomeBannerZoom {
+  from {
+    opacity: .75;
+    transform: scale(1.08);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.csv-admin-settings-field select {
+  width: 100%;
+  min-height: 49px;
+  padding: 0 14px;
+  border: 1px solid var(--cp-border, #e2e8f0);
+  border-radius: 15px;
+  outline: none;
+  color: var(--cp-text, #172033);
+  background: var(--cp-soft, #f7f9fc);
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.csv-admin-settings-field select:focus {
+  border-color: rgba(115,87,189,.48);
+  box-shadow: 0 0 0 4px rgba(115,87,189,.085);
+}
+
+.csv-admin-settings-card-title > span.orange {
+  background: linear-gradient(145deg, #f3a236, #d85b42);
 }
 
 .csv-drive-help {
@@ -90,8 +436,7 @@
   color: #4a7be4;
 }
 
-.csv-drive-login-error::after,
-.csv-drive-home-error::after {
+.csv-drive-login-error::after {
   content: "Não foi possível abrir a imagem. Confirme se o arquivo está como 'Qualquer pessoa com o link'.";
   padding: 7px 10px;
   position: absolute;
@@ -105,12 +450,87 @@
   font-weight: 700;
 }
 
-#banner-area.csv-drive-home-error {
-  position: relative;
-}
-
 @media (max-width: 900px) {
   .csv-login-ad-panel.csv-drive-login-active .csv-ad-copy {
     padding: 20px;
+  }
+
+  .csv-home-banner-stage {
+    min-height: 360px;
+    border-radius: 24px;
+  }
+
+  .csv-home-banner-copy {
+    width: calc(100% - 60px);
+    left: 30px;
+  }
+
+  .csv-home-banner-overlay {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(17, 20, 31, .84),
+        rgba(17, 20, 31, .30)
+      ),
+      linear-gradient(
+        0deg,
+        rgba(8, 13, 24, .42),
+        transparent
+      );
+  }
+
+  .csv-home-banner-arrow {
+    top: auto;
+    bottom: 16px;
+    transform: none;
+  }
+
+  .csv-home-banner-arrow:hover {
+    transform: scale(1.05);
+  }
+
+  .csv-home-banner-arrow.previous {
+    left: 15px;
+  }
+
+  .csv-home-banner-arrow.next {
+    right: 15px;
+  }
+
+  .csv-home-banner-bottom {
+    bottom: 23px;
+  }
+}
+
+@media (max-width: 620px) {
+  .csv-home-banner-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .csv-home-banner-stage {
+    min-height: 410px;
+  }
+
+  .csv-home-banner-copy {
+    width: calc(100% - 44px);
+    left: 22px;
+  }
+
+  .csv-home-banner-copy h3 {
+    font-size: 31px;
+  }
+
+  .csv-home-banner-copy p {
+    font-size: 11px;
+  }
+
+  .csv-home-banner-arrow {
+    width: 38px;
+    height: 38px;
+  }
+
+  .csv-home-banner-bottom {
+    bottom: 21px;
   }
 }
