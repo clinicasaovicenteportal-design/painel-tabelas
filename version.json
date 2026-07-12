@@ -1,6 +1,6 @@
 {
-  "version": "7.5.2",
-  "message": "A Central de Boletins agora organiza automaticamente as publicações em pastas da empresa, setores e colaboradores. O painel de leitores foi corrigido, o acompanhamento direcionado voltou a exibir os dados e o card Ensino foi removido da tela inicial.",
-  "force": false,
+  "version": "7.5.3",
+  "message": "Correção das pastas visuais dos boletins e compatibilidade ampliada com imagens públicas do Google Drive na tela de login e no anúncio inicial.",
+  "force": true,
   "publishedAt": "2026-07-12"
 }

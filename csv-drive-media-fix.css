@@ -1,0 +1,116 @@
+/* CSV Drive Media Fix 7.5.3 */
+
+.csv-login-ad-panel.csv-drive-login-active {
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(42, 9, 13, .90) 0%,
+      rgba(74, 17, 23, .73) 48%,
+      rgba(25, 42, 76, .40) 100%
+    ),
+    var(--csv-drive-login-image) !important;
+  background-position: center !important;
+  background-size: cover !important;
+  isolation: isolate;
+}
+
+.csv-login-ad-panel.csv-drive-login-active::before,
+.csv-login-ad-panel.csv-drive-login-active::after {
+  opacity: .45;
+}
+
+.csv-login-ad-panel.csv-drive-login-active .csv-ad-main {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.csv-login-ad-panel.csv-drive-login-active .csv-ad-copy {
+  max-width: 760px;
+  padding: 30px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 25px;
+  background: rgba(45, 13, 20, .28);
+  box-shadow:
+    0 22px 55px rgba(13, 8, 14, .22),
+    inset 0 1px 0 rgba(255,255,255,.12);
+  backdrop-filter: blur(15px) saturate(130%);
+  -webkit-backdrop-filter: blur(15px) saturate(130%);
+}
+
+.csv-login-ad-panel.csv-drive-login-active .csv-ad-copy h1,
+.csv-login-ad-panel.csv-drive-login-active .csv-ad-copy p {
+  text-shadow: 0 3px 18px rgba(0,0,0,.30);
+}
+
+.csv-drive-login-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  z-index: 8;
+  display: flex;
+  gap: 6px;
+  transform: translateX(-50%);
+}
+
+.csv-drive-login-dots button {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255,255,255,.38);
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.csv-drive-login-dots button.active {
+  width: 24px;
+  background: #fff;
+}
+
+#banner-area.csv-drive-home-active {
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(35, 14, 22, .86),
+      rgba(35, 14, 22, .33)
+    ),
+    var(--csv-drive-home-image) !important;
+  background-position: center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+
+.csv-drive-help {
+  color: #56657c !important;
+  line-height: 1.55;
+}
+
+.csv-drive-help i {
+  margin-right: 4px;
+  color: #4a7be4;
+}
+
+.csv-drive-login-error::after,
+.csv-drive-home-error::after {
+  content: "Não foi possível abrir a imagem. Confirme se o arquivo está como 'Qualquer pessoa com o link'.";
+  padding: 7px 10px;
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  z-index: 9;
+  border-radius: 10px;
+  color: #fff;
+  background: rgba(160, 39, 48, .90);
+  font-size: 8px;
+  font-weight: 700;
+}
+
+#banner-area.csv-drive-home-error {
+  position: relative;
+}
+
+@media (max-width: 900px) {
+  .csv-login-ad-panel.csv-drive-login-active .csv-ad-copy {
+    padding: 20px;
+  }
+}
