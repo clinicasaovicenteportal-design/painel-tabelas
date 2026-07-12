@@ -23,7 +23,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_PHASE2_VERSION = "7.4.1";
+const CSV_PHASE2_VERSION = "7.5.0";
 const INTERNAL_DOMAIN = "acesso.csv.app";
 const app = getApp();
 const auth = getAuth(app);

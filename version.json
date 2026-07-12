@@ -1,6 +1,6 @@
 {
-  "version": "7.4.1",
-  "message": "O menu foi simplificado. Foram removidas as abas Ultrassom, Consultas e Procedimentos, Pacotes PS, Exames de Imagem, Tabela Instituto, Contatos Úteis e Remoções. Os dados do Firebase foram preservados.",
+  "version": "7.5.0",
+  "message": "Boletins Gerais e Informativos Diretos foram unificados em uma única central. Agora o destino pode ser toda a clínica, setores específicos ou colaboradores direcionados. Também foi acrescentado o grau de atenção e o acompanhamento individual.",
   "force": false,
-  "publishedAt": "2026-07-11"
+  "publishedAt": "2026-07-12"
 }

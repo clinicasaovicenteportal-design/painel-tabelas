@@ -1,0 +1,242 @@
+/* =========================================================
+   CSV — Boletins Unificados 7.5.0
+   ========================================================= */
+
+.csv-unified-monitor-button {
+  border-color: rgba(109, 90, 230, .18) !important;
+  color: #5f4fd1 !important;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(109, 90, 230, .10),
+      rgba(68, 119, 223, .08)
+    ) !important;
+}
+
+.csv-unified-field-help {
+  margin-top: 6px;
+  display: block;
+  color: #7c879b;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.csv2-modal-card.csv-unified-is-direct {
+  border-color: rgba(109, 90, 230, .28);
+  box-shadow:
+    0 28px 80px rgba(49, 46, 112, .18),
+    0 0 0 5px rgba(109, 90, 230, .055);
+}
+
+.csv2-modal-card.csv-unified-is-direct::before {
+  content: "Boletim direcionado";
+  padding: 7px 11px;
+  position: absolute;
+  right: 70px;
+  top: 24px;
+  border-radius: 999px;
+  color: #6d5ae6;
+  background: rgba(109, 90, 230, .10);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .03em;
+}
+
+.csv-unified-monitor-modal {
+  padding: 24px;
+  position: fixed;
+  inset: 0;
+  z-index: 10080;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(18, 24, 38, .62);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.csv-unified-monitor-modal.is-open {
+  display: flex;
+  animation: csvUnifiedFade .22s ease both;
+}
+
+.csv-unified-modal-open {
+  overflow: hidden;
+}
+
+.csv-unified-monitor-card {
+  width: min(1600px, 97vw);
+  max-height: 94vh;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, .72);
+  border-radius: 30px;
+  background:
+    radial-gradient(
+      circle at 92% 0%,
+      rgba(109, 90, 230, .16),
+      transparent 32%
+    ),
+    #f4f7fb;
+  box-shadow: 0 36px 100px rgba(8, 15, 31, .28);
+  animation: csvUnifiedCard .28s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.csv-unified-monitor-header {
+  padding: 23px 27px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  border-bottom: 1px solid rgba(224, 230, 241, .92);
+  background: rgba(255, 255, 255, .88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.csv-unified-monitor-header span {
+  color: #6d5ae6;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+.csv-unified-monitor-header h2 {
+  margin: 6px 0 3px;
+  color: #182033;
+  font-size: 25px;
+  letter-spacing: -.035em;
+}
+
+.csv-unified-monitor-header p {
+  margin: 0;
+  color: #78859a;
+  font-size: 11px;
+}
+
+.csv-unified-monitor-header button {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e1e7f0;
+  border-radius: 15px;
+  color: #1c2434;
+  background: rgba(255, 255, 255, .88);
+  box-shadow: 0 12px 26px rgba(36, 51, 80, .08);
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.csv-unified-monitor-header button:hover {
+  transform: translateY(-2px);
+  color: #fff;
+  border-color: transparent;
+  background: #9b2931;
+}
+
+.csv-unified-monitor-stage {
+  padding: 22px;
+}
+
+.csv-unified-monitor-stage #tab-boletins-privados {
+  width: 100%;
+  min-height: 620px;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+.csv-unified-monitor-stage #csv-intel-admin-root {
+  width: 100%;
+}
+
+.csv-unified-monitor-stage
+  #csv-intel-admin-root
+  > .csv-intel-header {
+  margin-top: 0;
+}
+
+@keyframes csvUnifiedFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes csvUnifiedCard {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+html[data-theme="dark"] .csv-unified-monitor-card {
+  border-color: rgba(255, 255, 255, .08);
+  background:
+    radial-gradient(
+      circle at 92% 0%,
+      rgba(109, 90, 230, .18),
+      transparent 32%
+    ),
+    #111927;
+}
+
+html[data-theme="dark"] .csv-unified-monitor-header {
+  border-bottom-color: #2a3548;
+  background: rgba(23, 31, 45, .90);
+}
+
+html[data-theme="dark"] .csv-unified-monitor-header h2 {
+  color: #f5f7fc;
+}
+
+html[data-theme="dark"] .csv-unified-monitor-header p {
+  color: #9ca8bb;
+}
+
+html[data-theme="dark"] .csv-unified-monitor-header button {
+  color: #edf1f8;
+  border-color: #303b50;
+  background: #212b3c;
+}
+
+@media (max-width: 780px) {
+  .csv-unified-monitor-modal {
+    padding: 8px;
+  }
+
+  .csv-unified-monitor-card {
+    width: 100%;
+    max-height: 98vh;
+    border-radius: 22px;
+  }
+
+  .csv-unified-monitor-header {
+    padding: 17px;
+    align-items: flex-start;
+  }
+
+  .csv-unified-monitor-header h2 {
+    font-size: 20px;
+  }
+
+  .csv-unified-monitor-header p {
+    max-width: 270px;
+  }
+
+  .csv-unified-monitor-stage {
+    padding: 10px;
+  }
+
+  .csv2-modal-card.csv-unified-is-direct::before {
+    display: none;
+  }
+}
