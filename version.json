@@ -1,6 +1,6 @@
 {
-  "version": "7.5.6",
-  "message": "Banners estabilizados, atualizador simplificado e chat de IA removido.",
+  "version": "7.6.0",
+  "message": "Nova área Minha Conta, troca de senha pelo colaborador, recuperação por PIN com limite de três usos e painel administrativo de solicitações e notificações.",
   "force": false,
   "publishedAt": "2026-07-12"
 }

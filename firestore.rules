@@ -202,6 +202,22 @@ service cloud.firestore {
         );
     }
 
+
+    match /recuperacoes-acesso/{requestId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if false;
+    }
+
+    match /notificacoes-admin/{notificationId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if false;
+    }
+
+    match /auditoria-acessos/{auditId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
     match /{collectionName}/{document=**} {
       allow read: if signedIn() &&
         collectionName in [
