@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.6.0";
+const VERSION = "7.6.1";
 const MAX_ATTEMPTS = 180;
 const WAIT_MS = 75;
 
@@ -108,13 +108,7 @@ async function start() {
     "Chat de IA removido",
     "./csv-chat-disabled.js"
   );
-
-  await safeImport(
-    "Segurança da conta e recuperação de senha",
-    "./csv-account-security.js"
-  );
-
-  removeOldStartupError();
+removeOldStartupError();
 
   const forceCurrentView = () => {
     removeOldStartupError();

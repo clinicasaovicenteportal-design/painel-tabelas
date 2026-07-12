@@ -1,6 +1,6 @@
 {
-  "version": "7.6.0",
-  "message": "Nova área Minha Conta, troca de senha pelo colaborador, recuperação por PIN com limite de três usos e painel administrativo de solicitações e notificações.",
-  "force": false,
+  "version": "7.6.1",
+  "message": "Recuperação de acessos, Minha Conta e Esqueci minha senha foram removidos. O Gerenciar Equipe continua criando logins e senhas iniciais diretamente no portal, compatível com o plano gratuito Spark.",
+  "force": true,
   "publishedAt": "2026-07-12"
 }
