@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.6.1";
+const VERSION = "7.7.0";
 const MAX_ATTEMPTS = 180;
 const WAIT_MS = 75;
 
@@ -59,6 +59,7 @@ async function start() {
   await waitForCore();
 
   const modules = [
+    ["Sessão segura e campanhas", "./csv-session-campaign.js"],
     ["Fase 2", "./csv-phase2.js"],
     ["Acabamento visual", "./csv-polish.js"],
     ["Corpo Clínico e Convênios", "./csv-clinical-directory.js"],
@@ -108,7 +109,18 @@ async function start() {
     "Chat de IA removido",
     "./csv-chat-disabled.js"
   );
-removeOldStartupError();
+
+  await safeImport(
+    "Opiniões, pesquisa e clube de benefícios",
+    "./csv-feedback-benefits.js"
+  );
+
+  await safeImport(
+    "Avaliação dos informativos",
+    "./csv-bulletin-ratings.js"
+  );
+
+  removeOldStartupError();
 
   const forceCurrentView = () => {
     removeOldStartupError();
@@ -123,6 +135,15 @@ removeOldStartupError();
 
     if (activeTab === "boletins") {
       window.csv2EnsureBulletinExperience?.();
+      window.csvBulletinRatingsRefresh?.();
+    }
+
+    if (activeTab === "opinioes") {
+      window.csvEngagementRenderOpinions?.();
+    }
+
+    if (activeTab === "beneficios") {
+      window.csvEngagementRenderBenefits?.();
     }
 
     window.csvUiRefresh?.renderActive?.(true);
@@ -145,4 +166,3 @@ start().catch((error) => {
     error
   );
 });
-

@@ -78,6 +78,56 @@ service cloud.firestore {
         .hasOnly(['visualizadoEm']);
     }
 
+    function onlyOwnFeedbackViewChanged() {
+      return request.resource.data
+        .diff(resource.data)
+        .affectedKeys()
+        .hasOnly([
+          'respostaVisualizada',
+          'respostaVisualizadaEm',
+          'atualizadoEm'
+        ]);
+    }
+
+    function onlyOwnBulletinEvaluationChanged() {
+      return request.resource.data
+        .diff(resource.data)
+        .affectedKeys()
+        .hasOnly([
+          'rating',
+          'understanding',
+          'observation',
+          'needsExplanation',
+          'updatedAt'
+        ]);
+    }
+
+    function onlyOwnSurveyChanged() {
+      return request.resource.data
+        .diff(resource.data)
+        .affectedKeys()
+        .hasOnly([
+          'rating',
+          'ease',
+          'priority',
+          'comment',
+          'updatedAt'
+        ]);
+    }
+
+    function onlyOwnCampaignResponseChanged() {
+      return request.resource.data
+        .diff(resource.data)
+        .affectedKeys()
+        .hasOnly([
+          'rating',
+          'comment',
+          'completed',
+          'completedAt',
+          'updatedAt'
+        ]);
+    }
+
     function privateBulletinForCurrentUser(data) {
       return isAdmin() ||
         (
@@ -202,6 +252,86 @@ service cloud.firestore {
         );
     }
 
+    match /feedback-plataforma/{feedbackId} {
+      allow read: if isAdmin() || ownStructuredRecord(resource.data);
+
+      allow create: if
+        ownStructuredRecord(request.resource.data) &&
+        request.resource.data.tipo is string &&
+        request.resource.data.titulo is string &&
+        request.resource.data.mensagem is string;
+
+      allow update: if isAdmin() ||
+        (
+          ownStructuredRecord(resource.data) &&
+          ownStructuredRecord(request.resource.data) &&
+          onlyOwnFeedbackViewChanged()
+        );
+
+      allow delete: if isAdmin();
+    }
+
+    match /avaliacoes-boletins/{evaluationId} {
+      allow read: if isAdmin() || ownStructuredRecord(resource.data);
+
+      allow create: if
+        ownStructuredRecord(request.resource.data) &&
+        request.resource.data.bulletinId is string &&
+        request.resource.data.collectionName is string &&
+        request.resource.data.rating is number &&
+        request.resource.data.rating >= 1 &&
+        request.resource.data.rating <= 5;
+
+      allow update: if isAdmin() ||
+        (
+          ownStructuredRecord(resource.data) &&
+          ownStructuredRecord(request.resource.data) &&
+          onlyOwnBulletinEvaluationChanged()
+        );
+
+      allow delete: if isAdmin();
+    }
+
+    match /pesquisa-interface/{responseId} {
+      allow read: if isAdmin() || ownStructuredRecord(resource.data);
+
+      allow create: if
+        ownStructuredRecord(request.resource.data) &&
+        request.resource.data.rating is number &&
+        request.resource.data.rating >= 1 &&
+        request.resource.data.rating <= 5;
+
+      allow update: if isAdmin() ||
+        (
+          ownStructuredRecord(resource.data) &&
+          ownStructuredRecord(request.resource.data) &&
+          onlyOwnSurveyChanged()
+        );
+
+      allow delete: if isAdmin();
+    }
+
+    match /beneficios/{benefitId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /campanha-acesso-respostas/{responseId} {
+      allow read: if isAdmin() || ownStructuredRecord(resource.data);
+
+      allow create: if
+        ownStructuredRecord(request.resource.data) &&
+        request.resource.data.campaignVersionId is string;
+
+      allow update: if isAdmin() ||
+        (
+          ownStructuredRecord(resource.data) &&
+          ownStructuredRecord(request.resource.data) &&
+          onlyOwnCampaignResponseChanged()
+        );
+
+      allow delete: if isAdmin();
+    }
 
     match /{collectionName}/{document=**} {
       allow read: if signedIn() &&
