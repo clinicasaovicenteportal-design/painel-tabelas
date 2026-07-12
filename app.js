@@ -156,7 +156,7 @@ window.obterAvaliacoesPerfilDisponiveis = function(nomeColaborador = '', setorCo
 };
 
 let chartBoletinsInst = null; let chartPrivadosInst = null; let chartHomeInst = null; let chartPrivadosGeralInst = null;
-const APP_VERSION = '7.5.0';
+const APP_VERSION = '7.5.1';
 let loginEmAndamento = false;
 
 if ('serviceWorker' in navigator) {
@@ -3563,6 +3563,12 @@ window.gerarImpressaoBoletim = function() {
 // ==========================================
 // FASE 1 - CONTROLE DE ATIVOS: UNIDADES > SETORES > ATIVOS + INVENTÁRIO
 // ==========================================
+
+configuracaoAbas['ativos'] = configuracaoAbas['ativos'] || {
+    titulo: 'Ativo da Empresa',
+    campos: [],
+    icone: 'ri-qr-code-line'
+};
 
 configuracaoAbas['ativos'].campos = [
     'Nome do Equipamento',

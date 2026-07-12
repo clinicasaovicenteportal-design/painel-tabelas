@@ -1,6 +1,6 @@
 {
-  "version": "7.5.0",
-  "message": "Boletins Gerais e Informativos Diretos foram unificados em uma única central. Agora o destino pode ser toda a clínica, setores específicos ou colaboradores direcionados. Também foi acrescentado o grau de atenção e o acompanhamento individual.",
+  "version": "7.5.1",
+  "message": "Proteção visual das ferramentas técnicas ativada no painel publicado. Os atalhos F12, Console, Elements, código-fonte e menu de contexto agora mostram um aviso de acesso restrito. Também foi corrigido o erro de inicialização do Controle de Ativos.",
   "force": false,
   "publishedAt": "2026-07-12"
 }
