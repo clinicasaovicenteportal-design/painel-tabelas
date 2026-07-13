@@ -156,7 +156,7 @@ window.obterAvaliacoesPerfilDisponiveis = function(nomeColaborador = '', setorCo
 };
 
 let chartBoletinsInst = null; let chartPrivadosInst = null; let chartHomeInst = null; let chartPrivadosGeralInst = null;
-const APP_VERSION = '7.9.2';
+const APP_VERSION = '7.9.3';
 let loginEmAndamento = false;
 
 if ('serviceWorker' in navigator) {

@@ -1,6 +1,6 @@
 {
-  "version": "7.9.2",
-  "message": "Correção final do modo mobile: menu lateral recolhível de verdade, largura total no celular e remoção da transição antiga para manter só o novo efeito profissional.",
+  "version": "7.9.3",
+  "message": "Correção do menu lateral no celular: itens em lista compacta, sem botão esticado, com rolagem e botão fechar.",
   "force": false,
   "publishedAt": "2026-07-13"
 }
