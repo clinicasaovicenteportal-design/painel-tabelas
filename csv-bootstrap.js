@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.7.0";
+const VERSION = "7.7.1";
 const MAX_ATTEMPTS = 180;
 const WAIT_MS = 75;
 
@@ -118,6 +118,11 @@ async function start() {
   await safeImport(
     "Avaliação dos informativos",
     "./csv-bulletin-ratings.js"
+  );
+
+  await safeImport(
+    "Permissões e pesquisa moderna",
+    "./csv-permissions-search-fix.js"
   );
 
   removeOldStartupError();

@@ -1,6 +1,6 @@
 {
-  "version": "7.7.0",
-  "message": "Nova Central de Opiniões e Melhorias, avaliação de informativos com estrelas e pedidos de explicação, pesquisa da interface, campanhas obrigatórias antes do painel, sessão encerrada ao fechar a janela e Clube de Benefícios.",
+  "version": "7.7.1",
+  "message": "Corrige o acesso às abas Opiniões e Benefícios, adiciona essas permissões ao Gerenciar Equipe e substitui a pesquisa antiga por resultados modernos sem cartões e campos antigos.",
   "force": true,
   "publishedAt": "2026-07-12"
 }
