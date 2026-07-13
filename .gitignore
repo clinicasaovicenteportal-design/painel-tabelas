@@ -1,0 +1,7 @@
+# Instaladores temporários usados nas atualizações do Codespace
+/*.sh
+
+# Backups temporários locais
+backup-*/
+*.bak
+*.tmp
