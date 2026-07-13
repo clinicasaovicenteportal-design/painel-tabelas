@@ -1,0 +1,233 @@
+/* Gestão de equipe: lista e cards por setor — 7.9.6 */
+
+.csv-team-view-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px;
+  border: 1px solid var(--csv2-border);
+  border-radius: 14px;
+  background: var(--csv2-soft);
+}
+
+.csv-team-view-controls button {
+  min-height: 38px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--csv2-muted);
+  background: transparent;
+  font: 800 8px Poppins, sans-serif;
+  cursor: pointer;
+}
+
+.csv-team-view-controls button.active {
+  color: #fff;
+  background: linear-gradient(135deg, #7458ca, #8b63d2);
+  box-shadow: 0 8px 18px rgba(116, 88, 202, .18);
+}
+
+.csv-team-sector-cards {
+  padding: 20px;
+}
+
+.csv-team-sector-cards-heading {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.csv-team-sector-cards-heading span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #7458ca;
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+.csv-team-sector-cards-heading h3 {
+  margin: 5px 0 3px;
+  color: var(--csv2-text);
+  font-size: 20px;
+}
+
+.csv-team-sector-cards-heading p,
+.csv-team-sector-cards-heading small {
+  margin: 0;
+  color: var(--csv2-muted);
+  font-size: 8px;
+}
+
+.csv-team-sector-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.csv-team-sector-card {
+  min-height: 205px;
+  padding: 18px;
+  position: relative;
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  grid-template-rows: auto 1fr auto;
+  gap: 13px;
+  overflow: hidden;
+  border: 1px solid var(--csv2-border);
+  border-radius: 21px;
+  color: inherit;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(116, 88, 202, .12), transparent 37%),
+    var(--csv2-card);
+  box-shadow: 0 14px 34px rgba(31, 46, 72, .07);
+  text-align: left;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.csv-team-sector-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(116, 88, 202, .30);
+  box-shadow: 0 21px 45px rgba(31, 46, 72, .11);
+}
+
+.csv-team-sector-card.company {
+  border-color: rgba(139, 37, 44, .22);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(179, 49, 58, .14), transparent 38%),
+    var(--csv2-card);
+}
+
+.csv-team-sector-card-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: #7458ca;
+  background: rgba(116, 88, 202, .10);
+  font-size: 20px;
+}
+
+.csv-team-sector-card.company .csv-team-sector-card-icon {
+  color: #9d2933;
+  background: rgba(179, 49, 58, .10);
+}
+
+.csv-team-sector-card-copy {
+  min-width: 0;
+}
+
+.csv-team-sector-card-copy span {
+  color: var(--csv2-muted);
+  font-size: 7px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.csv-team-sector-card-copy h3 {
+  margin: 4px 0 5px;
+  overflow: hidden;
+  color: var(--csv2-text);
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.csv-team-sector-card-copy strong {
+  color: #7458ca;
+  font-size: 11px;
+}
+
+.csv-team-sector-card.company .csv-team-sector-card-copy strong {
+  color: #9d2933;
+}
+
+.csv-team-sector-card-metrics {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.csv-team-sector-card-metrics span {
+  min-height: 54px;
+  padding: 9px;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  border-radius: 12px;
+  color: var(--csv2-muted);
+  background: var(--csv2-soft);
+  font-size: 7px;
+  text-align: center;
+}
+
+.csv-team-sector-card-metrics b {
+  color: var(--csv2-text);
+  font-size: 14px;
+}
+
+.csv-team-sector-card-metrics span.attention {
+  color: #a5650d;
+  background: rgba(222, 145, 35, .10);
+}
+
+.csv-team-sector-card-metrics span.attention b {
+  color: #b97813;
+}
+
+.csv-team-sector-card-footer {
+  grid-column: 1 / -1;
+  padding-top: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--csv2-border);
+  color: #7458ca;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.csv-team-sector-card.company .csv-team-sector-card-footer {
+  color: #9d2933;
+}
+
+.csv-team-cards-mode .csv2-team-toolbar .csv2-search-field,
+.csv-team-cards-mode #csv2-team-sector {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .csv2-team-toolbar {
+    grid-template-columns: 1fr !important;
+  }
+
+  .csv-team-view-controls,
+  .csv-team-view-controls button {
+    width: 100%;
+  }
+
+  .csv-team-sector-cards {
+    padding: 14px;
+  }
+
+  .csv-team-sector-cards-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .csv-team-sector-cards-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

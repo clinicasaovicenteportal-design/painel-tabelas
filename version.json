@@ -1,6 +1,6 @@
 {
-  "version": "7.9.5",
-  "message": "Contagem exata de colaboradores por setor e nova Central de Avaliações com estrelas, comentários, pedidos de explicação e acompanhamento da gestão.",
+  "version": "7.9.6",
+  "message": "Correção definitiva da contagem de leituras por setor e nova visualização da equipe em lista ou cards, com totais por setor e visão da empresa toda.",
   "force": false,
   "publishedAt": "2026-07-13"
 }

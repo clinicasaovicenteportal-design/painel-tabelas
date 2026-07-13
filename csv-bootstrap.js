@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.9.5";
+const VERSION = "7.9.6";
 const MAX_ATTEMPTS = 180;
 const WAIT_MS = 75;
 
@@ -143,6 +143,11 @@ async function start() {
   await safeImport(
     "Menu lateral mobile corrigido",
     "./csv-mobile-navigation.js"
+  );
+
+  await safeImport(
+    "Equipe em cards por setor",
+    "./csv-team-sector-cards.js"
   );
 removeOldStartupError();
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = "painel-csv-v7.9.5";
+const CACHE_NAME = "painel-csv-v7.9.6";
 const RUNTIME_CACHE = `${CACHE_NAME}-runtime`;
 
 const APP_SHELL = [
@@ -22,6 +22,7 @@ const APP_SHELL = [
   "./csv-evaluation-center.css",
   "./csv-notification-center.css",
   "./csv-app-branding.css",
+  "./csv-team-sector-cards.css",
   "./csv-offline-access.css",
   "./csv-mobile-navigation.css",
   "./app.js",
@@ -48,6 +49,7 @@ const APP_SHELL = [
   "./csv-permissions-search-fix.js",
   "./csv-notification-center.js",
   "./csv-app-branding.js",
+  "./csv-team-sector-cards.js",
   "./csv-offline-access.js",
   "./csv-mobile-navigation.js",
   "./version.json",

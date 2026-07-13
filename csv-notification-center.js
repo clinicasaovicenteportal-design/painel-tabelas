@@ -10,7 +10,7 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const VERSION = "7.9.5";
+const VERSION = "7.9.6";
 const app = getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);

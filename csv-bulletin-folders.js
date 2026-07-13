@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "7.9.5";
+  const VERSION = "7.9.6";
 
   const uiState = {
     mode: "folders",
@@ -248,6 +248,10 @@
     if (type === "todos") return true;
     if (type === "setores" || type === "pessoas") return false;
 
+    if (itemSectors(item).length) {
+      return false;
+    }
+
     const legacy = normalize(
       item?.data?.["Para quais Setores?"] || "Geral"
     );
@@ -303,13 +307,8 @@
     const data = item?.data || {};
     const type = data.publicoTipo;
 
-    if (type === "todos") return people;
-
-    if (type === "setores") {
-      const sectors = itemSectors(item).map(normalize);
-      return people.filter((person) =>
-        sectors.includes(normalize(person.sector))
-      );
+    if (type === "todos") {
+      return people;
     }
 
     if (type === "pessoas") {
@@ -319,13 +318,21 @@
       );
     }
 
-    if (isCompanyItem(item)) return people;
+    const sectors = itemSectors(item)
+      .map(normalize)
+      .filter(Boolean);
 
-    const sectors = itemSectors(item).map(normalize);
+    if (type === "setores" || sectors.length) {
+      return people.filter((person) =>
+        sectors.includes(normalize(person.sector))
+      );
+    }
 
-    return people.filter((person) =>
-      sectors.includes(normalize(person.sector))
-    );
+    if (isCompanyItem(item)) {
+      return people;
+    }
+
+    return [];
   }
 
   function directRecipients(item) {
@@ -391,8 +398,49 @@
     });
   }
 
-  function itemStats(item) {
-    const rows = recipientRows(item);
+  function peopleForScope(scope = null) {
+    const people = activePeople();
+
+    if (!scope?.kind) return people;
+    if (scope.kind === "company") return people;
+
+    if (scope.kind === "sector") {
+      return people.filter((person) =>
+        normalize(person.sector) === normalize(scope.key)
+      );
+    }
+
+    if (scope.kind === "person") {
+      return people.filter((person) =>
+        normalize(person.name) === normalize(scope.key)
+      );
+    }
+
+    return people;
+  }
+
+  function scopedRecipientRows(item, scope = null) {
+    if (!scope?.kind) {
+      return recipientRows(item);
+    }
+
+    return peopleForScope(scope).map((person) => {
+      const reading = structuredReading(item, person);
+
+      return {
+        item,
+        person,
+        read: hasRead(item, person),
+        readAt:
+          reading?.data?.lidoEmIso ||
+          reading?.data?.lidoEm?.toDate?.()?.toISOString?.() ||
+          ""
+      };
+    });
+  }
+
+  function itemStats(item, scope = null) {
+    const rows = scopedRecipientRows(item, scope);
     const read = rows.filter((row) => row.read).length;
     const total = rows.length;
 
@@ -404,74 +452,47 @@
     };
   }
 
-  function folderStats(items) {
+  function folderStats(items, scope = null) {
     const totals = items.reduce(
       (stats, item) => {
-        const current = itemStats(item);
-
+        const current = itemStats(item, scope);
         stats.documents += 1;
         stats.assigned += current.total;
         stats.read += current.read;
         stats.pending += current.pending;
-
         return stats;
       },
-      {
-        documents: 0,
-        assigned: 0,
-        read: 0,
-        pending: 0
-      }
+      { documents: 0, assigned: 0, read: 0, pending: 0 }
     );
 
     const people = new Map();
 
     items.forEach((item) => {
-      recipientRows(item).forEach((row) => {
+      scopedRecipientRows(item, scope).forEach((row) => {
         const key = String(
-          row.person?.uid ||
-          normalize(row.person?.name || "")
+          row.person?.uid || normalize(row.person?.name || "")
         );
-
         if (!key) return;
 
-        const current = people.get(key) || {
-          pending: false
-        };
-
-        if (!row.read) {
-          current.pending = true;
-        }
-
+        const current = people.get(key) || { pending: false };
+        if (!row.read) current.pending = true;
         people.set(key, current);
       });
     });
 
     const peopleRows = [...people.values()];
-    const peoplePending = peopleRows.filter(
-      (person) => person.pending
-    ).length;
-
+    const peoplePending = peopleRows.filter((person) => person.pending).length;
     const peopleTotal = peopleRows.length;
-    const peopleComplete = Math.max(
-      0,
-      peopleTotal - peoplePending
-    );
+    const peopleComplete = Math.max(0, peopleTotal - peoplePending);
 
     return {
       ...totals,
       peopleTotal,
       peopleComplete,
       peoplePending,
-      peopleRate:
-        peopleTotal
-          ? Math.round(
-              (
-                peopleComplete /
-                peopleTotal
-              ) * 100
-            )
-          : 0
+      peopleRate: peopleTotal
+        ? Math.round((peopleComplete / peopleTotal) * 100)
+        : 0
     };
   }
 
@@ -485,7 +506,7 @@
       subtitle: "Boletins enviados para toda a empresa",
       icon: "ri-building-4-line",
       items,
-      stats: folderStats(items)
+      stats: folderStats(items, { kind: "company", key: "company" })
     };
   }
 
@@ -514,7 +535,7 @@
     return [...map.values()]
       .map((folder) => ({
         ...folder,
-        stats: folderStats(folder.items)
+        stats: folderStats(folder.items, { kind: "sector", key: folder.key })
       }))
       .sort((a, b) =>
         a.name.localeCompare(b.name, "pt-BR")
@@ -554,7 +575,7 @@
     return [...map.values()]
       .map((folder) => ({
         ...folder,
-        stats: folderStats(folder.items)
+        stats: folderStats(folder.items, { kind: "person", key: folder.key })
       }))
       .sort((a, b) =>
         a.name.localeCompare(b.name, "pt-BR")
@@ -744,9 +765,12 @@
     return itemSectors(item).join(", ") || "Setores";
   }
 
-  function bulletinCard(item, index = 0) {
-    const key = registerDisplayItem(item, String(index));
-    const stats = itemStats(item);
+  function bulletinCard(item, index = 0, scope = null) {
+    const displayItem = scope
+      ? { ...item, __csvFolderScope: scope }
+      : item;
+    const key = registerDisplayItem(displayItem, String(index));
+    const stats = itemStats(item, scope);
     const deadline = bulletinDeadline(item);
 
     return `
@@ -829,7 +853,7 @@
             ? folder.items
                 .slice()
                 .sort((a, b) => bulletinDate(b).localeCompare(bulletinDate(a)))
-                .map((item, index) => bulletinCard(item, index))
+                .map((item, index) => bulletinCard(item, index, { kind: folder.kind, key: folder.key }))
                 .join("")
             : `<div class="csv-folder-empty"><i class="ri-inbox-line"></i><strong>Esta pasta ainda está vazia</strong></div>`}
         </div>
@@ -1026,7 +1050,10 @@
     const item = phase().displayItems?.get?.(key) || window.csv2GetDisplayItem?.(key);
     if (!item || !isAdmin()) return;
 
-    const rows = recipientRows(item);
+    const rows = scopedRecipientRows(
+      item,
+      item.__csvFolderScope || null
+    );
     const read = rows.filter((row) => row.read).length;
     const pending = rows.length - read;
 
