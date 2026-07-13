@@ -18,7 +18,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_ENGAGEMENT_HUB_VERSION = "7.7.0";
+const CSV_ENGAGEMENT_HUB_VERSION = "7.7.5";
 const app = getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -594,10 +594,21 @@ function adminFeedbackListMarkup() {
         ` : ""}
         <footer>
           <span>Prioridade: <b>${esc(data.prioridade || "Normal")}</b></span>
-          <button type="button" data-open-feedback="${item.id}">
-            <i class="ri-chat-check-line"></i>
-            ${answered ? "Atualizar resposta" : "Responder"}
-          </button>
+
+          <div class="csv-feedback-actions">
+            <button
+              type="button"
+              class="csv-feedback-delete danger"
+              data-delete-feedback="${item.id}">
+              <i class="ri-delete-bin-6-line"></i>
+              Excluir
+            </button>
+
+            <button type="button" data-open-feedback="${item.id}">
+              <i class="ri-chat-check-line"></i>
+              ${answered ? "Atualizar resposta" : "Responder"}
+            </button>
+          </div>
         </footer>
       </article>
     `;
@@ -916,6 +927,11 @@ function employeeFeedbackMarkup() {
         ${state.feedback.length ? state.feedback.map((item) => {
           const data = item.data || {};
           const answered = Boolean(String(data.respostaAdmin || "").trim());
+          const canDeleteOwn =
+            !answered &&
+            ["nova", "em analise"].includes(
+              normalize(data.status || "Nova")
+            );
 
           return `
             <article class="csv-my-feedback-card">
@@ -940,7 +956,19 @@ function employeeFeedbackMarkup() {
                   Aguardando retorno da gestão
                 </div>
               `}
-              <footer>${formatDate(data.criadoEm)}</footer>
+              <footer>
+                <span>${formatDate(data.criadoEm)}</span>
+
+                ${canDeleteOwn ? `
+                  <button
+                    type="button"
+                    class="csv-feedback-delete-own"
+                    data-delete-own-feedback="${item.id}">
+                    <i class="ri-delete-bin-6-line"></i>
+                    Excluir mensagem
+                  </button>
+                ` : ""}
+              </footer>
             </article>
           `;
         }).join("") : `
@@ -1165,6 +1193,16 @@ function bindEmployeeOpinions(root) {
     submitFeedback(event.currentTarget);
   });
 
+
+  root.querySelectorAll("[data-delete-own-feedback]").forEach((button) => {
+    button.addEventListener("click", () => {
+      deleteFeedbackMessage(
+        button.dataset.deleteOwnFeedback,
+        true
+      );
+    });
+  });
+
   const surveyForm = root.querySelector("#csv-interface-survey-form");
   if (surveyForm) {
     const input = surveyForm.querySelector('input[name="rating"]');
@@ -1269,6 +1307,57 @@ function feedbackReplyModal(item) {
   });
 }
 
+
+async function deleteFeedbackMessage(id, requestedByOwner = false) {
+  const item = state.feedback.find((entry) => entry.id === id);
+
+  if (!item) {
+    alert("A mensagem não foi encontrada.");
+    return;
+  }
+
+  const data = item.data || {};
+  const answered = Boolean(String(data.respostaAdmin || "").trim());
+  const status = normalize(data.status || "Nova");
+  const isOwner = data.uid === state.user?.uid;
+
+  const ownerCanDelete =
+    isOwner &&
+    !answered &&
+    ["nova", "em analise"].includes(status);
+
+  if (!state.isAdmin && !ownerCanDelete) {
+    alert(
+      "Esta mensagem já foi respondida ou concluída. " +
+      "Somente a gestão poderá excluí-la."
+    );
+    return;
+  }
+
+  const label = String(data.titulo || "Mensagem");
+  const confirmation = state.isAdmin
+    ? `Excluir definitivamente "${label}"?\n\nEsta ação não poderá ser desfeita.`
+    : `Excluir a sua mensagem "${label}"?\n\nDepois de excluir, ela não poderá ser recuperada.`;
+
+  if (!confirm(confirmation)) return;
+
+  try {
+    await deleteDoc(doc(db, "feedback-plataforma", id));
+
+    if (requestedByOwner) {
+      alert("Sua mensagem foi excluída.");
+    }
+  } catch (error) {
+    console.error("Excluir opinião:", error);
+
+    alert(
+      error?.code === "permission-denied"
+        ? "A permissão de exclusão ainda não foi publicada no Firebase."
+        : "Não foi possível excluir a mensagem agora."
+    );
+  }
+}
+
 async function saveCategories(nextCategories) {
   await setDoc(doc(db, "configuracoes", "engagement"), {
     feedbackCategories: cleanArray([...nextCategories, "Outro"]),
@@ -1354,6 +1443,16 @@ function bindAdminOpinions(root) {
     button.addEventListener("click", () => {
       const item = state.feedback.find((entry) => entry.id === button.dataset.openFeedback);
       if (item) feedbackReplyModal(item);
+    });
+  });
+
+
+  root.querySelectorAll("[data-delete-feedback]").forEach((button) => {
+    button.addEventListener("click", () => {
+      deleteFeedbackMessage(
+        button.dataset.deleteFeedback,
+        false
+      );
     });
   });
 

@@ -268,7 +268,15 @@ service cloud.firestore {
           onlyOwnFeedbackViewChanged()
         );
 
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() ||
+        (
+          ownStructuredRecord(resource.data) &&
+          (
+            !resource.data.keys().hasAny(['respostaAdmin']) ||
+            resource.data.respostaAdmin == ""
+          ) &&
+          resource.data.status in ['Nova', 'Em análise']
+        );
     }
 
     match /avaliacoes-boletins/{evaluationId} {

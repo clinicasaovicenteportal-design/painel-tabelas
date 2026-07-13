@@ -2044,3 +2044,104 @@ html[data-theme="dark"] .csv-benefit-image {
     border-radius: 0;
   }
 }
+
+/* =========================================================
+   Exclusão segura de opiniões — 7.7.5
+   ========================================================= */
+
+.csv-feedback-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.csv-feedback-ticket .csv-feedback-delete,
+.csv-my-feedback-card .csv-feedback-delete-own {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid rgba(180, 35, 46, .22);
+  border-radius: 12px;
+  color: #b4232e;
+  background: rgba(180, 35, 46, .07);
+  font: 700 9px/1 "Poppins", sans-serif;
+  cursor: pointer;
+  transition:
+    transform .18s ease,
+    background .18s ease,
+    box-shadow .18s ease;
+}
+
+.csv-feedback-ticket .csv-feedback-delete:hover,
+.csv-my-feedback-card .csv-feedback-delete-own:hover {
+  transform: translateY(-1px);
+  color: #fff;
+  background: #b4232e;
+  box-shadow: 0 10px 22px rgba(180, 35, 46, .18);
+}
+
+.csv-my-feedback-card > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 680px) {
+  .csv-feedback-actions,
+  .csv-feedback-ticket .csv-feedback-delete,
+  .csv-my-feedback-card .csv-feedback-delete-own {
+    width: 100%;
+  }
+
+  .csv-feedback-actions > button {
+    flex: 1 1 130px;
+  }
+}
+
+/* Exclusão segura das opiniões — versão 7.7.5 */
+
+.csv-feedback-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.csv-feedback-ticket .csv-feedback-delete,
+.csv-my-feedback-card .csv-feedback-delete-own {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid rgba(180, 35, 46, .22);
+  border-radius: 12px;
+  color: #b4232e;
+  background: rgba(180, 35, 46, .07);
+  font: 700 9px/1 "Poppins", sans-serif;
+  cursor: pointer;
+}
+
+.csv-feedback-ticket .csv-feedback-delete:hover,
+.csv-my-feedback-card .csv-feedback-delete-own:hover {
+  color: #fff;
+  background: #b4232e;
+}
+
+.csv-my-feedback-card > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+

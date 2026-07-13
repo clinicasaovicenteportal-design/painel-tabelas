@@ -1,6 +1,6 @@
 {
-  "version": "7.7.4",
-  "message": "Recuperação de emergência: removido o módulo que causava loop de interface e tela branca.",
+  "version": "7.7.5",
+  "message": "Exclusão segura adicionada às opiniões e melhorias.",
   "force": false,
   "publishedAt": "2026-07-13"
 }
