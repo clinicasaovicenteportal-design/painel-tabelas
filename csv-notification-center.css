@@ -1,0 +1,127 @@
+/* Central de notificações e atualização segura — 7.8.0 */
+.top-header { position: relative; }
+.csv-notification-center { position: relative; z-index: 1800; margin-left: auto; }
+.csv-notification-bell {
+  position: relative; width: 48px; height: 48px; display: grid; place-items: center;
+  border: 1px solid rgba(126,142,166,.18); border-radius: 16px; color: #263247;
+  background: rgba(255,255,255,.9); box-shadow: 0 12px 28px rgba(35,48,72,.08);
+  font-size: 20px; cursor: pointer; transition: .18s ease;
+}
+.csv-notification-bell:hover { transform: translateY(-1px); border-color: rgba(139,37,44,.24); }
+.csv-notification-bell > span {
+  position: absolute; top: -5px; right: -5px; min-width: 20px; height: 20px;
+  display: none; place-items: center; padding: 0 5px; border: 2px solid #fff;
+  border-radius: 999px; color: #fff; background: #b4232e; font: 800 9px/1 Poppins,sans-serif;
+}
+.csv-notification-bell > span.visible { display: grid; }
+.csv-notification-panel {
+  position: absolute; top: calc(100% + 12px); right: 0;
+  width: min(420px, calc(100vw - 34px)); max-height: min(620px, calc(100vh - 120px));
+  display: none; overflow: hidden; border: 1px solid rgba(126,142,166,.18);
+  border-radius: 24px; background: rgba(255,255,255,.98);
+  box-shadow: 0 28px 80px rgba(20,31,50,.2); backdrop-filter: blur(22px);
+}
+.csv-notification-panel.open { display: flex; flex-direction: column; animation: csvNotifyIn .2s ease both; }
+@keyframes csvNotifyIn { from { opacity: 0; transform: translateY(-8px) scale(.985); } to { opacity: 1; transform: none; } }
+.csv-notification-panel > header {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+  padding: 20px 20px 16px; border-bottom: 1px solid rgba(126,142,166,.14);
+}
+.csv-notification-panel > header div { display: grid; gap: 4px; }
+.csv-notification-panel > header span { color: #8b252c; font: 800 8px/1 Poppins,sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.csv-notification-panel > header strong { color: #172033; font: 800 18px/1.25 Poppins,sans-serif; }
+.csv-notification-panel > header button {
+  width: 36px; height: 36px; display: grid; place-items: center; border: 0;
+  border-radius: 11px; color: #667085; background: #f2f4f7; cursor: pointer;
+}
+.csv-notification-list { min-height: 160px; overflow: auto; padding: 10px; }
+.csv-notification-item {
+  position: relative; width: 100%; display: grid; grid-template-columns: 44px minmax(0,1fr) 8px;
+  align-items: start; gap: 12px; padding: 13px; border: 0; border-radius: 16px;
+  color: inherit; background: transparent; text-align: left; cursor: pointer;
+}
+.csv-notification-item:hover { background: #f6f8fb; }
+.csv-notification-item.unread { background: rgba(139,37,44,.045); }
+.csv-notification-icon {
+  width: 42px; height: 42px; display: grid; place-items: center; border-radius: 14px;
+  color: #516078; background: #eef2f7; font-size: 18px;
+}
+.csv-notification-icon.update { color: #8b252c; background: rgba(139,37,44,.1); }
+.csv-notification-icon.campaign { color: #a56000; background: rgba(245,158,11,.12); }
+.csv-notification-icon.response { color: #087f5b; background: rgba(16,185,129,.11); }
+.csv-notification-icon.bulletin { color: #3159a8; background: rgba(59,130,246,.11); }
+.csv-notification-icon.benefit { color: #7048c8; background: rgba(124,88,210,.11); }
+.csv-notification-icon.training { color: #9a6700; background: rgba(234,179,8,.12); }
+.csv-notification-icon.document { color: #3d5a80; background: rgba(61,90,128,.11); }
+.csv-notification-copy { min-width: 0; display: grid; gap: 4px; }
+.csv-notification-copy strong {
+  overflow: hidden; color: #172033; font: 750 11px/1.35 Poppins,sans-serif;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.csv-notification-copy > span {
+  display: -webkit-box; overflow: hidden; color: #68758a; font: 500 9px/1.5 Poppins,sans-serif;
+  -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+}
+.csv-notification-copy small { color: #98a2b3; font: 600 8px/1.3 Poppins,sans-serif; }
+.csv-notification-dot {
+  width: 7px; height: 7px; margin-top: 6px; border-radius: 999px;
+  background: #b4232e; box-shadow: 0 0 0 4px rgba(180,35,46,.08);
+}
+.csv-notification-empty {
+  min-height: 210px; display: grid; place-items: center; align-content: center;
+  gap: 7px; padding: 30px; color: #8a96a8; text-align: center;
+}
+.csv-notification-empty i { color: #8b252c; font-size: 30px; }
+.csv-notification-empty strong { color: #263247; font: 800 13px/1.3 Poppins,sans-serif; }
+.csv-notification-empty span { font: 500 9px/1.5 Poppins,sans-serif; }
+.csv-notification-panel > footer { padding: 12px 14px 14px; border-top: 1px solid rgba(126,142,166,.14); }
+.csv-notification-panel > footer button {
+  width: 100%; min-height: 40px; display: inline-flex; align-items: center; justify-content: center;
+  gap: 7px; border: 0; border-radius: 12px; color: #6d51b7;
+  background: rgba(109,81,183,.08); font: 750 9px/1 Poppins,sans-serif; cursor: pointer;
+}
+.csv-notification-panel > footer button:disabled { opacity: .45; cursor: default; }
+.csv-update-toast {
+  position: fixed; right: 24px; bottom: 24px; z-index: 12000;
+  width: min(420px, calc(100vw - 32px)); display: grid;
+  grid-template-columns: 50px minmax(0,1fr); gap: 14px; padding: 18px;
+  border: 1px solid rgba(255,255,255,.12); border-radius: 22px; color: #fff;
+  background: #172436; box-shadow: 0 28px 80px rgba(13,24,40,.3);
+  animation: csvUpdateIn .25s ease both;
+}
+@keyframes csvUpdateIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.csv-update-toast-icon {
+  width: 50px; height: 50px; display: grid; place-items: center; border-radius: 16px;
+  color: #fff; background: #c43c48; font-size: 21px;
+}
+.csv-update-toast-copy { min-width: 0; display: grid; gap: 5px; }
+.csv-update-toast-copy small { color: #d7a5aa; font: 800 8px/1 Poppins,sans-serif; letter-spacing: .08em; }
+.csv-update-toast-copy strong { font: 800 16px/1.25 Poppins,sans-serif; }
+.csv-update-toast-copy p { margin: 0; color: #bac4d3; font: 500 9px/1.55 Poppins,sans-serif; }
+.csv-update-toast-copy > span {
+  width: fit-content; margin-top: 3px; padding: 6px 9px; border-radius: 999px;
+  color: #d7b8ff; background: rgba(124,88,210,.16); font: 750 8px/1 Poppins,sans-serif;
+}
+.csv-update-toast-actions { grid-column: 1 / -1; display: grid; grid-template-columns: .8fr 1.2fr; gap: 9px; margin-top: 3px; }
+.csv-update-toast-actions button { min-height: 42px; border: 0; border-radius: 13px; font: 750 9px/1 Poppins,sans-serif; cursor: pointer; }
+.csv-update-toast-actions .secondary { color: #536178; background: #f1f4f8; }
+.csv-update-toast-actions .primary { color: #fff; background: #ad303c; }
+.csv-update-toast-actions button:disabled { opacity: .65; cursor: wait; }
+html[data-theme="dark"] .csv-notification-bell,
+body.dark-mode .csv-notification-bell { color: #eef2f7; background: rgba(24,35,51,.92); border-color: rgba(255,255,255,.08); }
+html[data-theme="dark"] .csv-notification-panel,
+body.dark-mode .csv-notification-panel { background: rgba(24,35,51,.98); border-color: rgba(255,255,255,.08); }
+html[data-theme="dark"] .csv-notification-panel > header strong,
+html[data-theme="dark"] .csv-notification-copy strong,
+html[data-theme="dark"] .csv-notification-empty strong,
+body.dark-mode .csv-notification-panel > header strong,
+body.dark-mode .csv-notification-copy strong,
+body.dark-mode .csv-notification-empty strong { color: #f1f5f9; }
+html[data-theme="dark"] .csv-notification-item:hover,
+body.dark-mode .csv-notification-item:hover { background: rgba(255,255,255,.05); }
+@media (max-width: 760px) {
+  .csv-notification-center { margin-left: 8px; }
+  .csv-notification-bell { width: 44px; height: 44px; }
+  .csv-notification-panel { position: fixed; top: 76px; right: 12px; left: 12px; width: auto; max-height: calc(100vh - 100px); }
+  .csv-update-toast { right: 16px; bottom: 16px; left: 16px; width: auto; }
+}

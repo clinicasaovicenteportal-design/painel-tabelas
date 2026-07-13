@@ -1,6 +1,6 @@
 {
-  "version": "7.7.5",
-  "message": "Exclusão segura adicionada às opiniões e melhorias.",
+  "version": "7.8.0",
+  "message": "Nova Central de Notificações com sino no topo e aviso seguro de atualização sem bloquear o acesso ao portal.",
   "force": false,
   "publishedAt": "2026-07-13"
 }
