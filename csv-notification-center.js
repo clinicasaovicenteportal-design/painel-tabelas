@@ -10,7 +10,7 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const VERSION = "7.8.0";
+const VERSION = "7.9.0";
 const app = getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -453,10 +453,25 @@ function closePanel() {
   document.getElementById("csv-notification-bell")?.setAttribute("aria-expanded", "false");
 }
 
+
+async function syncInstalledAppBadge(count) {
+  try {
+    if (count > 0 && typeof navigator.setAppBadge === "function") {
+      await navigator.setAppBadge(count);
+      return;
+    }
+
+    if (typeof navigator.clearAppBadge === "function") {
+      await navigator.clearAppBadge();
+    }
+  } catch (_) {}
+}
+
 function render() {
   if (!ensureUi()) return;
   const items = allItems();
   const unread = items.filter((item) => !state.seen.has(item.id)).length;
+  syncInstalledAppBadge(unread);
   const badge = document.getElementById("csv-notification-badge");
   const list = document.getElementById("csv-notification-list");
   const readAll = document.getElementById("csv-notification-read-all");

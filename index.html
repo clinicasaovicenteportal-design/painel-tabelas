@@ -7,9 +7,16 @@
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#8B252C">
-    <link rel="icon" href="./logo.png" type="image/png">
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="./icons/favicon.ico" sizes="any">
+    <link rel="icon" href="./icons/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon-180.png" sizes="180x180">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="São Vicente">
+    <meta name="mobile-web-app-capable" content="yes">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
     <!-- BIBLIOTECAS -->
@@ -46,7 +53,8 @@
         }
     </style>
     <link rel="stylesheet" href="csv-engagement-7.7.css?v=7.7.5">
-    <link rel="stylesheet" href="csv-notification-center.css?v=7.8.0">
+    <link rel="stylesheet" href="csv-notification-center.css?v=7.9.0">
+    <link rel="stylesheet" href="csv-app-branding.css?v=7.9.0">
 
     <style id="csv-search-security-critical">
         #search-box,
@@ -59,50 +67,6 @@
             pointer-events: none !important;
         }
     </style>
-
-<script id="csv-emergency-recovery-7.7.4">
-(() => {
-  const KEY = "csv_emergency_recovery_7_7_4";
-
-  if (sessionStorage.getItem(KEY) === "done") {
-    return;
-  }
-
-  sessionStorage.setItem(KEY, "done");
-
-  window.addEventListener("DOMContentLoaded", async () => {
-    try {
-      if ("serviceWorker" in navigator) {
-        const registrations =
-          await navigator.serviceWorker.getRegistrations();
-
-        await Promise.allSettled(
-          registrations.map((registration) =>
-            registration.unregister()
-          )
-        );
-      }
-
-      if ("caches" in window) {
-        const names = await caches.keys();
-
-        await Promise.allSettled(
-          names
-            .filter((name) => name.startsWith("painel-csv-"))
-            .map((name) => caches.delete(name))
-        );
-      }
-    } catch (error) {
-      console.warn("Limpeza emergencial do cache:", error);
-    }
-
-    const url = new URL(window.location.href);
-    url.searchParams.set("recuperado", "7.7.4");
-    window.location.replace(url.toString());
-  });
-})();
-</script>
-
 </head>
 <body>
 
@@ -1195,8 +1159,8 @@
     </div>
     <script src="login-ui.js?v=4.3.0"></script>
     <script src="csv-devtools-guard.js?v=7.5.1"></script>
-    <script type="module" src="app.js?v=7.8.0"></script>
-    <script type="module" src="csv-bootstrap.js?v=7.8.0"></script>
+    <script type="module" src="app.js?v=7.9.0"></script>
+    <script type="module" src="csv-bootstrap.js?v=7.9.0"></script>
 
 </body>
 </html>

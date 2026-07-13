@@ -1,4 +1,4 @@
-const CACHE_NAME = "painel-csv-v7.8.0";
+const CACHE_NAME = "painel-csv-v7.9.0";
 
 const APP_SHELL = [
   "./",
@@ -19,6 +19,7 @@ const APP_SHELL = [
   "./csv-devtools-guard.css",
   "./csv-engagement-7.7.css",
   "./csv-notification-center.css",
+  "./csv-app-branding.css",
   "./app.js",
   "./login-ui.js",
   "./csv-devtools-guard.js",
@@ -41,8 +42,16 @@ const APP_SHELL = [
   "./csv-bulletin-ratings.js",
   "./csv-permissions-search-fix.js",
   "./csv-notification-center.js",
+  "./csv-app-branding.js",
   "./version.json",
   "./manifest.json",
+  "./icons/favicon.ico",
+  "./icons/favicon-32.png",
+  "./icons/apple-touch-icon-180.png",
+  "./icons/app-icon-maskable-512.png",
+  "./icons/app-icon-maskable-192.png",
+  "./icons/app-icon-512.png",
+  "./icons/app-icon-192.png",
   "./logo.png"
 ];
 
