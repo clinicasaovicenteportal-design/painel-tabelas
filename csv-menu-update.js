@@ -1,7 +1,22 @@
 (() => {
   "use strict";
 
-  const CURRENT_VERSION = "7.5.6";
+  function obterVersaoAtual() {
+    const script = [...document.scripts].find((item) =>
+      String(item.src || "").includes("csv-bootstrap.js")
+    );
+
+    if (script) {
+      try {
+        const versao = new URL(script.src).searchParams.get("v");
+        if (versao) return versao;
+      } catch (_) {}
+    }
+
+    return "7.7.2";
+  }
+
+  const CURRENT_VERSION = obterVersaoAtual();
   const REMOVED_TABS = new Set(["ensino", "treinamentos", "rh"]);
   const APPLIED_KEY = "csv_update_applied_version";
   const DISMISSED_KEY = "csv_update_dismissed_version";
