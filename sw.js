@@ -1,4 +1,4 @@
-const CACHE_NAME = "painel-csv-v7.7.1";
+const CACHE_NAME = "painel-csv-v7.7.2";
 
 const APP_SHELL = [
   "./",
@@ -40,6 +40,7 @@ const APP_SHELL = [
   "./csv-feedback-benefits.js",
   "./csv-bulletin-ratings.js",
   "./csv-permissions-search-fix.js",
+  "./csv-security-controls-7.7.2.js",
   "./version.json",
   "./manifest.json",
   "./logo.png"

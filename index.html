@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Clínico 7.7.1</title>
+    <title>Clínica São Vicente | Portal Interno</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#8B252C">
@@ -46,6 +46,19 @@
         }
     </style>
     <link rel="stylesheet" href="csv-engagement-7.7.css?v=7.7.0">
+
+    <style id="csv-search-security-critical">
+        #search-box,
+        .csv-home-search-wrap,
+        #resultados-globais,
+        .resultados-globais-box,
+        #csv-modern-search-panel {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+    </style>
+
 </head>
 <body>
 
@@ -1138,8 +1151,8 @@
     </div>
     <script src="login-ui.js?v=4.3.0"></script>
     <script src="csv-devtools-guard.js?v=7.5.1"></script>
-    <script type="module" src="app.js?v=7.7.1"></script>
-    <script type="module" src="csv-bootstrap.js?v=7.7.1"></script>
+    <script type="module" src="app.js?v=7.7.2"></script>
+    <script type="module" src="csv-bootstrap.js?v=7.7.2"></script>
 
 </body>
 </html>
