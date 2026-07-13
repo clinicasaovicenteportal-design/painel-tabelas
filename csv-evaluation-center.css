@@ -1,0 +1,476 @@
+/* Central de avaliações — 7.9.5 */
+
+.csv-evaluation-center-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.csv-evaluation-center-button {
+  color: #fff !important;
+  border-color: transparent !important;
+  background:
+    linear-gradient(135deg, #d99a25, #b97813)
+    !important;
+  box-shadow:
+    0 12px 26px rgba(185, 120, 19, .20)
+    !important;
+}
+
+.csv-evaluation-card-button {
+  color: #93610c !important;
+  border-color:
+    rgba(217, 154, 37, .28)
+    !important;
+  background:
+    rgba(217, 154, 37, .10)
+    !important;
+}
+
+.csv-evaluation-card-button.rated {
+  color: #fff !important;
+  border-color: transparent !important;
+  background:
+    linear-gradient(135deg, #d99a25, #b97813)
+    !important;
+}
+
+.csv-evaluation-card-button.admin {
+  color: #684fb5 !important;
+  border-color:
+    rgba(116, 88, 202, .25)
+    !important;
+  background:
+    rgba(116, 88, 202, .09)
+    !important;
+}
+
+.csv-evaluation-center-summary {
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.csv-evaluation-center-summary article {
+  min-height: 96px;
+  padding: 14px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--csv-e-border);
+  border-radius: 17px;
+  background: var(--csv-e-soft);
+}
+
+.csv-evaluation-center-summary article.attention {
+  border-color:
+    rgba(207, 64, 76, .25);
+  background:
+    rgba(207, 64, 76, .06);
+}
+
+.csv-evaluation-center-summary span {
+  color: var(--csv-e-muted);
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.csv-evaluation-center-summary strong {
+  margin-top: 4px;
+  color: var(--csv-e-text);
+  font-size: 22px;
+}
+
+.csv-evaluation-center-summary article > i {
+  position: absolute;
+  right: 12px;
+  bottom: 9px;
+  color:
+    rgba(116, 88, 202, .13);
+  font-size: 29px;
+}
+
+.csv-evaluation-center-toolbar {
+  margin-bottom: 13px;
+  display: grid;
+  grid-template-columns:
+    minmax(260px, 1fr)
+    minmax(190px, auto);
+  gap: 9px;
+}
+
+.csv-evaluation-center-toolbar label {
+  min-height: 43px;
+  padding: 0 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--csv-e-border);
+  border-radius: 13px;
+  background: var(--csv-e-soft);
+}
+
+.csv-evaluation-center-toolbar input,
+.csv-evaluation-center-toolbar select {
+  width: 100%;
+  min-height: 43px;
+  border: 1px solid var(--csv-e-border);
+  border-radius: 13px;
+  outline: 0;
+  color: var(--csv-e-text);
+  background: var(--csv-e-soft);
+  font: 600 9px Poppins, sans-serif;
+}
+
+.csv-evaluation-center-toolbar label input {
+  min-height: 0;
+  border: 0;
+  background: transparent;
+}
+
+.csv-evaluation-center-toolbar select {
+  padding: 0 12px;
+}
+
+.csv-evaluation-center-list {
+  display: grid;
+  gap: 9px;
+}
+
+.csv-evaluation-center-row {
+  padding: 13px;
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 1fr)
+    minmax(330px, auto)
+    auto;
+  align-items: center;
+  gap: 11px;
+  border: 1px solid var(--csv-e-border);
+  border-radius: 16px;
+  background: var(--csv-e-soft);
+}
+
+.csv-evaluation-center-row.needs-attention {
+  border-color:
+    rgba(207, 64, 76, .27);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 248, 249, .96),
+      rgba(255, 239, 241, .78)
+    );
+}
+
+.csv-evaluation-center-row.employee {
+  grid-template-columns:
+    minmax(220px, 1fr)
+    minmax(130px, auto)
+    auto;
+}
+
+.csv-evaluation-center-copy {
+  min-width: 0;
+}
+
+.csv-evaluation-center-copy > span {
+  color: var(--csv-e-purple);
+  font-size: 7px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.csv-evaluation-center-copy h3 {
+  margin: 4px 0 2px;
+  overflow: hidden;
+  color: var(--csv-e-text);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.csv-evaluation-center-copy small {
+  color: var(--csv-e-muted);
+  font-size: 8px;
+}
+
+.csv-evaluation-center-metrics {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(72px, 1fr));
+  gap: 6px;
+}
+
+.csv-evaluation-center-metrics span {
+  min-width: 75px;
+  padding: 8px;
+  border-radius: 11px;
+  color: var(--csv-e-muted);
+  background: var(--csv-e-card);
+  font-size: 7px;
+  text-align: center;
+}
+
+.csv-evaluation-center-metrics strong {
+  display: block;
+  color: var(--csv-e-text);
+  font-size: 13px;
+}
+
+.csv-evaluation-center-metrics span.attention {
+  color: #a92f39;
+  background:
+    rgba(207, 64, 76, .09);
+}
+
+.csv-evaluation-center-own {
+  min-width: 130px;
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+}
+
+.csv-evaluation-center-own strong {
+  color: #d0911f;
+  font-size: 15px;
+}
+
+.csv-evaluation-center-own span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: var(--csv-e-muted);
+  background: var(--csv-e-card);
+  font-size: 7px;
+}
+
+.csv-evaluation-center-row > button {
+  min-height: 38px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background:
+    linear-gradient(135deg, #7458ca, #8b63d2);
+  font: 800 8px Poppins, sans-serif;
+  cursor: pointer;
+}
+
+.csv-evaluation-back {
+  margin-bottom: 14px;
+  min-height: 38px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--csv-e-border);
+  border-radius: 12px;
+  color: var(--csv-e-text);
+  background: var(--csv-e-soft);
+  font: 800 8px Poppins, sans-serif;
+  cursor: pointer;
+}
+
+.csv-evaluation-management-list {
+  display: grid;
+  gap: 11px;
+}
+
+.csv-evaluation-management-list > article {
+  padding: 17px;
+  border: 1px solid var(--csv-e-border);
+  border-radius: 18px;
+  background: var(--csv-e-soft);
+}
+
+.csv-evaluation-management-list > article.needs-explanation {
+  border-color:
+    rgba(226, 138, 48, .30);
+  background:
+    rgba(226, 138, 48, .05);
+}
+
+.csv-evaluation-management-list article header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.csv-evaluation-management-list article header strong {
+  color: var(--csv-e-text);
+  font-size: 10px;
+}
+
+.csv-evaluation-management-list article header small {
+  display: block;
+  color: var(--csv-e-muted);
+  font-size: 8px;
+}
+
+.csv-evaluation-management-list article header > span {
+  color: #d99a25;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.csv-evaluation-management-list article > b {
+  display: block;
+  margin-top: 10px;
+  color: var(--csv-e-purple);
+  font-size: 9px;
+}
+
+.csv-evaluation-management-list article > p {
+  margin: 6px 0 0;
+  color: var(--csv-e-muted);
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+.csv-explanation-state {
+  width: max-content;
+  max-width: 100%;
+  margin-top: 10px;
+  padding: 7px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  font-size: 8px;
+}
+
+.csv-explanation-state.pending {
+  color: #a5650d;
+  background:
+    rgba(222, 145, 35, .10);
+}
+
+.csv-explanation-state.progress {
+  color: #6651ae;
+  background:
+    rgba(116, 88, 202, .10);
+}
+
+.csv-explanation-state.resolved {
+  color: #168052;
+  background:
+    rgba(31, 166, 111, .10);
+}
+
+.csv-evaluation-management-form {
+  margin-top: 13px;
+  padding-top: 13px;
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 1fr)
+    minmax(170px, .45fr)
+    auto;
+  align-items: end;
+  gap: 9px;
+  border-top: 1px solid var(--csv-e-border);
+}
+
+.csv-evaluation-management-form label {
+  display: grid;
+  gap: 5px;
+}
+
+.csv-evaluation-management-form label > span {
+  color: var(--csv-e-muted);
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.csv-evaluation-management-form textarea,
+.csv-evaluation-management-form select {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--csv-e-border);
+  border-radius: 12px;
+  outline: 0;
+  color: var(--csv-e-text);
+  background: var(--csv-e-card);
+  font: 500 8px Poppins, sans-serif;
+}
+
+.csv-evaluation-management-form textarea {
+  min-height: 76px;
+  resize: vertical;
+}
+
+.csv-evaluation-management-form button {
+  min-height: 42px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background:
+    linear-gradient(135deg, #7458ca, #8b63d2);
+  font: 800 8px Poppins, sans-serif;
+  cursor: pointer;
+}
+
+.csv-evaluation-management-form small {
+  grid-column: 1 / -1;
+  font-size: 8px;
+}
+
+.csv-evaluation-management-form small.success {
+  color: #168052;
+}
+
+.csv-evaluation-management-form small.error {
+  color: #c13a45;
+}
+
+@media (max-width: 920px) {
+  .csv-evaluation-center-row,
+  .csv-evaluation-center-row.employee {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .csv-evaluation-center-own {
+    justify-items: start;
+  }
+
+  .csv-evaluation-center-row > button {
+    width: 100%;
+  }
+
+  .csv-evaluation-management-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .csv-evaluation-management-form small {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .csv-evaluation-center-actions,
+  .csv-evaluation-center-button {
+    width: 100%;
+  }
+
+  .csv-evaluation-center-summary {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .csv-evaluation-center-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .csv-evaluation-center-metrics {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}

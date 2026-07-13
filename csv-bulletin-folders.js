@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "7.9.4";
+  const VERSION = "7.9.5";
 
   const uiState = {
     mode: "folders",
@@ -405,7 +405,7 @@
   }
 
   function folderStats(items) {
-    return items.reduce(
+    const totals = items.reduce(
       (stats, item) => {
         const current = itemStats(item);
 
@@ -423,6 +423,56 @@
         pending: 0
       }
     );
+
+    const people = new Map();
+
+    items.forEach((item) => {
+      recipientRows(item).forEach((row) => {
+        const key = String(
+          row.person?.uid ||
+          normalize(row.person?.name || "")
+        );
+
+        if (!key) return;
+
+        const current = people.get(key) || {
+          pending: false
+        };
+
+        if (!row.read) {
+          current.pending = true;
+        }
+
+        people.set(key, current);
+      });
+    });
+
+    const peopleRows = [...people.values()];
+    const peoplePending = peopleRows.filter(
+      (person) => person.pending
+    ).length;
+
+    const peopleTotal = peopleRows.length;
+    const peopleComplete = Math.max(
+      0,
+      peopleTotal - peoplePending
+    );
+
+    return {
+      ...totals,
+      peopleTotal,
+      peopleComplete,
+      peoplePending,
+      peopleRate:
+        peopleTotal
+          ? Math.round(
+              (
+                peopleComplete /
+                peopleTotal
+              ) * 100
+            )
+          : 0
+    };
   }
 
   function companyFolder() {
@@ -543,14 +593,16 @@
 
   function folderCard(folder, tone) {
     const stats = folder.stats;
-    const rate = stats.assigned
-      ? Math.round((stats.read / stats.assigned) * 100)
-      : 0;
+    const statusClass = stats.peopleTotal === 0
+      ? "status-neutral"
+      : stats.peoplePending > 0
+        ? "status-pending"
+        : "status-complete";
 
     return `
       <button
         type="button"
-        class="csv-folder-card ${tone} ${stats.pending > 0 ? "status-pending" : "status-complete"}"
+        class="csv-folder-card ${tone} ${statusClass}"
         onclick="window.csvBulletinFoldersOpen(
           '${folder.kind}',
           '${esc(encodeURIComponent(folder.key))}'
@@ -563,18 +615,26 @@
         <div class="csv-folder-card-copy">
           <span>${esc(folder.subtitle)}</span>
           <h3>${esc(folder.name)}</h3>
-          <small>${stats.documents} informativo(s)</small>
+          <small>
+            ${stats.documents} informativo(s)
+            • ${stats.peopleTotal} colaborador(es)
+          </small>
         </div>
 
         <div class="csv-folder-card-metrics">
-          <span><strong>${stats.read}</strong>Lidos</span>
-          <span class="${stats.pending ? "pending" : ""}">
-            <strong>${stats.pending}</strong>Pendentes
+          <span class="complete">
+            <strong>${stats.peopleComplete}</strong>
+            Em dia
+          </span>
+
+          <span class="${stats.peoplePending ? "pending" : "complete"}">
+            <strong>${stats.peoplePending}</strong>
+            Com pendência
           </span>
         </div>
 
         <div class="csv-folder-card-progress">
-          <i style="width:${rate}%"></i>
+          <i style="width:${stats.peopleRate}%"></i>
         </div>
 
         <span class="csv-folder-card-arrow">
@@ -759,7 +819,7 @@
             <section>
               <span>${esc(folder.subtitle)}</span>
               <h3>${esc(folder.name)}</h3>
-              <p>${stats.documents} informativo(s) • ${stats.read} leitura(s) • ${stats.pending} pendência(s)</p>
+              <p>${stats.documents} informativo(s) • ${stats.peopleTotal} colaborador(es) • ${stats.peopleComplete} em dia • ${stats.peoplePending} com pendência</p>
             </section>
           </div>
         </header>

@@ -1,6 +1,6 @@
 {
-  "version": "7.9.4",
-  "message": "Modo offline real com sessão persistente no mesmo dispositivo e cores vermelha/verde para pendências e leituras concluídas nos boletins.",
+  "version": "7.9.5",
+  "message": "Contagem exata de colaboradores por setor e nova Central de Avaliações com estrelas, comentários, pedidos de explicação e acompanhamento da gestão.",
   "force": false,
   "publishedAt": "2026-07-13"
 }

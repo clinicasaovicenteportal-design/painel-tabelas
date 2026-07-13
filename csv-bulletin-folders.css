@@ -1156,3 +1156,28 @@ html[data-theme="dark"]
     ) !important;
 }
 
+/* Contagem exata por colaborador — 7.9.5 */
+
+.csv-folder-card-metrics span.complete {
+  color: #237e58;
+  background: rgba(38, 158, 104, .08);
+}
+
+.csv-folder-card-metrics span.complete strong {
+  color: #238b5f;
+}
+
+.csv-folder-card.status-neutral {
+  color: #6d778a;
+}
+
+.csv-folder-card.status-neutral
+.csv-folder-card-progress i {
+  background: #9aa5b4;
+}
+
+.csv-folder-card-copy small {
+  white-space: normal;
+  line-height: 1.45;
+}
+

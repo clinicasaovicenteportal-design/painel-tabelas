@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.9.4";
+const VERSION = "7.9.5";
 const MAX_ATTEMPTS = 180;
 const WAIT_MS = 75;
 
@@ -118,6 +118,11 @@ async function start() {
   await safeImport(
     "Avaliação dos informativos",
     "./csv-bulletin-ratings.js"
+  );
+
+  await safeImport(
+    "Central de avaliações e explicações",
+    "./csv-evaluation-center.js"
   );
 
   await safeImport(
