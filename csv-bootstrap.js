@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.9.0";
+const VERSION = "7.9.2";
 const MAX_ATTEMPTS = 180;
 const WAIT_MS = 75;
 
@@ -132,6 +132,11 @@ async function start() {
   await safeImport(
     "Pulso São Vicente e identidade do aplicativo",
     "./csv-app-branding.js"
+  );
+
+  await safeImport(
+    "Correção final de mobile e entrada",
+    "./csv-mobile-hotfix-7.9.2.js"
   );
 removeOldStartupError();
 

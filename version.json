@@ -1,6 +1,6 @@
 {
-  "version": "7.9.0",
-  "message": "Nova identidade Pulso São Vicente: ícone PWA correto, abertura animada, logo viva e contador no ícone instalado.",
+  "version": "7.9.2",
+  "message": "Correção final do modo mobile: menu lateral recolhível de verdade, largura total no celular e remoção da transição antiga para manter só o novo efeito profissional.",
   "force": false,
   "publishedAt": "2026-07-13"
 }
