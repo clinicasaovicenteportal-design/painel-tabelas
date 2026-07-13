@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.7.2";
+const VERSION = "7.7.3";
 const MAX_ATTEMPTS = 180;
 const WAIT_MS = 75;
 
@@ -65,7 +65,6 @@ async function start() {
     ["Corpo Clínico e Convênios", "./csv-clinical-directory.js"],
     ["Controle de Ativos", "./csv-assets-dashboard.js"],
     ["Controle Administrativo", "./csv-admin-control.js"],
-    ["Menu e Atualizações", "./csv-menu-update.js"],
     ["Inteligência de Informativos", "./csv-bulletin-intelligence.js"]
   ];
 

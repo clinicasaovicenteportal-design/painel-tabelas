@@ -1,6 +1,6 @@
 {
-  "version": "7.7.2",
-  "message": "Correção crítica de segurança: pesquisa global removida, resultados antigos eliminados, exclusão imediata e programada de mensagens, barra de navegação limpa, mensagem institucional editável e rodapé Ludodigitalmkt.",
-  "force": true,
+  "version": "7.7.3",
+  "message": "Estabilização do acesso e remoção do atualizador bloqueante.",
+  "force": false,
   "publishedAt": "2026-07-12"
 }
