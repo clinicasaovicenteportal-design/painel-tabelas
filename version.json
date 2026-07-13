@@ -1,6 +1,6 @@
 {
-  "version": "7.7.3",
-  "message": "Estabilização do acesso e remoção do atualizador bloqueante.",
+  "version": "7.7.4",
+  "message": "Recuperação de emergência: removido o módulo que causava loop de interface e tela branca.",
   "force": false,
-  "publishedAt": "2026-07-12"
+  "publishedAt": "2026-07-13"
 }

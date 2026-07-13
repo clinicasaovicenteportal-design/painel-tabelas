@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.7.3";
+const VERSION = "7.7.4";
 const MAX_ATTEMPTS = 180;
 const WAIT_MS = 75;
 
@@ -123,13 +123,7 @@ async function start() {
     "Permissões e pesquisa moderna",
     "./csv-permissions-search-fix.js"
   );
-
-  await safeImport(
-    "Segurança, exclusão de mensagens e identidade",
-    "./csv-security-controls-7.7.2.js"
-  );
-
-  removeOldStartupError();
+removeOldStartupError();
 
   const forceCurrentView = () => {
     removeOldStartupError();

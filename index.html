@@ -59,35 +59,46 @@
         }
     </style>
 
-
-<style id="csv-disable-old-updater">
-    #csv-update-stable-overlay {
-        display: none !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-    }
-</style>
-
-<script id="csv-remove-old-updater">
+<script id="csv-emergency-recovery-7.7.4">
 (() => {
-    const remover = () => {
-        document
-            .getElementById("csv-update-stable-overlay")
-            ?.remove();
-    };
+  const KEY = "csv_emergency_recovery_7_7_4";
 
-    new MutationObserver(remover).observe(
-        document.documentElement,
-        {
-            childList: true,
-            subtree: true
-        }
-    );
+  if (sessionStorage.getItem(KEY) === "done") {
+    return;
+  }
 
-    document.addEventListener("DOMContentLoaded", remover);
+  sessionStorage.setItem(KEY, "done");
 
-    sessionStorage.removeItem("csv_update_applied_version");
-    sessionStorage.removeItem("csv_update_dismissed_version");
+  window.addEventListener("DOMContentLoaded", async () => {
+    try {
+      if ("serviceWorker" in navigator) {
+        const registrations =
+          await navigator.serviceWorker.getRegistrations();
+
+        await Promise.allSettled(
+          registrations.map((registration) =>
+            registration.unregister()
+          )
+        );
+      }
+
+      if ("caches" in window) {
+        const names = await caches.keys();
+
+        await Promise.allSettled(
+          names
+            .filter((name) => name.startsWith("painel-csv-"))
+            .map((name) => caches.delete(name))
+        );
+      }
+    } catch (error) {
+      console.warn("Limpeza emergencial do cache:", error);
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("recuperado", "7.7.4");
+    window.location.replace(url.toString());
+  });
 })();
 </script>
 
@@ -1183,8 +1194,8 @@
     </div>
     <script src="login-ui.js?v=4.3.0"></script>
     <script src="csv-devtools-guard.js?v=7.5.1"></script>
-    <script type="module" src="app.js?v=7.7.3"></script>
-    <script type="module" src="csv-bootstrap.js?v=7.7.3"></script>
+    <script type="module" src="app.js?v=7.7.4"></script>
+    <script type="module" src="csv-bootstrap.js?v=7.7.4"></script>
 
 </body>
 </html>
