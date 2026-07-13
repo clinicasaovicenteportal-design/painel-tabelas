@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.9.3";
+const VERSION = "7.9.4";
 const MAX_ATTEMPTS = 180;
 const WAIT_MS = 75;
 
@@ -61,6 +61,7 @@ async function start() {
   const modules = [
     ["Sessão segura e campanhas", "./csv-session-campaign.js"],
     ["Fase 2", "./csv-phase2.js"],
+    ["Acesso offline seguro", "./csv-offline-access.js"],
     ["Acabamento visual", "./csv-polish.js"],
     ["Corpo Clínico e Convênios", "./csv-clinical-directory.js"],
     ["Controle de Ativos", "./csv-assets-dashboard.js"],

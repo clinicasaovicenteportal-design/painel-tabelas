@@ -1,4 +1,5 @@
-const CACHE_NAME = "painel-csv-v7.9.3";
+const CACHE_NAME = "painel-csv-v7.9.4";
+const RUNTIME_CACHE = `${CACHE_NAME}-runtime`;
 
 const APP_SHELL = [
   "./",
@@ -20,6 +21,7 @@ const APP_SHELL = [
   "./csv-engagement-7.7.css",
   "./csv-notification-center.css",
   "./csv-app-branding.css",
+  "./csv-offline-access.css",
   "./csv-mobile-navigation.css",
   "./app.js",
   "./login-ui.js",
@@ -44,6 +46,7 @@ const APP_SHELL = [
   "./csv-permissions-search-fix.js",
   "./csv-notification-center.js",
   "./csv-app-branding.js",
+  "./csv-offline-access.js",
   "./csv-mobile-navigation.js",
   "./version.json",
   "./manifest.json",
@@ -80,7 +83,7 @@ self.addEventListener("activate", (event) => {
             .filter(
               (name) =>
                 name.startsWith("painel-csv-") &&
-                name !== CACHE_NAME
+                ![CACHE_NAME, RUNTIME_CACHE].includes(name)
             )
             .map((name) => caches.delete(name))
         )

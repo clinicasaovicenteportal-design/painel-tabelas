@@ -23,7 +23,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_PHASE2_VERSION = "7.5.2";
+const CSV_PHASE2_VERSION = "7.9.4";
 const INTERNAL_DOMAIN = "acesso.csv.app";
 const app = getApp();
 const auth = getAuth(app);
@@ -406,34 +406,98 @@ function applyPhase2Permissions() {
 
 async function loadProfile(user) {
   if (!user) return null;
-  const snapshot = await getDoc(doc(db, "usuarios", user.uid));
-  const legacyAdmin = String(user.email || "").toLowerCase().includes("@clinica");
 
-  if (snapshot.exists()) {
+  const cacheKey = `csv-offline-profile:${user.uid}`;
+  const legacyAdmin = String(user.email || "")
+    .toLowerCase()
+    .includes("@clinica");
+
+  const readCachedProfile = () => {
+    try {
+      const cached = JSON.parse(
+        localStorage.getItem(cacheKey) || "null"
+      );
+
+      return cached &&
+        cached.uid === user.uid
+        ? cached
+        : null;
+    } catch (_) {
+      return null;
+    }
+  };
+
+  const saveCachedProfile = (profile) => {
+    try {
+      localStorage.setItem(
+        cacheKey,
+        JSON.stringify(profile)
+      );
+    } catch (_) {}
+
+    return profile;
+  };
+
+  let snapshot = null;
+
+  try {
+    snapshot = await getDoc(
+      doc(db, "usuarios", user.uid)
+    );
+  } catch (error) {
+    const cached = readCachedProfile();
+
+    if (cached) {
+      console.info(
+        "CSV Fase 2: perfil carregado do cache offline."
+      );
+      return cached;
+    }
+
+    if (!legacyAdmin) throw error;
+  }
+
+  if (snapshot?.exists()) {
     const data = snapshot.data() || {};
-    return {
+
+    return saveCachedProfile({
       uid: user.uid,
       email: user.email || data.email || "",
-      name: data.nome || user.email?.split("@")[0] || "Colaborador",
-      username: data.usuario || user.email?.split("@")[0] || "",
+      name:
+        data.nome ||
+        user.email?.split("@")[0] ||
+        "Colaborador",
+      username:
+        data.usuario ||
+        user.email?.split("@")[0] ||
+        "",
       sector: data.setor || "Geral",
       active: data.ativo !== false,
       admin: data.admin === true || legacyAdmin,
-      permissions: Array.isArray(data.permissoes) ? data.permissoes : []
-    };
+      permissions:
+        Array.isArray(data.permissoes)
+          ? data.permissoes
+          : []
+    });
   }
 
+  const cached = readCachedProfile();
+  if (cached) return cached;
+
   if (legacyAdmin) {
-    return {
+    return saveCachedProfile({
       uid: user.uid,
       email: user.email || "",
       name: "Gestão Administrador",
-      username: user.email?.split("@")[0] || "gestao",
+      username:
+        user.email?.split("@")[0] ||
+        "gestao",
       sector: "Gestão",
       active: true,
       admin: true,
-      permissions: ACCESS_AREAS.map((item) => item.id)
-    };
+      permissions:
+        ACCESS_AREAS.map((item) => item.id)
+    });
   }
 
   return null;

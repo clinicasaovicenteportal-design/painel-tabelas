@@ -1,6 +1,6 @@
 {
-  "version": "7.9.3",
-  "message": "Correção do menu lateral no celular: itens em lista compacta, sem botão esticado, com rolagem e botão fechar.",
+  "version": "7.9.4",
+  "message": "Modo offline real com sessão persistente no mesmo dispositivo e cores vermelha/verde para pendências e leituras concluídas nos boletins.",
   "force": false,
   "publishedAt": "2026-07-13"
 }

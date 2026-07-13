@@ -1,0 +1,87 @@
+/* =========================================================
+   Acesso offline e status de sincronização — 7.9.4
+   ========================================================= */
+
+.csv-offline-indicator {
+  display: none;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 7px 12px;
+  border: 1px solid rgba(196, 119, 20, .20);
+  border-radius: 14px;
+  color: #8a540d;
+  background: rgba(255, 247, 230, .94);
+  box-shadow: 0 9px 23px rgba(116, 73, 14, .08);
+}
+
+.csv-offline-indicator.visible {
+  display: inline-flex;
+}
+
+.csv-offline-indicator > i {
+  font-size: 19px;
+}
+
+.csv-offline-indicator > span {
+  display: grid;
+  gap: 2px;
+}
+
+.csv-offline-indicator strong {
+  font: 800 9px/1.15 Poppins, sans-serif;
+}
+
+.csv-offline-indicator small {
+  color: #a06b25;
+  font: 600 7px/1.25 Poppins, sans-serif;
+  white-space: nowrap;
+}
+
+body.csv-offline-dashboard::after {
+  content: "MODO OFFLINE";
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 15000;
+  padding: 7px 10px;
+  border: 1px solid rgba(194, 117, 16, .18);
+  border-radius: 999px;
+  color: #8f570c;
+  background: rgba(255, 247, 230, .92);
+  box-shadow: 0 9px 24px rgba(85, 54, 14, .10);
+  font: 800 7px/1 Poppins, sans-serif;
+  letter-spacing: .08em;
+  pointer-events: none;
+}
+
+html[data-theme="dark"] .csv-offline-indicator {
+  color: #ffd48f;
+  border-color: rgba(240, 173, 62, .18);
+  background: rgba(95, 62, 16, .42);
+}
+
+html[data-theme="dark"] .csv-offline-indicator small {
+  color: #e8bd78;
+}
+
+@media (max-width: 760px) {
+  .csv-offline-indicator {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: center;
+    order: 4;
+  }
+
+  .csv-offline-indicator small {
+    white-space: normal;
+  }
+
+  body.csv-offline-dashboard::after {
+    right: 10px;
+    bottom: max(
+      10px,
+      env(safe-area-inset-bottom)
+    );
+  }
+}

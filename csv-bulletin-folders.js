@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "7.5.2";
+  const VERSION = "7.9.4";
 
   const uiState = {
     mode: "folders",
@@ -550,7 +550,7 @@
     return `
       <button
         type="button"
-        class="csv-folder-card ${tone}"
+        class="csv-folder-card ${tone} ${stats.pending > 0 ? "status-pending" : "status-complete"}"
         onclick="window.csvBulletinFoldersOpen(
           '${folder.kind}',
           '${esc(encodeURIComponent(folder.key))}'
@@ -690,7 +690,7 @@
     const deadline = bulletinDeadline(item);
 
     return `
-      <article class="csv-folder-bulletin-card">
+      <article class="csv-folder-bulletin-card ${stats.pending > 0 ? "status-pending" : "status-complete"}">
         <div class="csv-folder-bulletin-icon">
           <i class="${
             bulletinMedia(item) === "video"
@@ -1048,7 +1048,7 @@
     const rate = stats.assigned ? Math.round((stats.read / stats.assigned) * 100) : 0;
 
     return `
-      <button type="button" class="csv-direct-monitor-person-card" onclick="window.csvDirectMonitorOpenPerson('${esc(encodeURIComponent(folder.key))}')">
+      <button type="button" class="csv-direct-monitor-person-card ${stats.pending > 0 ? "status-pending" : "status-complete"}" onclick="window.csvDirectMonitorOpenPerson('${esc(encodeURIComponent(folder.key))}')">
         <span class="csv-direct-monitor-avatar">${esc(folder.name.charAt(0))}</span>
         <div>
           <h3>${esc(folder.name)}</h3>
