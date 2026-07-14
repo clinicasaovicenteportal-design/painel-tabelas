@@ -1,6 +1,6 @@
 {
-  "version": "7.9.8",
-  "message": "Filtros por data nos gráficos, relatório mensal ou por período em PDF com data e hora das leituras, áudio complementar e leitura em voz alta dos informativos.",
+  "version": "7.9.9",
+  "message": "Botões da Central de Boletins organizados em uma barra responsiva, Relatório PDF sempre visível e filtros de data adicionados à Central de Avaliações, Acompanhamentos Direcionados e Desempenho por Leitura.",
   "force": false,
   "publishedAt": "2026-07-14"
 }

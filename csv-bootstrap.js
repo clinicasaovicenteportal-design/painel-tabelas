@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.9.8";
+const VERSION = "7.9.9";
 const MAX_ATTEMPTS = 180;
 const WAIT_MS = 75;
 
@@ -153,6 +153,11 @@ async function start() {
   await safeImport(
     "Relatórios, períodos e acessibilidade",
     "./csv-reports-accessibility.js"
+  );
+
+  await safeImport(
+    "Filtros de data e organização dos botões",
+    "./csv-date-filters-layout.js"
   );
 removeOldStartupError();
 
