@@ -1,5 +1,5 @@
-const CSV_APP_BRANDING_VERSION = "7.9.9";
-const SPLASH_KEY = "csv_splash_seen_7_9_9";
+const CSV_APP_BRANDING_VERSION = "8.0.0";
+const SPLASH_KEY = "csv_splash_seen_8_0_0";
 
 function isStandalone() {
   return (

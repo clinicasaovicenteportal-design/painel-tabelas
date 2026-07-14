@@ -1,6 +1,6 @@
 {
-  "version": "7.9.9",
-  "message": "Botões da Central de Boletins organizados em uma barra responsiva, Relatório PDF sempre visível e filtros de data adicionados à Central de Avaliações, Acompanhamentos Direcionados e Desempenho por Leitura.",
+  "version": "8.0.0",
+  "message": "Nova identidade sonora do Portal CSV, com efeito suave de entrada, sons de notificações, respostas, prazos de leitura, confirmações, volume individual e modo silencioso.",
   "force": false,
   "publishedAt": "2026-07-14"
 }

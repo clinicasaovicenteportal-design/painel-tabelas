@@ -1,0 +1,417 @@
+/* =========================================================
+   Central de Sons CSV — 8.0.0
+   ========================================================= */
+
+.csv-sound-center {
+  position: relative;
+  z-index: 25020;
+  margin-left: auto;
+}
+
+.csv-sound-button {
+  width: 48px;
+  height: 48px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(214, 221, 231, .95);
+  border-radius: 15px;
+  color: #263247;
+  background: rgba(255, 255, 255, .90);
+  box-shadow: 0 12px 28px rgba(32, 47, 70, .09);
+  font-size: 19px;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, color .18s ease;
+}
+
+.csv-sound-button:hover {
+  transform: translateY(-2px);
+  color: #8b252c;
+  box-shadow: 0 17px 35px rgba(32, 47, 70, .13);
+}
+
+.csv-sound-button.csv-sound-playing {
+  animation: csvSoundPulse .62s ease;
+}
+
+.csv-sound-status {
+  width: 8px;
+  height: 8px;
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #aab3c0;
+}
+
+.csv-sound-status.active {
+  background: #2fa86e;
+  box-shadow: 0 0 0 4px rgba(47, 168, 110, .10);
+}
+
+.csv-sound-panel {
+  width: min(390px, calc(100vw - 24px));
+  max-height: min(720px, calc(100vh - 95px));
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  padding: 18px;
+  display: none;
+  overflow-y: auto;
+  border: 1px solid rgba(215, 222, 232, .98);
+  border-radius: 23px;
+  background: rgba(255, 255, 255, .98);
+  box-shadow: 0 28px 75px rgba(22, 34, 52, .22);
+  backdrop-filter: blur(20px);
+}
+
+.csv-sound-panel.open {
+  display: block;
+  animation: csvSoundPanelIn .22s ease both;
+}
+
+.csv-sound-panel > header {
+  position: relative;
+  padding-right: 42px;
+  margin-bottom: 15px;
+}
+
+.csv-sound-panel > header > div {
+  display: grid;
+  gap: 3px;
+}
+
+.csv-sound-panel > header span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #8b252c;
+  font: 800 7px/1.2 Poppins, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.csv-sound-panel > header strong {
+  color: #182235;
+  font: 800 17px/1.2 Poppins, sans-serif;
+}
+
+.csv-sound-panel > header small {
+  color: #7b879a;
+  font: 600 7px/1.45 Poppins, sans-serif;
+}
+
+.csv-sound-panel > header > button {
+  width: 36px;
+  height: 36px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e3e8ef;
+  border-radius: 11px;
+  color: #697588;
+  background: #f7f9fc;
+  cursor: pointer;
+}
+
+.csv-sound-master {
+  min-height: 64px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(139, 37, 44, .15);
+  border-radius: 16px;
+  background: rgba(139, 37, 44, .055);
+}
+
+.csv-sound-master > div {
+  display: grid;
+  gap: 3px;
+}
+
+.csv-sound-master strong,
+.csv-sound-volume strong,
+.csv-sound-categories strong {
+  color: #253047;
+  font: 800 8px Poppins, sans-serif;
+}
+
+.csv-sound-master span,
+.csv-sound-categories small {
+  color: #7b879a;
+  font: 600 7px/1.4 Poppins, sans-serif;
+}
+
+.csv-sound-switch {
+  position: relative;
+}
+
+.csv-sound-switch input {
+  width: 46px;
+  height: 26px;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.csv-sound-switch > span {
+  width: 46px;
+  height: 26px;
+  position: relative;
+  display: block;
+  border-radius: 999px;
+  background: #d6dce5;
+  cursor: pointer;
+  transition: background .18s ease;
+}
+
+.csv-sound-switch > span::after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 3px 9px rgba(20, 32, 50, .18);
+  transition: transform .18s ease;
+}
+
+.csv-sound-switch input:checked + span {
+  background: linear-gradient(135deg, #8b252c, #bd3c47);
+}
+
+.csv-sound-switch input:checked + span::after {
+  transform: translateX(20px);
+}
+
+.csv-sound-volume {
+  margin-top: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  border: 1px solid #e3e8ef;
+  border-radius: 15px;
+  background: #f8fafc;
+}
+
+.csv-sound-volume > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.csv-sound-volume b {
+  color: #8b252c;
+  font: 800 8px Poppins, sans-serif;
+}
+
+.csv-sound-volume input {
+  width: 100%;
+  accent-color: #9b2d36;
+  cursor: pointer;
+}
+
+.csv-sound-categories {
+  margin-top: 12px;
+  display: grid;
+  gap: 7px;
+}
+
+.csv-sound-categories > label {
+  min-height: 55px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 35px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #e4e9f0;
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.csv-sound-categories > label > i {
+  width: 35px;
+  height: 35px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: #7458ca;
+  background: rgba(116, 88, 202, .09);
+  font-size: 16px;
+}
+
+.csv-sound-categories > label > span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.csv-sound-categories small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.csv-sound-categories input {
+  width: 17px;
+  height: 17px;
+  accent-color: #9b2d36;
+  cursor: pointer;
+}
+
+.csv-sound-tests {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px dashed rgba(116, 88, 202, .24);
+  border-radius: 15px;
+  background: rgba(116, 88, 202, .045);
+}
+
+.csv-sound-tests > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #6651ae;
+  font: 800 7px Poppins, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.csv-sound-tests > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.csv-sound-tests button {
+  min-height: 38px;
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(116, 88, 202, .18);
+  border-radius: 11px;
+  color: #6651ae;
+  background: #fff;
+  font: 800 7px Poppins, sans-serif;
+  cursor: pointer;
+}
+
+.csv-sound-silent-session {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 12px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #e2e7ee;
+  border-radius: 13px;
+  color: #687487;
+  background: #f7f9fc;
+  font: 800 7.5px Poppins, sans-serif;
+  cursor: pointer;
+}
+
+.csv-sound-silent-session.active {
+  color: #8b252c;
+  border-color: rgba(139, 37, 44, .18);
+  background: rgba(139, 37, 44, .06);
+}
+
+.csv-sound-note {
+  margin: 10px 3px 0;
+  color: #8a95a6;
+  font: 600 6.5px/1.5 Poppins, sans-serif;
+  text-align: center;
+}
+
+.csv-sound-unsupported {
+  min-height: 170px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  color: #7b879a;
+  text-align: center;
+}
+
+.csv-sound-unsupported i {
+  font-size: 28px;
+}
+
+.csv-sound-unsupported strong {
+  color: #253047;
+  font: 800 10px Poppins, sans-serif;
+}
+
+.csv-sound-unsupported span {
+  max-width: 260px;
+  font: 600 7px/1.5 Poppins, sans-serif;
+}
+
+html[data-theme="dark"] .csv-sound-button,
+html[data-theme="dark"] .csv-sound-panel {
+  color: #f4f7fb;
+  border-color: rgba(255, 255, 255, .08);
+  background: rgba(25, 34, 49, .97);
+}
+
+html[data-theme="dark"] .csv-sound-panel > header strong,
+html[data-theme="dark"] .csv-sound-master strong,
+html[data-theme="dark"] .csv-sound-volume strong,
+html[data-theme="dark"] .csv-sound-categories strong,
+html[data-theme="dark"] .csv-sound-unsupported strong {
+  color: #f3f6fb;
+}
+
+html[data-theme="dark"] .csv-sound-volume,
+html[data-theme="dark"] .csv-sound-categories > label,
+html[data-theme="dark"] .csv-sound-tests button,
+html[data-theme="dark"] .csv-sound-silent-session {
+  border-color: rgba(255, 255, 255, .08);
+  background: rgba(255, 255, 255, .045);
+}
+
+@keyframes csvSoundPulse {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes csvSoundPanelIn {
+  from { opacity: 0; transform: translateY(-7px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 760px) {
+  .csv-sound-center {
+    margin-left: 0;
+  }
+
+  .csv-sound-button {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+  }
+
+  .csv-sound-panel {
+    position: fixed;
+    top: auto;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: 8px;
+    width: auto;
+    max-height: calc(100vh - 90px);
+    border-radius: 23px;
+  }
+}
