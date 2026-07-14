@@ -1,6 +1,6 @@
 {
-  "version": "7.9.6",
-  "message": "Correção definitiva da contagem de leituras por setor e nova visualização da equipe em lista ou cards, com totais por setor e visão da empresa toda.",
+  "version": "7.9.8",
+  "message": "Filtros por data nos gráficos, relatório mensal ou por período em PDF com data e hora das leituras, áudio complementar e leitura em voz alta dos informativos.",
   "force": false,
-  "publishedAt": "2026-07-13"
+  "publishedAt": "2026-07-14"
 }

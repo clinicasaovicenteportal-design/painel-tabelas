@@ -23,7 +23,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CSV_PHASE2_VERSION = "7.9.6";
+const CSV_PHASE2_VERSION = "7.9.8";
 const INTERNAL_DOMAIN = "acesso.csv.app";
 const app = getApp();
 const auth = getAuth(app);
@@ -1851,12 +1851,113 @@ window.csv2OpenBulletin = function(key) {
 
 window.csv2MarkRead = async function(key) {
   const item = state.displayItems.get(key);
-  if (!item || state.isAdmin || !state.profile || hasRead(item, state.profile.name)) return;
+
+  if (
+    !item ||
+    state.isAdmin ||
+    !state.profile ||
+    hasRead(item, state.profile.name)
+  ) {
+    return;
+  }
+
+  const now = new Date();
+  const userUid =
+    state.user?.uid ||
+    auth.currentUser?.uid ||
+    "";
+
+  const record =
+    `${state.profile.name} (` +
+    `${now.toLocaleString("pt-BR")} | ` +
+    `Por: ${state.profile.email})`;
+
   try {
-    const record = `${state.profile.name} (${new Date().toLocaleString("pt-BR")} | Por: ${state.profile.email})`;
-    await updateDoc(doc(db, item.collectionName, item.id), { leituras: arrayUnion(record) });
+    await updateDoc(
+      doc(
+        db,
+        item.collectionName,
+        item.id
+      ),
+      {
+        leituras: arrayUnion(record)
+      }
+    );
+
+    if (userUid) {
+      const readingDocumentId =
+        `${item.collectionName}__${item.id}__${userUid}`
+          .replace(/\//g, "_");
+
+      const deadline =
+        parseDate(
+          bulletinDeadline(item)
+        );
+
+      if (deadline) {
+        deadline.setHours(
+          23,
+          59,
+          59,
+          999
+        );
+      }
+
+      try {
+        await setDoc(
+          doc(
+            db,
+            "leituras-boletins",
+            readingDocumentId
+          ),
+          {
+            uid: userUid,
+            userUid,
+            colaboradorUid: userUid,
+            nome: state.profile.name,
+            colaboradorNome:
+              state.profile.name,
+            setor:
+              state.profile.sector ||
+              "Geral",
+            email:
+              state.profile.email ||
+              auth.currentUser?.email ||
+              "",
+            boletimId: item.id,
+            bulletinId: item.id,
+            colecao:
+              item.collectionName,
+            titulo:
+              bulletinTitle(item),
+            lidoEm:
+              serverTimestamp(),
+            lidoEmIso:
+              now.toISOString(),
+            lidoEmLocal:
+              now.toLocaleString("pt-BR"),
+            dentroDoPrazo:
+              !deadline ||
+              now.getTime() <=
+                deadline.getTime(),
+            atualizadoEm:
+              serverTimestamp()
+          },
+          {
+            merge: true
+          }
+        );
+      } catch (structuredError) {
+        console.warn(
+          "A leitura foi registrada, mas o registro estruturado de data e hora não pôde ser salvo.",
+          structuredError
+        );
+      }
+    }
   } catch (error) {
-    alert(`Não foi possível registrar a leitura: ${error.message}`);
+    alert(
+      `Não foi possível registrar a leitura: ${error.message}`
+    );
   }
 };
 
@@ -1916,6 +2017,38 @@ function openBulletinForm(item = null) {
         </div>
 
         <label><span>Descrição / mensagem</span><textarea id="csv2-b-description" class="form-input csv2-textarea" required placeholder="Escreva a orientação principal do informativo...">${esc(bulletinDescription(item || {}))}</textarea></label>
+        <div class="csv2-accessibility-fields">
+          <label class="full">
+            <span>
+              Texto para leitura em voz alta
+            </span>
+            <textarea
+              id="csv2-b-accessible-text"
+              class="form-input csv2-textarea"
+              rows="5"
+              placeholder="Cole aqui o texto completo ou um resumo acessível. Se ficar vazio, o portal lerá a descrição."
+            >${esc(data.textoAcessivel || data.textoParaLeitura || "")}</textarea>
+            <small>
+              Recomendado para PDFs, documentos digitalizados e materiais sem texto direto no portal.
+            </small>
+          </label>
+
+          <label class="full">
+            <span>
+              Áudio complementar da gestão - opcional
+            </span>
+            <input
+              id="csv2-b-supplemental-audio"
+              type="url"
+              class="form-input"
+              value="${esc(data.audioComplementarUrl || data.audioUrl || "")}"
+              placeholder="Link público do áudio no Google Drive ou arquivo MP3"
+            >
+            <small>
+              O colaborador poderá ouvir a gravação junto do documento, texto, vídeo ou link.
+            </small>
+          </label>
+        </div>
         <label id="csv2-b-url-label"><span>Link do material</span><input id="csv2-b-url" type="url" class="form-input" value="${esc(bulletinMediaUrl(item || {}))}" placeholder="https://..."><small>Para vídeos, documentos e áudios, informe um link público ou compartilhável.</small></label>
 
         <div id="csv2-target-sectors" class="csv2-target-box" style="display:${audienceType === "setores" ? "block" : "none"}"><div class="csv2-section-label">Selecione um ou mais setores</div><div class="csv2-target-grid">${sectorOptionsMarkup(selectedSectors)}</div></div>
@@ -1972,6 +2105,16 @@ async function saveBulletin(event, existingItem = null) {
   const audienceType = document.getElementById("csv2-b-audience").value;
   const description = document.getElementById("csv2-b-description").value.trim();
   const mediaUrl = document.getElementById("csv2-b-url").value.trim();
+  const accessibleText = String(
+    document.getElementById(
+      "csv2-b-accessible-text"
+    )?.value || ""
+  ).trim();
+  const supplementalAudioUrl = String(
+    document.getElementById(
+      "csv2-b-supplemental-audio"
+    )?.value || ""
+  ).trim();
   const sectors = [...form.querySelectorAll('input[name="csv2-target-sector"]:checked')].map((input) => input.value);
   const people = [...form.querySelectorAll('input[name="csv2-target-person"]:checked')].map((input) => input.value);
 
@@ -1993,6 +2136,9 @@ async function saveBulletin(event, existingItem = null) {
     conteudo: description,
     midiaTipo: mediaType,
     midiaUrl: mediaUrl,
+    textoAcessivel: accessibleText,
+    audioComplementarUrl:
+      supplementalAudioUrl,
     publicoTipo: audienceType,
     prazoLeitura: deadline,
     leituraObrigatoria: requiredRead,

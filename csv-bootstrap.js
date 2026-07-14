@@ -1,6 +1,6 @@
 import { getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 
-const VERSION = "7.9.6";
+const VERSION = "7.9.8";
 const MAX_ATTEMPTS = 180;
 const WAIT_MS = 75;
 
@@ -148,6 +148,11 @@ async function start() {
   await safeImport(
     "Equipe em cards por setor",
     "./csv-team-sector-cards.js"
+  );
+
+  await safeImport(
+    "Relatórios, períodos e acessibilidade",
+    "./csv-reports-accessibility.js"
   );
 removeOldStartupError();
 
